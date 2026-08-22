@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jogos de Baralho</title>
+<style>
+  :root{ --felt:#15603c; --felt2:#0e4a2e; --gold:#f0c419; --ink:#12291d; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:22px;
+       background:radial-gradient(circle at 50% 0,var(--felt),var(--felt2));
+       color:#fff;min-height:100vh}
+  .screen{max-width:1000px;margin:0 auto;padding:16px}
+  .hidden{display:none !important}
+  h1{font-size:44px;text-align:center;margin:24px 0 8px;color:var(--gold)}
+  h2{font-size:32px;text-align:center;margin:8px 0}
+  button{font-family:inherit;font-size:26px;padding:14px 26px;border:none;border-radius:12px;
+         background:var(--gold);color:var(--ink);font-weight:bold;cursor:pointer;margin:6px}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.35;cursor:default}
+  .menu-btn{display:block;width:100%;max-width:520px;margin:22px auto;font-size:34px;padding:28px}
+  .voltar{background:#ffffff33;color:#fff;font-size:20px;padding:10px 18px}
+  .bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+       background:#00000038;padding:12px 16px;border-radius:12px;font-size:24px}
+  .msg{text-align:center;font-size:26px;min-height:38px;margin:14px 0;color:var(--gold)}
+  .hand{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:12px 0}
+
+  /* ---- carta ---- */
+  .card{width:100px;height:150px;background:#fffdf3;color:#123;border-radius:8px;
+        box-shadow:0 4px 8px #00000055;position:relative;padding:7px;
+        font-family:Arial,Helvetica,sans-serif;font-weight:bold;user-select:none}
+  .card::after{content:"";position:absolute;inset:5px;border:2px solid #2f5f9e;border-radius:5px;
+        pointer-events:none}
+  .card .n{position:absolute;font-size:24px;line-height:1}
+  .card .n1{top:9px;left:11px}
+  .card .n2{bottom:9px;right:11px;transform:rotate(180deg)}
+  .card .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .card .mid svg{width:58px;height:58px}
+  .card .mid .uni{font-size:56px;font-family:Georgia,serif}
+  .card.red{color:#c1121f}
+  .card.click{cursor:pointer}
+  .card.click:hover{transform:translateY(-10px);transition:.1s}
+  .card.new{outline:4px solid var(--gold);outline-offset:2px}
+  .card.back{background:
+      repeating-linear-gradient(45deg,transparent 0 7px,#d43b3b 7px 10px),
+      repeating-linear-gradient(-45deg,transparent 0 7px,#d43b3b 7px 10px),#fff8f8}
+  .card.back::after{border-color:#fff}
+  .card.sm{width:70px;height:105px}
+  .card.sm .n{font-size:17px}
+  .card.sm .mid svg{width:40px;height:40px}
+  .slot{width:100px;height:150px;border:3px dashed #ffffff44;border-radius:8px}
+  .slot.sm{width:70px;height:105px}
+
+  .mesa{display:flex;justify-content:center;gap:34px;align-items:center;margin:16px 0;flex-wrap:wrap}
+  .lbl{text-align:center;font-size:17px;opacity:.85;margin-bottom:6px}
+  .actions{text-align:center}
+  .overlay{position:fixed;inset:0;background:#000000bb;display:flex;align-items:center;
+           justify-content:center;padding:20px}
+  .box{background:#1c3a2a;border:3px solid var(--gold);border-radius:16px;padding:24px;
+       text-align:center;max-width:640px}
+  .box p{font-size:30px;margin:0 0 18px}
+  details{background:#00000033;border-radius:10px;padding:10px 16px;margin-top:24px;font-size:19px}
+  summary{cursor:pointer;font-size:22px;color:var(--gold)}
+  .pilhas{display:flex;justify-content:center;gap:36px;align-items:flex-start;margin:14px 0}
+  .opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:6px 0 20px}
+  .opts button{font-size:24px;padding:12px 22px;background:#ffffff22;color:#fff;margin:0}
+  .opts button.on{background:var(--gold);color:var(--ink)}
+  .lbl2{text-align:center;font-size:26px;color:var(--gold);margin-top:18px}
+  .placar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0}
+  .jog{background:#00000033;border-radius:10px;padding:6px 14px;font-size:21px}
+  .jog.vez{background:var(--gold);color:var(--ink);font-weight:bold}
+  .jog.correu{opacity:.45;text-decoration:line-through}
+  .jog.fora{opacity:.28}
+  .card.jok{background:#fffbe6}
+  .card.jok::after{border-color:#c8a01a}
+</style>
+</head>
+<body>
+
+<!-- ================= MENU ================= -->
+<div id="scr-menu" class="screen">
+  <h1>Jogos de Baralho</h1>
+  <p style="text-align:center;font-size:24px;opacity:.85">Escolha o jogo</p>
+  <button class="menu-btn" onclick="abrirTruco()">TRUCO</button>
+  <button class="menu-btn" onclick="abrirCacheta()">CACHETA</button>
+</div>
+
+<!-- ================= TRUCO ================= -->
+<div id="scr-truco" class="screen hidden">
+  <button class="voltar" onclick="voltar()">← Voltar</button>
+  <h2>Truco</h2>
+  <div class="bar">
+    <span>Você <b id="t-sp">0</b></span>
+    <span>Vale <b id="t-val">1</b></span>
+    <span>Rodadas: <b id="t-vazas">—</b></span>
+    <span>Máquina <b id="t-sb">0</b></span>
+  </div>
+
+  <div class="hand" id="t-bothand"></div>
+  <div class="mesa">
+    <div><div class="lbl">Vira</div><div id="t-vira"></div>
+         <div class="lbl" id="t-manilha" style="margin-top:6px"></div></div>
+    <div><div class="lbl">Máquina</div><div id="t-mesab"></div></div>
+    <div><div class="lbl">Você</div><div id="t-mesap"></div></div>
+  </div>
+  <div class="msg" id="t-msg"></div>
+  <div class="hand" id="t-phand"></div>
+  <div class="actions">
+    <button id="t-truco" onclick="trucoPedir('p')">TRUCO</button>
+  </div>
+
+  <details><summary>Regras rápidas</summary>
+    <p>Baralho espanhol de 40 cartas. Ordem da mais fraca pra mais forte:
+    <b>4 5 6 7 10 11 12 1 2 3</b>.<br>
+    A carta virada na mesa (<b>vira</b>) define a manilha: manilha é a carta
+    <b>seguinte</b> na escala. Ex.: virou 7 → manilha é o 10; virou 3 → manilha é o 4.<br>
+    Entre as manilhas manda o naipe: <b>Mole (ouros) &lt; Espada &lt; Copa &lt; Gato (paus)</b>.<br>
+    Cada mão tem 3 rodadas; quem ganha 2 leva a mão. Empate na primeira: leva quem ganhar a
+    seguinte. Pedindo truco a mão vale 3, depois 6, 9 e 12. Quem corre entrega o valor
+    anterior. Ganha o jogo quem chegar a 12 pontos.</p>
+  </details>
+</div>
+
+<!-- ================= CACHETA ================= -->
+<div id="scr-cacheta-cfg" class="screen hidden">
+  <button class="voltar" onclick="voltar()">← Voltar</button>
+  <h2>Cacheta</h2>
+  <div class="lbl2">Quantos jogadores? (você + máquinas)</div>
+  <div class="opts" id="cfg-nj"></div>
+  <div class="lbl2">Dificuldade</div>
+  <div class="opts" id="cfg-dif"></div>
+  <div class="actions" style="margin-top:26px">
+    <button class="menu-btn" onclick="cacComecar()">COMEÇAR</button>
+  </div>
+</div>
+
+<div id="scr-cacheta" class="screen hidden">
+  <button class="voltar" onclick="voltar()">← Voltar</button>
+  <h2>Cacheta</h2>
+  <div class="placar" id="c-placar"></div>
+  <div class="bar">
+    <span>Monte: <b id="c-deck">0</b></span>
+    <span id="c-dealer"></span>
+  </div>
+
+  <div class="pilhas" id="c-pilhas">
+    <div><div id="c-monte"></div><div class="lbl" style="margin-top:6px">Comprar<br>do monte</div></div>
+    <div><div id="c-lixo"></div><div class="lbl" style="margin-top:6px">Comprar<br>do descarte</div></div>
+  </div>
+  <div class="msg" id="c-msg"></div>
+  <div class="hand" id="c-phand"></div>
+  <div class="actions" id="c-acts">
+    <button id="c-vou" onclick="cacDeclarar(true)">VOU</button>
+    <button id="c-corro" onclick="cacDeclarar(false)">CORRO</button>
+    <button id="c-bater" onclick="cacBater()">BATER!</button>
+  </div>
+
+  <details><summary>Regras rápidas</summary>
+    <p>2 baralhos (108 cartas, 4 coringas). Cada um recebe 9 cartas e diz, na ordem,
+    se <b>vai</b> ou <b>corre</b> — quem deu as cartas fala por último (se ninguém foi, ele é
+    obrigado a ir e ganha sozinho).<br>
+    Quem vai: compra 1 (monte ou topo do descarte) e descarta 1. Bate quem fechar as 9 em
+    trincas/sequências (coringa vale qualquer carta).<br>
+    Pontos: todos começam com <b>10</b>. Correu: <b>−1</b>. Foi e bateu: mantém. Foi e perdeu:
+    <b>−2</b> (mínimo zero).<br>
+    Zerou: pode <b>recomprar na hora</b> voltando com a pontuação do último colocado ainda vivo.
+    Se não recomprar, está fora. Vence quem sobrar.</p>
+  </details>
+</div>
+
+<div id="modal" class="overlay hidden"><div class="box">
+  <p id="modal-txt"></p><div id="modal-btns"></div>
+</div></div>
+
+<script>
+"use strict";
+const $ = s => document.getElementById(s);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* --- naipes espanhóis (Copag): O=ouros/moeda, E=espada, C=copa, P=paus/basto --- */
+const NAIPE_SVG = {
+  O:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#f5c518" stroke="#b8860b" stroke-width="2"/>'
+   +'<circle cx="20" cy="20" r="9" fill="none" stroke="#b8860b" stroke-width="2"/>'
+   +'<circle cx="20" cy="20" r="3.5" fill="#b8860b"/></svg>',
+  E:'<svg viewBox="0 0 40 40"><path d="M20 2 L25 13 L25 26 L15 26 L15 13 Z" fill="#9fd0ea" stroke="#2c4c66" stroke-width="1.6"/>'
+   +'<rect x="8" y="26" width="24" height="4.5" rx="2" fill="#e0a52c" stroke="#8a6414" stroke-width="1"/>'
+   +'<rect x="17.5" y="30" width="5" height="8" rx="2" fill="#e0a52c" stroke="#8a6414" stroke-width="1"/></svg>',
+  C:'<svg viewBox="0 0 40 40"><path d="M8 5 h24 v7 a12 12 0 0 1 -24 0 Z" fill="#d94a3d" stroke="#8c2b22" stroke-width="1.6"/>'
+   +'<rect x="17.5" y="24" width="5" height="8" fill="#e0a52c" stroke="#8a6414" stroke-width="1"/>'
+   +'<rect x="10" y="32" width="20" height="4.5" rx="2" fill="#e0a52c" stroke="#8a6414" stroke-width="1"/></svg>',
+  P:'<svg viewBox="0 0 40 40"><path d="M9 35 L31 7" stroke="#4a9a3f" stroke-width="7" stroke-linecap="round"/>'
+   +'<path d="M16 27 l-7 -4 M24 17 l7 4" stroke="#4a9a3f" stroke-width="5.5" stroke-linecap="round"/>'
+   +'<path d="M9 35 L31 7" stroke="#2f6b28" stroke-width="1.5"/></svg>'
+};
+const NAIPE_NOME = { P:"Gato", C:"Copa", E:"Espada", O:"Mole" };
+const NAIPE_FORCA = { O:1, E:2, C:3, P:4 };          // mole < espada < copa < gato
+
+function naipeHTML(s){
+  return NAIPE_SVG[s] ? NAIPE_SVG[s] : `<span class="uni">${s}</span>`;
+}
+function cardEl(c, cls, onclick){
+  const d = document.createElement("div");
+  if(!c){ d.className = "card back " + (cls||""); }
+  else{
+    const vermelho = c.s === "♥" || c.s === "♦";
+    d.className = "card " + (cls||"") + (vermelho ? " red" : "");
+    d.innerHTML = `<div class="n n1">${c.r}</div><div class="mid">${naipeHTML(c.s)}</div>`
+                + `<div class="n n2">${c.r}</div>`;
+  }
+  if(onclick){ d.classList.add("click"); d.onclick = onclick; }
+  return d;
+}
+function slot(cls){ const d=document.createElement("div"); d.className="slot "+(cls||""); return d; }
+function fill(id, nodes){ const e=$(id); e.innerHTML=""; nodes.forEach(n=>e.appendChild(n)); }
+
+function voltar(){ ["scr-menu","scr-truco","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+                   $("scr-menu").classList.remove("hidden"); fecharModal(); }
+function mostrar(id){ ["scr-menu","scr-truco","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+                      $(id).classList.remove("hidden"); }
+function modal(txt, botoes){
+  $("modal-txt").textContent = txt;
+  const b = $("modal-btns"); b.innerHTML = "";
+  botoes.forEach(([lbl,fn])=>{ const x=document.createElement("button"); x.textContent=lbl;
+    x.onclick=()=>{ fecharModal(); fn(); }; b.appendChild(x); });
+  $("modal").classList.remove("hidden");
+}
+function fecharModal(){ $("modal").classList.add("hidden"); }
+
+/* =========================================================
+   TRUCO — baralho espanhol 40 cartas, manilha móvel pelo vira
+   ========================================================= */
+const T_ORDEM = ["4","5","6","7","10","11","12","1","2","3"];   // fraca -> forte
+const T_NAIPES = ["O","E","C","P"];
+const proxValor = v => ({1:3,3:6,6:9,9:12})[v] || null;
+const nomeAposta = v => ({3:"TRUCO",6:"SEIS",9:"NOVE",12:"DOZE"})[v];
+
+let T = null;
+
+// manilha = carta seguinte ao vira na escala (3 -> 4)
+const manilhaDe = vira => T_ORDEM[(T_ORDEM.indexOf(vira.r) + 1) % T_ORDEM.length];
+function forca(c){
+  return c.r === T.manilha ? 10 + NAIPE_FORCA[c.s] : T_ORDEM.indexOf(c.r) + 1;
+}
+
+function abrirTruco(){ mostrar("scr-truco"); T = { sp:0, sb:0, mao:"p" }; trucoNovaMao(); }
+
+function trucoNovaMao(){
+  const baralho = shuffle(T_ORDEM.flatMap(r => T_NAIPES.map(s => ({r,s}))));
+  T.p = baralho.slice(0,3); T.b = baralho.slice(3,6);
+  T.vira = baralho[6]; T.manilha = manilhaDe(T.vira);
+  T.vazas = []; T.mesa = {p:null,b:null};
+  T.valor = 1; T.pendente = null; T.ultimoPediu = null;
+  T.vez = T.mao; T.msg = T.mao==="p" ? "Sua vez — jogue uma carta." : "Máquina começa...";
+  trucoRender();
+  if(T.vez==="b") setTimeout(botJoga, 800);
+}
+
+function trucoRender(){
+  $("t-sp").textContent = T.sp; $("t-sb").textContent = T.sb;
+  $("t-val").textContent = T.valor;
+  $("t-vazas").textContent = T.vazas.length
+    ? T.vazas.map(v => v==="p"?"Você":v==="b"?"Máq.":"empate").join(" · ") : "—";
+  fill("t-vira", [cardEl(T.vira, "sm")]);
+  $("t-manilha").innerHTML = `Manilha: <b>${T.manilha}</b><br>`
+    + T_NAIPES.slice().reverse().map(s=>`${T.manilha} de ${NAIPE_NOME[s]}`).join(" &gt; ");
+  fill("t-bothand", T.b.map(()=>cardEl(null)));
+  fill("t-mesab", [T.mesa.b ? cardEl(T.mesa.b) : slot()]);
+  fill("t-mesap", [T.mesa.p ? cardEl(T.mesa.p) : slot()]);
+  const jogavel = T.vez==="p" && !T.pendente && !T.fim;
+  fill("t-phand", T.p.map((c,i)=>cardEl(c, "", jogavel ? ()=>jogadorJoga(i) : null)));
+  $("t-msg").textContent = T.msg;
+  const prox = proxValor(T.valor);
+  const bt = $("t-truco");
+  bt.textContent = prox ? nomeAposta(prox) : "—";
+  bt.disabled = !(jogavel && prox && T.ultimoPediu !== "p");
+}
+
+function jogadorJoga(i){
+  if(T.vez!=="p" || T.pendente) return;
+  T.mesa.p = T.p.splice(i,1)[0];
+  if(T.mesa.b) return resolverVaza();
+  T.vez = "b"; T.msg = "Máquina pensando..."; trucoRender();
+  setTimeout(botJoga, 800);
+}
+
+function botJoga(){
+  if(T.fim || T.vez!=="b") return;
+  const media = T.b.reduce((a,c)=>a+forca(c),0)/T.b.length;
+  const prox = proxValor(T.valor);
+  if(prox && T.ultimoPediu!=="b" && media >= 9.5 && Math.random() < 0.6) return trucoPedir("b");
+
+  let idx;
+  if(T.mesa.p){
+    const venc = T.b.map((c,i)=>({c,i})).filter(o=>forca(o.c) > forca(T.mesa.p))
+                    .sort((a,b)=>forca(a.c)-forca(b.c));
+    idx = venc.length ? venc[0].i
+        : T.b.map((c,i)=>({c,i})).sort((a,b)=>forca(a.c)-forca(b.c))[0].i;
+  } else {
+    idx = T.b.map((c,i)=>({c,i})).sort((a,b)=>forca(b.c)-forca(a.c))[0].i;
+  }
+  T.mesa.b = T.b.splice(idx,1)[0];
+  if(T.mesa.p) return resolverVaza();
+  T.vez = "p"; T.msg = "Sua vez — jogue uma carta."; trucoRender();
+}
+
+function resolverVaza(){
+  const fp = forca(T.mesa.p), fb = forca(T.mesa.b);
+  const r = fp>fb ? "p" : fb>fp ? "b" : "t";
+  T.vazas.push(r);
+  T.msg = r==="p" ? "Você ganhou a rodada!" : r==="b" ? "Máquina ganhou a rodada." : "Rodada empatada.";
+  trucoRender();
+  const dono = donoDaMao(T.vazas);
+  setTimeout(()=>{
+    T.mesa = {p:null,b:null};
+    if(dono !== null) return fimDaMao(dono, T.valor);
+    T.vez = (r==="t") ? T.vez : r;
+    T.msg = T.vez==="p" ? "Sua vez — jogue uma carta." : "Máquina pensando...";
+    trucoRender();
+    if(T.vez==="b") setTimeout(botJoga, 800);
+  }, 1400);
+}
+
+// null = indefinido; "p"/"b" = vencedor; "n" = mão anulada
+function donoDaMao(r){
+  const conta = w => r.filter(x=>x===w).length;
+  if(conta("p")>=2) return "p";
+  if(conta("b")>=2) return "b";
+  if(r.length===0) return null;
+  if(r[0]==="t"){
+    const primeiro = r.find(x=>x!=="t");
+    if(primeiro) return primeiro;
+    return r.length===3 ? "n" : null;
+  }
+  if(r.length>=2 && r[1]==="t") return r[0];
+  if(r.length===3) return r[0];
+  return null;
+}
+
+function trucoPedir(quem){
+  const prox = proxValor(T.valor);
+  if(!prox) return;
+  T.pendente = prox; T.ultimoPediu = quem;
+  if(quem==="p"){
+    T.msg = `Você pediu ${nomeAposta(prox)}!`; trucoRender();
+    setTimeout(botResponde, 900);
+  } else {
+    T.msg = `Máquina pediu ${nomeAposta(prox)}!`; trucoRender();
+    const opcoes = [["Aceitar", ()=>aceitar("p")], ["Correr", ()=>correr("p")]];
+    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>trucoPedir("p")]);
+    modal(`Máquina pediu ${nomeAposta(prox)}. O que você faz?`, opcoes);
+  }
+}
+
+function botResponde(){
+  const media = T.b.reduce((a,c)=>a+forca(c),0)/T.b.length;
+  const prox = proxValor(T.pendente);
+  if(prox && media >= 11) return trucoPedir("b");
+  if(media >= 6.5) return aceitar("b");
+  correr("b");
+}
+
+function aceitar(quem){
+  T.valor = T.pendente; T.pendente = null;
+  T.msg = (quem==="b" ? "Máquina aceitou" : "Você aceitou") + ` — vale ${T.valor}.`;
+  trucoRender();
+  if(T.vez==="b") setTimeout(botJoga, 800);
+}
+
+function correr(quem){
+  const ganhador = quem==="p" ? "b" : "p";
+  T.msg = quem==="p" ? "Você correu." : "Máquina correu!";
+  fimDaMao(ganhador, T.valor);
+}
+
+function fimDaMao(vencedor, pontos){
+  T.pendente = null;
+  if(vencedor === "n"){ T.msg = "Mão empatada — ninguém pontua."; }
+  else{
+    if(vencedor==="p") T.sp += pontos; else T.sb += pontos;
+    T.msg = (vencedor==="p" ? "Você fez " : "Máquina fez ") + pontos + (pontos>1?" pontos.":" ponto.");
+  }
+  trucoRender();
+  if(T.sp>=12 || T.sb>=12){
+    T.fim = true;
+    setTimeout(()=>modal(T.sp>=12 ? "Você venceu o jogo!" : "A máquina venceu. Revanche?",
+      [["Jogar de novo", ()=>{ T.sp=0;T.sb=0;T.fim=false;T.mao="p"; trucoNovaMao(); }],
+       ["Menu", voltar]]), 1200);
+    return;
+  }
+  T.mao = T.mao==="p" ? "b" : "p";
+  setTimeout(trucoNovaMao, 1800);
+}
+
+/* =========================================================
+   CACHETA — baralho comum 52, 9 cartas, 3 jogos de 3
+   ========================================================= */
+const C_ORDEM = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const C_NAIPES = ["♦","♠","♥","♣"];
+const ci = c => C_ORDEM.indexOf(c.r) + 1;
+let C = null;
+
+function ehJogo(g){
+  if(g[0].r===g[1].r && g[1].r===g[2].r) return new Set(g.map(c=>c.s)).size===3;
+  if(!(g[0].s===g[1].s && g[1].s===g[2].s)) return false;
+  const v = g.map(ci).sort((a,b)=>a-b);
+  return (v[1]===v[0]+1 && v[2]===v[1]+1) || (v[0]===1 && v[1]===12 && v[2]===13); // Q K A
+}
+function fecha(cs){                       // 9 cartas viram exatamente 3 jogos?
+  if(!cs.length) return true;
+  const [a,...r] = cs;
+  for(let i=0;i<r.length;i++) for(let j=i+1;j<r.length;j++)
+    if(ehJogo([a,r[i],r[j]]) && fecha(r.filter((_,k)=>k!==i&&k!==j))) return true;
+  return false;
+}
+function maxJogos(cs){
+  if(cs.length<3) return 0;
+  const [a,...r] = cs;
+  let melhor = maxJogos(r);
+  for(let i=0;i<r.length;i++) for(let j=i+1;j<r.length;j++)
+    if(ehJogo([a,r[i],r[j]]))
+      melhor = Math.max(melhor, 1 + maxJogos(r.filter((_,k)=>k!==i&&k!==j)));
+  return melhor;
+}
+// ponytail: heurística simples (jogos completos + pares/quase-sequências). Sobe pra minimax se ficar fácil demais.
+function pontuar(cs){
+  let p = 0;
+  for(let i=0;i<cs.length;i++) for(let j=i+1;j<cs.length;j++){
+    const a=cs[i], b=cs[j];
+    if(a.r===b.r) p += 1;
+    else if(a.s===b.s && Math.abs(ci(a)-ci(b))<=2) p += 1;
+  }
+  return maxJogos(cs)*20 + p;
+}
+function melhorDescarte(mao){
+  let bi = 0, bs = -1;
+  mao.forEach((_,i)=>{ const s = pontuar(mao.filter((_,k)=>k!==i)); if(s>bs){bs=s;bi=i;} });
+  return bi;
+}
+function ordenar(m){ m.sort((a,b)=> C_NAIPES.indexOf(a.s)-C_NAIPES.indexOf(b.s) || ci(a)-ci(b)); }
+
+function abrirCacheta(){ mostrar("scr-cacheta"); C = { vidas:{p:5,b:5}, mao:"p" }; cacNovaRodada(); }
+
+function cacNovaRodada(){
+  const baralho = shuffle(C_ORDEM.flatMap(r => C_NAIPES.map(s => ({r,s}))));
+  C.p = baralho.slice(0,9); C.b = baralho.slice(9,18);
+  C.deck = baralho.slice(18); C.lixo = [C.deck.pop()];
+  ordenar(C.p);
+  C.vez = C.mao; C.comprou = false; C.nova = null; C.fim = false;
+  C.msg = C.vez==="p" ? "Sua vez — compre uma carta." : "Máquina jogando...";
+  cacRender();
+  if(C.vez==="b") setTimeout(botCacheta, 900);
+}
+
+function cacRender(){
+  $("c-lp").textContent = "♥".repeat(C.vidas.p) || "—";
+  $("c-lb").textContent = "♥".repeat(C.vidas.b) || "—";
+  $("c-deck").textContent = C.deck.length;
+  if(!C.fim) fill("c-bothand", C.b.map(()=>cardEl(null)));
+
+  const podeComprar = C.vez==="p" && !C.comprou && !C.fim;
+  fill("c-monte", [ C.deck.length ? cardEl(null,"",podeComprar?()=>cacComprar("monte"):null) : slot() ]);
+  fill("c-lixo",  [ C.lixo.length
+      ? cardEl(C.lixo[C.lixo.length-1],"",podeComprar?()=>cacComprar("lixo"):null) : slot() ]);
+
+  const podeDescartar = C.vez==="p" && C.comprou && !C.fim;
+  fill("c-phand", C.p.map(c=>cardEl(c, c===C.nova ? "new" : "",
+      podeDescartar ? ()=>cacDescartar(C.p.indexOf(c)) : null)));
+  $("c-msg").textContent = C.msg;
+  $("c-bater").disabled = !(podeDescartar && indiceParaBater(C.p) !== -1);
+}
+
+function indiceParaBater(mao){
+  for(let i=0;i<mao.length;i++) if(fecha(mao.filter((_,k)=>k!==i))) return i;
+  return -1;
+}
+function repor(){
+  if(C.deck.length) return;
+  const topo = C.lixo.pop();
+  C.deck = shuffle(C.lixo); C.lixo = [topo];
+}
+
+function cacComprar(de){
+  if(C.vez!=="p" || C.comprou) return;
+  if(de==="monte"){ repor(); if(!C.deck.length) return; C.nova = C.deck.pop(); }
+  else C.nova = C.lixo.pop();
+  C.p.push(C.nova); ordenar(C.p); C.comprou = true;
+  C.msg = "Agora descarte uma carta.";
+  cacRender();
+}
+
+function cacDescartar(i){
+  if(C.vez!=="p" || !C.comprou) return;
+  C.lixo.push(C.p.splice(i,1)[0]);
+  C.comprou = false; C.nova = null; C.vez = "b"; C.msg = "Máquina jogando...";
+  cacRender();
+  setTimeout(botCacheta, 900);
+}
+
+function cacBater(){
+  const i = indiceParaBater(C.p);
+  if(i === -1) return;
+  C.lixo.push(C.p.splice(i,1)[0]);
+  fimRodada("p");
+}
+
+function botCacheta(){
+  if(C.fim) return;
+  const topo = C.lixo[C.lixo.length-1];
+  let pegouLixo = false;
+  if(topo){
+    const mais = C.b.concat([topo]);
+    const melhor = Math.max(...mais.map((_,i)=>pontuar(mais.filter((_,k)=>k!==i))));
+    if(melhor > pontuar(C.b)){ C.b.push(C.lixo.pop()); pegouLixo = true; }
+  }
+  if(!pegouLixo){ repor(); if(!C.deck.length) return fimRodada("empate"); C.b.push(C.deck.pop()); }
+
+  const i = indiceParaBater(C.b);
+  if(i !== -1){ C.lixo.push(C.b.splice(i,1)[0]); return fimRodada("b"); }
+
+  C.lixo.push(C.b.splice(melhorDescarte(C.b),1)[0]);
+  C.vez = "p"; C.msg = "Sua vez — compre uma carta.";
+  cacRender();
+}
+
+function fimRodada(vencedor){
+  C.fim = true;
+  if(vencedor === "empate"){ C.msg = "Acabaram as cartas — rodada empatada."; }
+  else{
+    C.vidas[vencedor==="p" ? "b" : "p"]--;
+    C.msg = vencedor==="p" ? "Você bateu!" : "A máquina bateu.";
+  }
+  cacRender();
+  fill("c-bothand", C.b.map(c=>cardEl(c)));   // mostra a mão da máquina
+  if(C.vidas.p===0 || C.vidas.b===0){
+    setTimeout(()=>modal(C.vidas.b===0 ? "Você venceu o jogo!" : "A máquina venceu. Revanche?",
+      [["Jogar de novo", ()=>{ C.vidas={p:5,b:5}; C.mao="p"; cacNovaRodada(); }],
+       ["Menu", voltar]]), 1400);
+    return;
+  }
+  C.mao = C.mao==="p" ? "b" : "p";
+  setTimeout(cacNovaRodada, 2600);
+}
+
+/* ---- autoteste: abra o console (F12) e veja "testes ok" ---- */
+(function(){
+  const c = (r,s)=>({r,s});
+  T = { manilha: manilhaDe(c("7","O")) };                 // virou 7 -> manilha é 10
+  console.assert(T.manilha === "10", "vira 7 -> manilha 10");
+  console.assert(manilhaDe(c("3","P")) === "4", "vira 3 -> manilha 4 (dá a volta)");
+  console.assert(forca(c("10","P")) > forca(c("10","C")), "gato > copa");
+  console.assert(forca(c("10","C")) > forca(c("10","E")), "copa > espada");
+  console.assert(forca(c("10","E")) > forca(c("10","O")), "espada > mole");
+  console.assert(forca(c("10","O")) > forca(c("3","P")), "qualquer manilha > 3");
+  console.assert(forca(c("3","O")) > forca(c("2","P")), "3 > 2 fora da manilha");
+  console.assert(forca(c("1","O")) > forca(c("12","P")), "1 > 12 fora da manilha");
+  console.assert(forca(c("4","P")) < forca(c("5","O")), "4 é a menor fora da manilha");
+  T = { manilha: manilhaDe(c("12","O")) };
+  console.assert(T.manilha === "1" && forca(c("1","P")) === 14, "vira 12 -> gato é o 1 de paus");
+  console.assert(donoDaMao(["p","p"]) === "p", "duas vazas ganha");
+  console.assert(donoDaMao(["t","b"]) === "b", "empate na 1a: leva a seguinte");
+  console.assert(donoDaMao(["p","b","t"]) === "p", "empate na 3a: leva quem fez a 1a");
+  console.assert(donoDaMao(["t","t","t"]) === "n", "tudo empate = anulada");
+  console.assert(donoDaMao(["p"]) === null, "1 vaza não decide");
+  console.assert(ehJogo([c("5","♥"),c("6","♥"),c("7","♥")]), "sequência");
+  console.assert(ehJogo([c("Q","♠"),c("K","♠"),c("A","♠")]), "Q K A");
+  console.assert(!ehJogo([c("5","♥"),c("6","♠"),c("7","♥")]), "naipe diferente não é sequência");
+  console.assert(ehJogo([c("9","♥"),c("9","♠"),c("9","♣")]), "trinca");
+  console.assert(!ehJogo([c("9","♥"),c("9","♥"),c("9","♣")]), "trinca precisa naipes distintos");
+  console.assert(fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
+                        c("Q","♠"),c("K","♠"),c("A","♠")]), "mão fechada");
+  console.assert(!fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
+                         c("Q","♠"),c("K","♠"),c("2","♦")]), "mão aberta");
+  T = null;
+  console.log("testes ok");
+})();
+</script>
+</body>
+</html>

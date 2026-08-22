@@ -1226,7 +1226,18 @@ function cacDescartar(i){
 }
 function cacBater(){
   const j = G.ativos && G.ativos[G.vi];
-  if(!j || !j.humano || !G.comprou) return;
+  if(!j || !j.humano) return;
+  // mão de 9 já fechada: compra e a décima vai direto pro lixo, como manda a
+  // regra. Sem isso o jogador tinha que dar um clique de compra sem sentido.
+  if(!G.comprou){
+    if(!(j.mao.length === 9 && fecha(j.mao))) return;
+    repor();
+    if(!G.deck.length) return;
+    G.lixo.push(G.deck.pop());
+    reg("bateu", { mao: maoStr(j.mao), direto: true });
+    G.msg = "Você bateu!";
+    return fimRodada(j);
+  }
   const i = indiceParaBater(j.mao);
   if(i === -1) return;
   reg("bateu", { mao:maoStr(j.mao) });
@@ -1371,9 +1382,15 @@ function cacRender(){
   const declara = G.fase==="declara" && minhaVez;
   $("c-vou").classList.toggle("hidden", !declara);
   $("c-corro").classList.toggle("hidden", !declara);
-  const podeBater = podeDescartar && indiceParaBater(eu.mao) !== -1;
-  $("c-bater").classList.toggle("hidden", !podeBater);
+  // mão fechada com 9 cartas: pode bater sem comprar antes
+  const maoFechada = eu.mao && eu.mao.length === 9 && fecha(eu.mao);
+  const podeBater = (podeDescartar && indiceParaBater(eu.mao) !== -1)
+                 || (G.fase === "jogo" && minhaVez && !G.comprou && maoFechada);
+  // se fechou mas ainda não é sua vez, avisa em vez de sumir com o botão
+  const esperando = maoFechada && !podeBater && G.fase !== "fim" && !G.fim;
+  $("c-bater").classList.toggle("hidden", !(podeBater || esperando));
   $("c-bater").disabled = !podeBater;
+  $("c-bater").textContent = podeBater ? "BATER!" : "MÃO FECHADA — espere sua vez";
 }
 window.addEventListener("resize", ()=>{ if(G && !$("scr-cacheta").classList.contains("hidden")) cacRender(); });
 // ponytail: um multiplicador só; nada de fila de animação

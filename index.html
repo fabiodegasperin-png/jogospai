@@ -242,6 +242,20 @@ function forca(c){
   return c.r === T.manilha ? 10 + NAIPE_FORCA[c.s] : T_ORDEM.indexOf(c.r) + 1;
 }
 
+
+/* ===== registro de jogadas (Supabase) ===== */
+const SB_URL = "https://yvwfyhjhxbvxpcqejdsa.supabase.co";
+const SB_KEY = "sb_publishable_Xv7FzSBFEFozSc9EoEdGcg_WTtOltFp";
+const SESSAO = Date.now().toString(36);
+function reg(jogo, tipo, dados){
+  const snap = jogo==="truco" ? {sp:T.sp,sb:T.sb,valor:T.valor,mao_p:T.p,mao_b:T.b,mesa:T.mesa,vira:T.vira}
+                               : {vidas:C.vidas,mao_p:C.p,mao_b:C.b,lixo_topo:C.lixo[C.lixo.length-1]||null};
+  fetch(SB_URL+"/rest/v1/eventos",{method:"POST",
+    headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+SB_KEY},
+    body:JSON.stringify({sessao:SESSAO,jogo,tipo,dados:Object.assign({},dados||{},{estado:snap})})
+  }).catch(()=>{}); // ponytail: sem fila offline; perde evento se cair a internet
+}
+
 function abrirTruco(){ mostrar("scr-truco"); T = { sp:0, sb:0, mao:"p" }; trucoNovaMao(); }
 
 function trucoNovaMao(){
@@ -277,6 +291,7 @@ function trucoRender(){
 
 function jogadorJoga(i){
   if(T.vez!=="p" || T.pendente) return;
+  reg("truco","jogou",{carta:T.p[i]});
   T.mesa.p = T.p.splice(i,1)[0];
   if(T.mesa.b) return resolverVaza();
   T.vez = "b"; T.msg = "Máquina pensando..."; trucoRender();
@@ -339,6 +354,7 @@ function donoDaMao(r){
 function trucoPedir(quem){
   const prox = proxValor(T.valor);
   if(!prox) return;
+  reg("truco","pediu",{quem,aposta:prox});
   T.pendente = prox; T.ultimoPediu = quem;
   if(quem==="p"){
     T.msg = `Você pediu ${nomeAposta(prox)}!`; trucoRender();
@@ -360,6 +376,7 @@ function botResponde(){
 }
 
 function aceitar(quem){
+  reg("truco","aceitou",{quem,aposta:T.pendente});
   T.valor = T.pendente; T.pendente = null;
   T.msg = (quem==="b" ? "Máquina aceitou" : "Você aceitou") + ` — vale ${T.valor}.`;
   trucoRender();
@@ -367,12 +384,14 @@ function aceitar(quem){
 }
 
 function correr(quem){
+  reg("truco","correu",{quem});
   const ganhador = quem==="p" ? "b" : "p";
   T.msg = quem==="p" ? "Você correu." : "Máquina correu!";
   fimDaMao(ganhador, T.valor);
 }
 
 function fimDaMao(vencedor, pontos){
+  reg("truco","fim_mao",{vencedor,pontos});
   T.pendente = null;
   if(vencedor === "n"){ T.msg = "Mão empatada — ninguém pontua."; }
   else{
@@ -481,6 +500,7 @@ function repor(){
 
 function cacComprar(de){
   if(C.vez!=="p" || C.comprou) return;
+  reg("cacheta","comprou",{de});
   if(de==="monte"){ repor(); if(!C.deck.length) return; C.nova = C.deck.pop(); }
   else C.nova = C.lixo.pop();
   C.p.push(C.nova); ordenar(C.p); C.comprou = true;
@@ -490,6 +510,7 @@ function cacComprar(de){
 
 function cacDescartar(i){
   if(C.vez!=="p" || !C.comprou) return;
+  reg("cacheta","descartou",{carta:C.p[i]});
   C.lixo.push(C.p.splice(i,1)[0]);
   C.comprou = false; C.nova = null; C.vez = "b"; C.msg = "Máquina jogando...";
   cacRender();
@@ -499,6 +520,7 @@ function cacDescartar(i){
 function cacBater(){
   const i = indiceParaBater(C.p);
   if(i === -1) return;
+  reg("cacheta","bateu",{});
   C.lixo.push(C.p.splice(i,1)[0]);
   fimRodada("p");
 }
@@ -523,6 +545,7 @@ function botCacheta(){
 }
 
 function fimRodada(vencedor){
+  reg("cacheta","fim_rodada",{vencedor});
   C.fim = true;
   if(vencedor === "empate"){ C.msg = "Acabaram as cartas — rodada empatada."; }
   else{

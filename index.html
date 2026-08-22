@@ -253,14 +253,30 @@
   .tt-manilha b{font-family:var(--disp);font-size:24px;color:var(--copag-am)}
 
   .tt-msg{font-family:var(--disp);font-size:30px;color:#fff;text-shadow:0 2px 4px #000c;text-align:center;flex:1;min-height:40px}
-  .tt-vazas{position:absolute;left:21%;top:33%;display:flex;gap:10px;z-index:3}
-  .tt-vazas span{width:22px;height:22px;border-radius:50%;border:3px solid #fff8;background:#0005}
-  .tt-vazas span.p{background:#3e7ac4;border-color:#fff}
-  .tt-vazas span.b{background:#c62828;border-color:#fff}
-  .tt-vazas span.t{background:#999;border-color:#fff}
+  .tt-vazas{position:absolute;left:9%;top:46%;transform:translate(-50%,-50%);z-index:3;
+    display:flex;flex-direction:column;gap:7px}
+  .tt-vazas .cab{font-size:15px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;
+    text-align:center;margin-bottom:2px}
+  .tt-vazas .lin{display:flex;align-items:center;gap:8px;min-width:112px;
+    padding:5px 10px;border-radius:9px;background:#00000055;border-left:6px solid #ffffff33}
+  .tt-vazas .lin b{font-family:var(--disp);font-size:17px;opacity:.85}
+  .tt-vazas .lin span{font-size:17px;font-weight:800;letter-spacing:.02em}
+  .tt-vazas .lin.p{background:#1d3f77cc;border-left-color:#5b9bff}
+  .tt-vazas .lin.b{background:#6b1616cc;border-left-color:#ff6b5b}
+  .tt-vazas .lin.t{background:#3d3d3dcc;border-left-color:#bbb}
+  .tt-vazas .lin.vazio{opacity:.4}
+  @media (max-width:760px){
+    .tt-vazas{left:4%;top:30%;transform:none;gap:4px}
+    .tt-vazas .cab{font-size:11px}
+    .tt-vazas .lin{min-width:0;padding:3px 7px;gap:5px}
+    .tt-vazas .lin b,.tt-vazas .lin span{font-size:12px}
+  }
 
   /* sua mão */
-  .tt-hand{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);display:flex;align-items:flex-end;z-index:5}
+  .tt-bottom{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:5;
+    display:flex;align-items:flex-end;justify-content:center;gap:24px}
+  .tt-bottom.comparceiro{left:44%}
+  .tt-hand{display:flex;align-items:flex-end}
   .tt-hand .card{width:118px;height:176px;margin:0 4px;transform-origin:50% 130%;transition:transform .15s, box-shadow .15s;
     box-shadow:0 8px 14px #000b;overflow:visible}
   .tt-hand .card .n{font-size:28px}.tt-hand .card .n1{top:13px;left:13px}.tt-hand .card .n2{bottom:13px;right:13px}
@@ -305,6 +321,62 @@
   .tt-backs.aberto{width:150px;height:96px;transform:translate(-50%,-22%);z-index:4}
   .tt-backs.aberto .card{width:64px;height:96px;margin-left:-32px;box-shadow:0 0 0 3px var(--copag-am),0 3px 6px #000a}
   @media (max-width:760px){ .tt-backs.aberto{width:96px;height:62px} .tt-backs.aberto .card{width:42px;height:62px;margin-left:-21px} }
+  .tt-hand.comparceiro .card{width:98px;height:147px}
+  .tt-par{text-align:center}
+  .tt-par .tag{display:inline-block;margin-bottom:5px;padding:3px 14px;border-radius:999px;
+    background:var(--copag-am);color:#2e1a0d;font-size:15px;font-weight:800;
+    letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;box-shadow:0 3px 6px #000a}
+  .tt-par .cartas{display:flex;align-items:flex-end;justify-content:center}
+  .tt-par .card{width:76px;height:114px;margin:0 1px;
+    box-shadow:0 0 0 3px var(--copag-am),0 6px 12px #000b}
+  @media (max-width:760px){
+    .tt-bottom{gap:8px}.tt-bottom.comparceiro{left:50%}
+    .tt-hand.comparceiro .card{width:62px;height:93px}
+    .tt-par .tag{font-size:11px;padding:2px 9px;margin-bottom:2px}
+    .tt-par .card{width:46px;height:69px;margin:0 1px}
+  }
+
+  /* ==================== CELULAR (cacheta) ====================
+     A mesa oval não cabe em 375px: com 10 jogadores os assentos ficavam a
+     26px de distância medindo 60px de altura, empilhando uns nos outros e
+     cobrindo o monte. No telefone viram fichas em grade, mesma informação. */
+  @media (max-width:760px){
+    #scr-cacheta{padding:8px}
+    #scr-cacheta h2{font-size:24px;margin:4px 0}
+    .mesa-wrap{aspect-ratio:auto;max-width:none;margin:6px 0 0}
+    .mesa-oval{display:none}
+    #c-seats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+      background:radial-gradient(ellipse at 50% 0,#2f8f57,#1a6039);
+      border:3px solid #6b3f1d;border-radius:14px;padding:9px 7px;
+      box-shadow:inset 0 0 26px #0006}
+    .seat{position:static;transform:none;width:auto;min-width:70px;flex:0 0 auto;
+      display:flex;flex-direction:column;align-items:center;gap:1px;
+      padding:5px 7px;border-radius:10px;background:#00000038}
+    .seat.vez{transform:none;background:#00000060;outline:2px solid var(--gold)}
+    .seat .stack{height:20px;width:24px;margin:0 0 2px}
+    .seat .stack .mini{width:16px;height:24px;border-width:1px;border-radius:3px}
+    .seat .nome{font-size:14px}
+    .seat .pts{font-size:14px;min-width:26px;padding:1px 7px;margin-top:1px}
+    .seat .balao{position:static;transform:none;animation:none;
+      font-size:11px;padding:0 7px;margin-bottom:2px;box-shadow:none}
+    .seat .balao::after{display:none}
+    .seat .dealer{position:static;width:auto;height:auto;line-height:1.4;
+      padding:0 5px;font-size:10px;margin-top:2px}
+    .centro{position:static;transform:none;margin:10px 0 0}
+    .centro .pilhas{gap:18px}
+    .centro .msg{font-size:17px;margin:8px 0 0;min-height:24px}
+    .btn-rapido{position:static;display:block;margin:8px auto 0}
+    .leque{margin-top:10px}
+    .leque .fc{width:62px;height:93px;margin-left:-25px}
+    #c-acts button{font-size:19px;padding:11px 16px;margin:4px 3px}
+    #scr-cacheta-cfg .opts button{font-size:20px;padding:10px 16px}
+  }
+  /* telas bem estreitas: aperta mais a mão pra caber as 9 cartas */
+  @media (max-width:400px){
+    .leque .fc{width:56px;height:84px;margin-left:-25px}
+    .seat{min-width:64px;padding:4px 5px}
+    .seat .nome{font-size:13px}
+  }
 </style>
 </head>
 <body>
@@ -313,6 +385,8 @@
 <div id="scr-menu" class="screen">
   <h1>Mesa de Truco<br><span style="font-size:.55em;color:var(--giz)">&amp; Cacheta</span></h1>
   <p style="text-align:center;font-size:22px;opacity:.8;margin:10px 0 0">Puxa uma cadeira.</p>
+  <p id="quem" style="text-align:center;font-size:20px;opacity:.85;margin:6px 0 0"></p>
+  <p style="text-align:center;margin:0"><button class="voltar" onclick="escolherJogador()">Trocar jogador</button></p>
   <button class="menu-btn" onclick="abrirTruco()">Truco</button>
   <button class="menu-btn" onclick="abrirCacheta()">Cacheta</button>
 </div>
@@ -343,7 +417,10 @@
     <div class="tt-deck" id="t-deck"></div>
     <div id="tt-slots"></div>
     <div class="tt-you" id="tt-you"><div class="tt-av"><img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')"></div><span class="tt-nome">Você</span></div>
-    <div class="tt-hand" id="t-phand"></div>
+    <div class="tt-bottom" id="t-bottom">
+      <div class="tt-hand" id="t-phand"></div>
+      <div class="tt-par hidden" id="t-parhand"></div>
+    </div>
     <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
   </div>
   <div class="tt-aposta hidden" id="t-aposta"></div>
@@ -390,6 +467,7 @@
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
+<script src="cacheta_core.js"></script>
 <script>
 "use strict";
 const $ = s => document.getElementById(s);
@@ -498,12 +576,28 @@ function setModoTruco(n){
 
 function novaMao(){
   const baralho = shuffle(T_ORDEM.flatMap(r => T_NAIPES.map(s => ({r,s}))));
-  T.maos = []; for(let i=0;i<T.n;i++) T.maos.push(baralho.slice(i*3, i*3+3));
+  T.aReceber = []; for(let i=0;i<T.n;i++) T.aReceber.push(baralho.slice(i*3, i*3+3));
+  T.maos = []; for(let i=0;i<T.n;i++) T.maos.push([]);
   T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
   $("t-aposta").classList.add("hidden");
   T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
   T.abreVaza = T.abreMao;
-  iniciarVaza();
+  // estado neutro pro render enquanto as cartas caem
+  T.mesa = new Array(T.n).fill(null); T.ordem = []; T.pos = 0;
+  T.ultimaJogada = -1; T.balao = null;
+  T.msg = "Dando as cartas...";
+  render();
+  darCartasTruco(0);
+}
+/* uma carta por jogador, na volta da mesa */
+function darCartasTruco(k){
+  if(k >= 3){ iniciarVaza(); return; }
+  for(let i=0;i<T.n;i++){
+    const a = (T.abreMao + i) % T.n;
+    T.maos[a].push(T.aReceber[a][k]);
+  }
+  render();
+  setTimeout(()=>darCartasTruco(k+1), 170);
 }
 
 function iniciarVaza(){
@@ -524,7 +618,7 @@ function seguir(){
 
 const AVATAR = { 2:["👴","🤖"], 4:["👴","🧔","👩","👨‍🦰"] };
 /* assento 0 = o dono do jogo. Se perfil/pai.jpg nao existir, o onerror devolve o emoji. */
-const avatarHTML = a => a === 0 ? `<img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')">` : AVATAR[T.n][a];
+const avatarHTML = a => a === 0 ? `<img src="${JOGADOR.foto}" alt="" onerror="this.replaceWith('${JOGADOR.emoji}')">` : AVATAR[T.n][a];
 // posições (% da mesa) por assento: av = avatar, bk = cartas viradas, sl = carta jogada
 const POS = {
   2:{ 1:{av:[50,8], bk:[50,21], sl:[50,36]}, 0:{sl:[50,68]} },
@@ -555,10 +649,9 @@ function render(){
     if(T.balao && T.balao.a===a) s.insertAdjacentHTML("afterbegin",
       `<div class="tt-balao${T.balao.grito?" grito":""}">${T.balao.txt}</div>`);
     seats.push(s);
-    const aberto = T.parceiroAberto && T.times[a] === T.times[0];   // só a mão do SEU parceiro
-    const bk = document.createElement("div"); bk.className = "tt-backs" + (aberto ? " aberto" : ""); pct(bk, p.bk);
+    const bk = document.createElement("div"); bk.className = "tt-backs"; pct(bk, p.bk);
     const n = T.maos[a].length, rot = [-14,0,14].slice(0,n);
-    T.maos[a].forEach((cc,k)=>{ const c = cardEl(aberto ? cc : null); c.style.transform = `rotate(${rot[k] - (n===2?7:0)}deg)`; bk.appendChild(c); });
+    T.maos[a].forEach((_,k)=>{ const c = cardEl(null); c.style.transform = `rotate(${rot[k] - (n===2?7:0)}deg)`; bk.appendChild(c); });
     seats.push(bk);
   }
   fill("tt-seats", seats);
@@ -601,8 +694,24 @@ function render(){
   fill("t-phand", T.maos[0].map((c,i)=>
     cardEl(c, "", minhaVez ? ()=>jogar(0,i) : null)));
 
+  // mão do parceiro aberta: grande, ao lado da sua
+  const par = T.parceiroAberto ? parceiroDe(0) : -1;
+  $("t-bottom").classList.toggle("comparceiro", par >= 0);
+  $("t-phand").classList.toggle("comparceiro", par >= 0);
+  const pw = $("t-parhand");
+  pw.classList.toggle("hidden", par < 0);
+  if(par >= 0){
+    pw.innerHTML = '<div class="tag">Mão do Parceiro</div>';
+    const box = document.createElement("div"); box.className = "cartas";
+    T.maos[par].forEach(c => box.appendChild(cardEl(c)));
+    pw.appendChild(box);
+  }
   $("t-msg").textContent = T.msg;
-  $("t-vazas").innerHTML = T.vazas.map(r=>`<span class="${r}" title="${r==="t"?"empate":nomeTime(r)}"></span>`).join("");
+  $("t-vazas").innerHTML = '<div class="cab">Rodadas</div>' + [0,1,2].map(k=>{
+    const r = T.vazas[k];
+    const txt = r ? (r === "t" ? "Empate" : nomeTime(r)) : "—";
+    return `<div class="lin ${r || "vazio"}"><b>${k+1}ª</b><span>${txt}</span></div>`;
+  }).join("");
 
   const prox = proxValor(T.valor);
   const bt = $("t-truco");
@@ -614,6 +723,7 @@ window.addEventListener("resize", ()=>{ if(T && !$("scr-truco").classList.contai
 function jogar(a, i){
   if(T.fim || T.pendente || T.ordem[T.pos] !== a) return;
   T.mesa[a] = T.maos[a].splice(i,1)[0]; T.ultimaJogada = a; T.jogadas.push(T.mesa[a]);
+  if(a !== 0 && Math.random() < 0.35) T.balao = { a, txt: fala(FALAS.joga) };
   if(a === 0) reg("jogou", { carta: chaveC(T.mesa[a]), manilha:T.manilha, vale:T.valor, restam:T.maos[0].length });
   T.pos++;
   seguir();
@@ -796,7 +906,8 @@ function botResponde(time){
   const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * momento(a);
 
   // sobe com mão de ferro; blefa só se ainda sobrar alguma chance real
-  if(prox && (p > 0.70 || (p > 0.22 && r < blefe))) return pedirTruco(a);
+  const cego = T.n === 4 && parceiroVisivel(a) < 0;
+  if(prox && (p > 0.70 + (cego ? 0.08 : 0) || (p > 0.22 && r < blefe * (cego ? 0.3 : 1)))) return pedirTruco(a);
   if(p > lim || r < 0.22) return aceitar(timeSigla(time));   // paga pra ver
   correr(timeSigla(time));
 }
@@ -810,8 +921,11 @@ function turnoBot(a){
   if(prox && T.ultimoPediu !== timeSigla(meuTime)){
     const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
     const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
-    const forte = p > 0.64 + per.ped;
-    if(forte ? r < 0.58 * m : (p > 0.22 && p < 0.40 && r < blefe)) return pedirTruco(a);
+    // em dupla, apostar gasta os pontos do parceiro também: sem ver a mão dele, pega leve
+    const cego = T.n === 4 && parceiroVisivel(a) < 0;
+    const forte = p > 0.64 + per.ped + (cego ? 0.09 : 0);
+    if(forte ? r < 0.58 * m * (cego ? 0.55 : 1)
+             : (p > 0.22 && p < 0.40 && r < blefe * (cego ? 0.3 : 1))) return pedirTruco(a);
   }
 
   const probs = avaliaJogadas(a, d.sims);
@@ -821,7 +935,12 @@ function turnoBot(a){
     // empatou? guarda a carta forte pra depois
     if(dif > 1e-9 || (Math.abs(dif) < 1e-9 && forca(mao[i]) < forca(mao[melhor]))) melhor = i;
   }
-  if(Math.random() < d.erro) melhor = (Math.random() * mao.length) | 0;
+  // ponytail: erro = pegar a segunda melhor, não uma carta qualquer.
+  // Sortear às cegas fazia o bot matar 5 com 3 e guardar o 7 — cara de principiante.
+  if(probs.length > 1 && Math.random() < d.erro){
+    const ordenadas = probs.map((p,i)=>({p,i})).sort((x,y)=>y.p-x.p);
+    melhor = ordenadas[1].i;
+  }
   jogar(a, melhor);
 }
 
@@ -833,6 +952,18 @@ function resolverVaza(){
   const r = times.size > 1 ? "t" : timeSigla(T.times[topos[0].i]);
   T.vazas.push(r);
   const nomeTime = s => T.n===4 ? (s==="p"?"Sua dupla":"Os adversários") : (s==="p"?"Você":"A máquina");
+  const botsDo = tm => T.times.map((x,i)=> x===tm && i>0 ? i : -1).filter(i=>i>0);
+  if(r !== "t"){
+    const meuTimeGanhou = r === "p";
+    const falantes = botsDo(meuTimeGanhou ? 0 : 1);
+    if(falantes.length && Math.random() < 0.55)
+      T.balao = { a: falantes[(Math.random()*falantes.length)|0],
+                  txt: fala(meuTimeGanhou ? FALAS.parceiro : FALAS.ganhou) };
+    else if(meuTimeGanhou){
+      const adv = botsDo(1);
+      if(adv.length && Math.random() < 0.5) T.balao = { a: adv[(Math.random()*adv.length)|0], txt: fala(FALAS.perdeu) };
+    }
+  }
   T.msg = r === "t" ? "Rodada empatada." : `${nomeTime(r)} ganhou a rodada!`;
   render();
 
@@ -865,6 +996,10 @@ function donoDaMao(r){
 const FALAS = {
   pede:   { 3:["TRUCO!","Truco, ladrão!","Truco!"], 6:["SEIS!","Seis!"], 9:["NOVE!"], 12:["DOZE!"] },
   aceita: ["Tô dentro!","Manda ver!","Pode vir!","Tô junto!","Vem que tem!","Cara a cara!"],
+  joga:     ["Toma essa!","Vai essa.","Segura essa.","Essa é minha.","Olha aí.","Pode vir."],
+  ganhou:   ["Minha!","É nossa!","Essa foi boa.","Tá comigo."],
+  perdeu:   ["Boa...","Essa foi tua.","Tá bom, tá bom.","Passou essa."],
+  parceiro: ["Boa, parceiro!","É isso aí!","Assim que se faz!"],
   corre:  ["Corro...","Tá teu.","Essa é tua.","Não vou não.","Fica pra próxima."]
 };
 const fala = arr => arr[(Math.random()*arr.length)|0];
@@ -899,6 +1034,7 @@ function pedirTruco(a){
 }
 
 function aceitar(quem){
+  T.parceiroAberto = false;   // consultou pra decidir; decidiu, fecha
   reg("aceitou", { quem: quem==="p" ? "voce" : "bot", aposta:T.pendente });
   T.valor = T.pendente; T.pendente = null;
   T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.aceita) };
@@ -911,6 +1047,7 @@ function aceitar(quem){
 }
 
 function correr(quem){
+  T.parceiroAberto = false;
   reg("correu", { quem: quem==="p" ? "voce" : "bot", valia:T.valor });
   T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.corre) };
   T.msg = quem === "p" ? "Vocês correram." : "Correram! Ponto é seu.";
@@ -944,70 +1081,60 @@ function fimDaMao(vencedor, pontos){
    CACHETA — 2 baralhos (108 cartas, 4 coringas), 6–10 jogadores,
    regras da casa: declaração vou/corro, pontos 10/−1/−2, recompra
    ========================================================= */
-const C_ORDEM = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-const C_NAIPES = ["♦","♠","♥","♣"];
-const JOKER = "★";
+/* regras, política e simulação moram em cacheta_core.js — o mesmo motor que
+   o treinador usa. Aqui em cima fica só a interface. */
+const C_ORDEM = CAC.ORDEM, C_NAIPES = CAC.NAIPES, JOKER = CAC.JOKER;
 /* cartas/fr/<rank>_of_<naipe>.png — nomes do baralho Byron Knoll */
 const FR_R = { A:"ace", J:"jack", Q:"queen", K:"king" };
 const FR_S = { "♦":"diamonds", "♠":"spades", "♥":"hearts", "♣":"clubs" };
 const FR_ARQ = c => ehCoringa(c) ? "red_joker" : (FR_R[c.r] || c.r) + "_of_" + FR_S[c.s];
-const ci = c => C_ORDEM.indexOf(c.r) + 1;
-const ehCoringa = c => c.r === JOKER;
+const ci = CAC.ci, ehCoringa = CAC.ehCoringa;
 let G = null;
 let CFG = { nj: 6, dif: "medio" };
 
-function ehJogo(g){
-  const jok = g.filter(ehCoringa).length;
-  const rest = g.filter(c => !ehCoringa(c));
-  if(jok >= 2) return true;
-  if(rest.every(c => c.r === rest[0].r)) return true;                 // trinca (2 baralhos: naipe pode repetir)
-  if(!rest.every(c => c.s === rest[0].s)) return false;
-  // sequência: valores distintos cabendo numa janela de 3 (A vale 1 ou 14)
-  const tenta = vs => { const v=[...vs].sort((a,b)=>a-b);
-    return new Set(v).size===v.length && v[v.length-1]-v[0] <= 2; };
-  const vals = rest.map(ci);
-  if(tenta(vals)) return true;
-  return vals.includes(1) && tenta(vals.map(v => v===1 ? 14 : v));
-}
-function fecha(cs){                       // 9 cartas viram exatamente 3 jogos?
-  if(!cs.length) return true;
-  const [a,...r] = cs;
-  for(let i=0;i<r.length;i++) for(let j=i+1;j<r.length;j++)
-    if(ehJogo([a,r[i],r[j]]) && fecha(r.filter((_,k)=>k!==i&&k!==j))) return true;
-  return false;
-}
-function maxJogos(cs){
-  if(cs.length<3) return 0;
-  const [a,...r] = cs;
-  let melhor = maxJogos(r);
-  for(let i=0;i<r.length;i++) for(let j=i+1;j<r.length;j++)
-    if(ehJogo([a,r[i],r[j]]))
-      melhor = Math.max(melhor, 1 + maxJogos(r.filter((_,k)=>k!==i&&k!==j)));
-  return melhor;
-}
-// ponytail: heurística simples (jogos completos + pares/quase-sequências); coringa vale muito
-function pontuar(cs){
-  let p = 0;
-  const rest = cs.filter(c=>!ehCoringa(c));
-  for(let i=0;i<rest.length;i++) for(let j=i+1;j<rest.length;j++){
-    const a=rest[i], b=rest[j];
-    if(a.r===b.r) p += 1;
-    else if(a.s===b.s && Math.abs(ci(a)-ci(b))<=2) p += 1;
-  }
-  return maxJogos(cs)*20 + cs.filter(ehCoringa).length*6 + p;
-}
-function melhorDescarte(mao){
-  let bi = 0, bs = -1;
-  mao.forEach((_,i)=>{ const s = pontuar(mao.filter((_,k)=>k!==i)); if(s>bs){bs=s;bi=i;} });
-  return bi;
-}
-function indiceParaBater(mao){
-  for(let i=0;i<mao.length;i++) if(fecha(mao.filter((_,k)=>k!==i))) return i;
-  return -1;
-}
-function ordenar(m){ m.sort((a,b)=>
-  (ehCoringa(a)-ehCoringa(b)) || C_NAIPES.indexOf(a.s)-C_NAIPES.indexOf(b.s) || ci(a)-ci(b)); }
+const ehJogo = CAC.ehJogo, fecha = CAC.fecha, indiceParaBater = CAC.indiceParaBater;
 
+/* deixa a mão arrumada: jogos fechados, depois pares, coringa na direita */
+function ordenar(m){ const o = CAC.organizarMao(m); m.length = 0; o.forEach(c=>m.push(c)); return m; }
+
+/* tabela aprendida no treinador (treino.html). Sem ela o bot usa o palpite do motor. */
+let TABELA = null;
+try{ TABELA = JSON.parse(localStorage.getItem("cacheta_tabela") || "null"); }catch(e){}
+
+const NIVEL_POL = {
+  facil:   Object.assign({}, CAC.POL_PADRAO, { ruidoDecl:.45, ruidoDesc:14, perigo:0, ganhoLixo:99 }),
+  medio:   Object.assign({}, CAC.POL_PADRAO, { ruidoDecl:.12, ruidoDesc:4 }),
+  dificil: Object.assign({}, CAC.POL_PADRAO)
+};
+const POL = () => NIVEL_POL[(G && G.dif) || CFG.dif] || CAC.POL_PADRAO;
+const pontuar = cs => CAC.pontuar(cs, POL());
+const melhorDescarte = mao => CAC.escolherDescarte(mao, POL(), G && G.perigo);
+
+/* ---- quem está na mesa (separa o histórico de cada um) ---- */
+const JOGADORES = [
+  { id:"rogerio", nome:"Rogério", foto:"perfil/pai.jpg",   emoji:"👴" },
+  { id:"fabio",   nome:"Fábio",   foto:"perfil/fabio.jpg", emoji:"🧑" }
+];
+let JOGADOR = JOGADORES[0];
+
+function escolherJogador(){
+  modal("Quem vai jogar?", JOGADORES.map(j => [j.nome, ()=>{
+    JOGADOR = j;
+    try{ localStorage.setItem("jogador", j.id); }catch(e){}
+    pintaJogador();
+  }]));
+}
+function pintaJogador(){
+  const el = $("quem");
+  if(el) el.innerHTML = `Jogando: <b>${JOGADOR.nome}</b>`;
+}
+(function(){
+  let id = null;
+  try{ id = localStorage.getItem("jogador"); }catch(e){}
+  const achou = JOGADORES.find(j => j.id === id);
+  if(achou) JOGADOR = achou;
+  addEventListener("DOMContentLoaded", ()=>{ pintaJogador(); if(!achou) escolherJogador(); });
+})();
 /* ---- registro de jogadas: Supabase + cópia local ---- */
 const SB_URL = "https://yvwfyhjhxbvxpcqejdsa.supabase.co";
 const SB_KEY = "sb_publishable_Xv7FzSBFEFozSc9EoEdGcg_WTtOltFp";
@@ -1022,7 +1149,7 @@ function reg(tipo, dados){
       : (G && { pts:G.jog.map(j=>j.pts), dif:G.dif, mao:G.jog[0].mao,
                 lixo_topo:G.lixo[G.lixo.length-1] || null });
   }catch(e){}
-  const evento = Object.assign({ t:Date.now(), jogo, tipo }, dados||{});
+  const evento = Object.assign({ t:Date.now(), jogador:JOGADOR.id, jogo, tipo }, dados||{});
   try{   // ponytail: guarda só os últimos 500; sem isso o localStorage cresce sem fim
     const L = JSON.parse(localStorage.getItem("jogos_log") || "[]");
     L.push(evento);
@@ -1031,7 +1158,7 @@ function reg(tipo, dados){
   fetch(SB_URL + "/rest/v1/eventos", { method:"POST",
     headers:{ "Content-Type":"application/json", apikey:SB_KEY, Authorization:"Bearer "+SB_KEY },
     body: JSON.stringify({ sessao:SESSAO, jogo, tipo,
-                           dados: Object.assign({}, dados||{}, { estado }) })
+                           dados: Object.assign({}, dados||{}, { jogador:JOGADOR.id, estado }) })
   }).catch(()=>{});   // ponytail: sem fila offline; perde evento se cair a internet
 }
 const maoStr = m => m.map(c=>c.r+(c.s||"")).join(" ");
@@ -1066,21 +1193,30 @@ function ordemDesde(d){ // dealer+1, dealer+2, ..., dealer — pulando quem est�
   return o;
 }
 function cacNovaRodada(){
-  const baralho = [];
-  for(let d=0;d<2;d++){
-    C_ORDEM.forEach(r => C_NAIPES.forEach(s => baralho.push({r,s})));
-    baralho.push({r:JOKER,s:""},{r:JOKER,s:""});
-  }
-  shuffle(baralho);
-  G.jog.forEach(j=>{ if(!j.fora){ j.mao = baralho.splice(0,9); j.foi = null; } });
-  G.deck = baralho; G.lixo = [G.deck.pop()];
-  ordenar(G.jog[0].mao);
+  const baralho = CAC.embaralhar(CAC.novoBaralho());
+  G.jog.forEach(j=>{ if(!j.fora){ j.aReceber = baralho.splice(0,9); j.mao = []; j.foi = null; } });
+  G.deck = baralho; G.lixo = [];
   G.ordem = ordemDesde(G.dealer);          // último = dealer
-  G.fase = "declara"; G.di = 0; G.rapido = false;
+  G.fase = "dando"; G.di = 0; G.rapido = false;
   G.comprou = false; G.nova = null; G.fim = false;
-  G.msg = "";
+  G.perigo = new Set();
+  G.msg = "Dando as cartas...";
   cacRender();
-  proxDeclara();
+  darCartas(0);
+}
+/* uma carta por vez, na volta da mesa, como na mesa de verdade */
+function darCartas(k){
+  if(k >= 9){
+    G.lixo = [G.deck.pop()];
+    ordenar(G.jog[0].mao);
+    G.fase = "declara"; G.msg = "";
+    cacRender();
+    setTimeout(proxDeclara, 300);
+    return;
+  }
+  G.ordem.forEach(j => j.mao.push(j.aReceber[k]));
+  cacRender();
+  setTimeout(()=>darCartas(k+1), 105);
 }
 function proxDeclara(){
   if(G.di >= G.ordem.length){ fimDeclara(); return; }
@@ -1096,14 +1232,11 @@ function proxDeclara(){
     G.msg = "Sua vez: você vai ou corre?";
     cacRender(); return;                            // espera o clique
   }
-  // bot declara
-  const s = pontuar(j.mao);
-  let vai;
-  if(G.dif==="facil") vai = Math.random() < 0.8;
-  else{
-    const limite = G.dif==="medio" ? 26 : 30;
-    vai = s >= limite || j.pts===1 || (G.dif==="medio" && Math.random()<0.15);
-  }
+  // bot declara: mesma conta de EV do motor, com a tabela aprendida se houver
+  const jaForam = G.ordem.slice(0, G.di).filter(x=>x.foi).length;
+  const vai = CAC.decidirIr(
+    { falta: CAC.falta(j.mao), jaForam, nMesa: G.ordem.length, pts: j.pts, obrigado:false },
+    POL(), TABELA);
   j.foi = vai;
   G.msg = j.nome + (vai ? " vai." : " correu.");
   G.di++; cacRender(); setTimeout(proxDeclara, espera(700));
@@ -1166,7 +1299,18 @@ function cacDescartar(i){
 }
 function cacBater(){
   const j = G.ativos && G.ativos[G.vi];
-  if(!j || !j.humano || !G.comprou) return;
+  if(!j || !j.humano) return;
+  // mão de 9 já fechada: compra e a décima vai direto pro lixo, como manda a
+  // regra. Sem isso o jogador tinha que dar um clique de compra sem sentido.
+  if(!G.comprou){
+    if(!(j.mao.length === 9 && fecha(j.mao))) return;
+    repor();
+    if(!G.deck.length) return;
+    G.lixo.push(G.deck.pop());
+    reg("bateu", { mao: maoStr(j.mao), direto: true });
+    G.msg = "Você bateu!";
+    return fimRodada(j);
+  }
   const i = indiceParaBater(j.mao);
   if(i === -1) return;
   reg("bateu", { mao:maoStr(j.mao) });
@@ -1180,10 +1324,9 @@ function botJoga(j){
   if(G.fim) return;
   const topo = G.lixo[G.lixo.length-1];
   let pegou = false;
-  if(topo && G.dif!=="facil"){
-    const mais = j.mao.concat([topo]);
-    const melhor = Math.max(...mais.map((_,i)=>pontuar(mais.filter((_,k)=>k!==i))));
-    if(melhor > pontuar(j.mao)){ j.mao.push(G.lixo.pop()); pegou = true; }
+  if(topo && CAC.pegarDoLixo(j.mao, topo, POL())){
+    j.mao.push(G.lixo.pop()); pegou = true;
+    G.perigo.add(topo.r); G.perigo.add(topo.s);   // ele quer isso: não alimentar
   }
   if(!pegou){ repor(); if(!G.deck.length) return fimRodada(null); j.mao.push(G.deck.pop()); }
 
@@ -1193,7 +1336,7 @@ function botJoga(j){
     G.msg = j.nome + " bateu!";
     return fimRodada(j);
   }
-  const di = G.dif==="facil" ? (Math.random()*j.mao.length)|0 : melhorDescarte(j.mao);
+  const di = melhorDescarte(j.mao);
   G.lixo.push(j.mao.splice(di,1)[0]);
   passaVez();
 }
@@ -1312,9 +1455,15 @@ function cacRender(){
   const declara = G.fase==="declara" && minhaVez;
   $("c-vou").classList.toggle("hidden", !declara);
   $("c-corro").classList.toggle("hidden", !declara);
-  const podeBater = podeDescartar && indiceParaBater(eu.mao) !== -1;
-  $("c-bater").classList.toggle("hidden", !podeBater);
+  // mão fechada com 9 cartas: pode bater sem comprar antes
+  const maoFechada = eu.mao && eu.mao.length === 9 && fecha(eu.mao);
+  const podeBater = (podeDescartar && indiceParaBater(eu.mao) !== -1)
+                 || (G.fase === "jogo" && minhaVez && !G.comprou && maoFechada);
+  // se fechou mas ainda não é sua vez, avisa em vez de sumir com o botão
+  const esperando = maoFechada && !podeBater && G.fase !== "fim" && !G.fim;
+  $("c-bater").classList.toggle("hidden", !(podeBater || esperando));
   $("c-bater").disabled = !podeBater;
+  $("c-bater").textContent = podeBater ? "BATER!" : "MÃO FECHADA — espere sua vez";
 }
 window.addEventListener("resize", ()=>{ if(G && !$("scr-cacheta").classList.contains("hidden")) cacRender(); });
 // ponytail: um multiplicador só; nada de fila de animação

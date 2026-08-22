@@ -333,9 +333,9 @@
     <div class="tt-table"></div>
     <div class="tt-placar">
       <span id="t-lbl-p">Nós</span><b id="t-sp">0</b>
-      <div class="pal" id="t-pal-p"></div>
+      <div class="pal hidden" id="t-pal-p"></div>
       <span id="t-lbl-b">Eles</span><b id="t-sb">0</b>
-      <div class="pal" id="t-pal-b"></div>
+      <div class="pal hidden" id="t-pal-b"></div>
     </div>
     <div class="tt-vale" id="t-vale-box">Vale<b id="t-val">1</b><div class="tt-manilha hidden" id="t-manilha"></div></div>
     <div class="tt-vazas" id="t-vazas"></div>
@@ -383,17 +383,6 @@
     <button id="c-bater" onclick="cacBater()">BATER!</button>
     <button id="c-org" class="voltar" onclick="cacOrganizar()">Organizar</button>
   </div>
-  <details><summary>Regras rápidas</summary>
-    <p>2 baralhos (108 cartas, 4 coringas). Cada um recebe 9 cartas e diz, na ordem,
-    se <b>vai</b> ou <b>corre</b> — quem deu as cartas fala por último (se ninguém foi, ele é
-    obrigado a ir e ganha sozinho).<br>
-    Quem vai: compra 1 (monte ou topo do descarte) e descarta 1. Bate quem fechar as 9 em
-    trincas/sequências (coringa vale qualquer carta).<br>
-    Pontos: todos começam com <b>10</b>. Correu: <b>−1</b>. Foi e bateu: mantém. Foi e perdeu:
-    <b>−2</b> (mínimo zero).<br>
-    Zerou: pode <b>recomprar na hora</b> voltando com a pontuação do último colocado ainda vivo.
-    Se não recomprar, está fora. Vence quem sobrar.</p>
-  </details>
 </div>
 
 <div id="modal" class="overlay hidden"><div class="box">
@@ -1295,13 +1284,22 @@ function cacRender(){
       ? cardCac(G.lixo[G.lixo.length-1],"",podeComprar?()=>cacComprar("lixo"):null) : slot() ]);
 
   const podeDescartar = G.fase==="jogo" && minhaVez && G.comprou && !G.fim;
-  fill("c-phand", (eu.mao||[]).map(c=>{
-    const el = cardCac(c, c===G.nova ? "new" : "", null);
-    el._c = c;
-    if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
-    return el;
-  }));
-  arrastavel($("c-phand"));
+  // A mão só é redesenhada quando muda de verdade. Sem isso, cada bot que
+  // declarava disparava um cacRender e arrancava a carta da mão do jogador
+  // no meio do arrasto.
+  const cont = $("c-phand");
+  const assinatura = (eu.mao||[]).map(c=>c.r+c.s).join(",") + "|" + podeDescartar
+                   + "|" + (G.nova ? G.nova.r+G.nova.s : "");
+  if(!cont._arrastando && cont._assinatura !== assinatura){
+    cont._assinatura = assinatura;
+    fill("c-phand", (eu.mao||[]).map(c=>{
+      const el = cardCac(c, c===G.nova ? "new" : "", null);
+      el._c = c;
+      if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
+      return el;
+    }));
+  }
+  arrastavel(cont);
   $("c-msg").textContent = G.msg;
 
   // só aparece quando você já está fora da rodada — não tem o que esperar
@@ -1332,7 +1330,7 @@ function arrastavel(cont){
   let alvo = null, movido = false, x0 = 0;
   cont.addEventListener("pointerdown", e=>{
     const el = e.target.closest(".fc"); if(!el || !cont.contains(el)) return;
-    alvo = el; movido = false; x0 = e.clientX;
+    alvo = el; movido = false; x0 = e.clientX; cont._arrastando = true;
     el.setPointerCapture(e.pointerId); el.classList.add("drag");
   });
   cont.addEventListener("pointermove", e=>{
@@ -1347,10 +1345,11 @@ function arrastavel(cont){
     }
   });
   const soltar = ()=>{
+    cont._arrastando = false;
     if(!alvo) return;
     alvo.classList.remove("drag");
     const nova = [...cont.children].map(n=>n._c).filter(Boolean);
-    if(G && nova.length === G.jog[0].mao.length) G.jog[0].mao = nova;
+    if(G && nova.length === G.jog[0].mao.length){ G.jog[0].mao = nova; cont._assinatura = null; }
     const clique = (!movido && alvo._click) || null;
     alvo = null;
     if(clique) clique(); else cacRender();

@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesa de Truco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow+Semi+Condensed:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --madeira:#4a2c17; --madeira2:#2e1a0d;
+    --feltro:#2d6b45; --feltro2:#1c4a2e;
+    --giz:#f5ecd8;
+    --copag-az:#1f4e9c; --copag-am:#f2c400; --copag-vm:#c62828; --copag-vd:#2e8b3e;
+    --disp:"Alfa Slab One",Georgia,serif;
+    --txt:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  .hidden{display:none !important}
+  body{margin:0;font-family:var(--txt);font-size:24px;font-weight:500;color:var(--giz);
+       background:
+         repeating-linear-gradient(90deg,transparent 0 38px,#00000014 38px 41px),
+         linear-gradient(180deg,var(--madeira),var(--madeira2));
+       min-height:100vh}
+  .screen{max-width:1080px;margin:0 auto;padding:14px 14px 40px}
+
+  h1,h2{font-family:var(--disp);font-weight:400;letter-spacing:.02em;margin:0;color:var(--copag-am);
+        text-shadow:2px 3px 0 #000000aa}
+  h1{font-size:clamp(40px,8vw,72px);text-align:center;line-height:1.05;padding-top:28px}
+  h2{font-size:34px}
+
+  /* ---------- botões: placa pintada ---------- */
+  button{font-family:var(--txt);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;
+         padding:14px 28px;border:0;border-radius:6px;cursor:pointer;margin:6px;
+         color:#2e1a0d;background:linear-gradient(180deg,#ffd93d,var(--copag-am));
+         box-shadow:0 4px 0 #8a6a00,0 6px 10px #00000066}
+  button:hover{filter:brightness(1.06)}
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 #8a6a00}
+  button:disabled{opacity:.3;cursor:default;transform:none}
+  button:focus-visible{outline:4px solid #fff;outline-offset:2px}
+  .menu-btn{display:block;width:100%;max-width:520px;margin:24px auto;font-size:40px;padding:30px}
+  .voltar{background:#00000055;color:var(--giz);font-size:20px;padding:8px 16px;box-shadow:none}
+  .topo{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .modos button,.opts button{font-size:20px;padding:8px 18px;background:#00000055;color:var(--giz);box-shadow:none}
+  .modos button.on,.opts button.on{background:linear-gradient(180deg,#ffd93d,var(--copag-am));color:#2e1a0d}
+  .opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:6px 0 20px}
+  .lbl2{text-align:center;font-size:26px;color:var(--copag-am);margin-top:18px;font-weight:700}
+
+  /* ---------- placar de palitos sobre a madeira ---------- */
+  .placar-t{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;padding:10px 14px;margin:10px 0 6px}
+  .placar-t .lado{display:flex;flex-direction:column;gap:4px}
+  .placar-t .lado.dir{align-items:flex-end}
+  .placar-t .nome{font-size:20px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+  .placar-t .num{font-family:var(--disp);font-size:40px;line-height:1}
+  .palitos{display:flex;gap:10px;height:46px;align-items:flex-end}
+  .palitos svg{height:46px;width:auto;filter:drop-shadow(1px 2px 1px #00000088)}
+  .vale{text-align:center;font-family:var(--disp);font-size:20px;color:var(--madeira2);
+        background:var(--giz);padding:8px 16px;border-radius:4px;transform:rotate(-2deg);
+        box-shadow:2px 3px 0 #00000055;min-width:120px}
+  .vale b{display:block;font-size:40px;line-height:1;color:var(--copag-vm)}
+
+  /* ---------- feltro ---------- */
+  .feltro{position:relative;border-radius:26px;padding:18px 14px 16px;
+          background:
+            radial-gradient(ellipse at 50% 30%,#ffffff12,transparent 60%),
+            repeating-radial-gradient(circle at 30% 40%,transparent 0 3px,#00000008 3px 4px),
+            radial-gradient(ellipse at 50% 50%,var(--feltro),var(--feltro2) 90%);
+          box-shadow:inset 0 0 0 6px #1a110a,inset 0 0 0 12px #6b4526,inset 0 0 60px #00000088,0 10px 30px #00000088}
+  .msg{text-align:center;font-size:28px;font-weight:700;min-height:40px;margin:10px 0;text-shadow:0 2px 0 #00000088}
+  .hand{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:10px 0}
+  .mesa{display:flex;justify-content:center;gap:22px;align-items:flex-start;flex-wrap:wrap}
+  .col{text-align:center}
+  .lbl{font-size:18px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-bottom:6px;text-align:center}
+  .lbl.eu{color:var(--copag-am);opacity:1}
+  .mini{display:flex;gap:4px;justify-content:center}
+  .mini .card{width:42px;height:64px}
+  .actions{text-align:center;margin-top:8px}
+  .pilhas{display:flex;justify-content:center;gap:40px;align-items:flex-start;margin:8px 0}
+
+  /* ---------- carta Copag espanhol ---------- */
+  .card{width:104px;height:156px;background:#fffef7;color:#1a1a1a;border-radius:7px;position:relative;
+        box-shadow:0 3px 6px #00000077;user-select:none;overflow:hidden;flex:none}
+  .card::before{content:"";position:absolute;inset:6px;border:2px solid var(--copag-az);border-radius:3px;pointer-events:none}
+  .card::after{content:"";position:absolute;inset:9px;border:1px solid var(--copag-az);border-radius:2px;pointer-events:none}
+  /* carta com foto: a arte já tem borda e índices, some com a moldura desenhada */
+  .card.foto{background:#fff}
+  .card.foto::before,.card.foto::after{display:none}
+  /* ponytail: fill estica ~3% (arte 0,65 x caixa 0,67). Invisível, e contain deixava
+     8px de tarja branca de cada lado. Se um dia trocar de baralho, confira essa razão. */
+  .card.foto img,.fc img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+  .card .n{position:absolute;font-family:Georgia,serif;font-weight:bold;font-size:24px;line-height:1}
+  .card .n1{top:13px;left:13px}
+  .card .n2{bottom:13px;right:13px;transform:rotate(180deg)}
+  .card .pips{position:absolute;inset:14px;display:grid;place-items:center}
+  .card .pips svg{width:100%;height:100%}
+  .card.fig .pips{inset:0}
+  .card .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .card .mid .uni{font-size:60px;font-family:Georgia,serif;font-weight:bold}
+  .card.red{color:#c62828}
+  .card.click{cursor:pointer;transition:transform .12s}
+  .card.click:hover,.card.click:focus-visible{transform:translateY(-14px);box-shadow:0 12px 16px #00000099;outline:none}
+  .card.new{box-shadow:0 0 0 4px var(--copag-am),0 3px 6px #00000077}
+  .card.back{background:
+      repeating-linear-gradient(45deg,transparent 0 6px,#c9302c 6px 8px),
+      repeating-linear-gradient(-45deg,transparent 0 6px,#c9302c 6px 8px),#f7eeee}
+  .card.back::before{border-color:#fff;border-width:3px}
+  .card.back::after{display:none}
+  /* ---- carta francesa (Cacheta) ---- */
+  .fc{width:100px;height:150px;background:#fff;border-radius:8px;position:relative;overflow:hidden;
+      box-shadow:0 3px 7px #00000055, inset 0 0 0 1px #00000014;border:1px solid #d9d4c8}
+  .fc svg{display:block;width:100%;height:100%}
+  .fc.jok{background:#fffdf4;border-color:#d8c98c}
+  .fc.click{cursor:pointer} .fc.click:hover{transform:translateY(-10px);transition:.1s}
+  .fc.new{box-shadow:0 0 0 3px var(--gold), 0 6px 14px #0007}
+  .card.sm{width:72px;height:108px}
+  .card.sm .n{font-size:17px}
+  .card.sm .n1{top:10px;left:10px}.card.sm .n2{bottom:10px;right:10px}
+  .card.sm .pips{inset:10px}
+  .card.sm::before{inset:4px}.card.sm::after{inset:6px}
+  .slot{width:104px;height:156px;border:3px dashed #ffffff44;border-radius:7px;flex:none}
+
+  /* ---- mesa da cacheta ---- */
+  .mesa-wrap{position:relative;width:100%;max-width:980px;aspect-ratio:980/560;margin:8px auto 0}
+  .mesa-oval{position:absolute;inset:0;border-radius:50%/50%;
+    background:radial-gradient(ellipse at 50% 40%,#2f8f57 0%,#227447 45%,#175a36 100%);
+    box-shadow:inset 0 0 60px #0006, 0 0 0 14px #6b3f1d, 0 0 0 18px #3f2310, 0 18px 40px #0008}
+  .mesa-oval::before{content:"";position:absolute;inset:22px;border-radius:50%;
+    border:2px solid #ffffff22;pointer-events:none}
+  .centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);text-align:center}
+  .centro .pilhas{gap:28px;margin:0}
+  .centro .msg{font-size:22px;min-height:30px;margin:10px 0 0;text-shadow:0 2px 4px #000a}
+  .seat{position:absolute;width:118px;transform:translate(-50%,-50%);text-align:center;transition:transform .2s}
+  .seat .stack{position:relative;height:46px;margin:0 auto 4px;width:34px}
+  .seat .stack .mini{position:absolute;width:30px;height:44px;border-radius:4px;
+    background:repeating-linear-gradient(45deg,transparent 0 3px,#c9302c 3px 5px),
+               repeating-linear-gradient(-45deg,transparent 0 3px,#c9302c 3px 5px),#fff4f2;
+    border:1.5px solid #fff;box-shadow:0 1px 3px #0007}
+  .seat .nome{font-family:Georgia,serif;font-size:19px;color:#fff;text-shadow:0 1px 3px #000c;line-height:1.1}
+  .seat .pts{display:inline-block;margin-top:3px;min-width:34px;padding:2px 9px;border-radius:999px;
+    background:#111;color:var(--gold);font-family:Arial,sans-serif;font-weight:bold;font-size:16px;
+    border:2px solid var(--gold);box-shadow:0 2px 4px #0009}
+  .seat.vez .nome{color:var(--gold)}
+  .seat.vez .stack{filter:drop-shadow(0 0 8px var(--gold))}
+  .seat.vez{transform:translate(-50%,-50%) scale(1.08)}
+  .seat.fora{opacity:.35;filter:grayscale(1)}
+  .seat .dealer{position:absolute;top:-6px;right:6px;width:22px;height:30px;border-radius:3px;
+    background:#b8222c;border:2px solid #f3d27a;font-size:9px;color:#f3d27a;line-height:26px;
+    font-family:Arial,sans-serif;font-weight:bold;box-shadow:0 2px 4px #000a}
+  .seat .balao{position:absolute;left:50%;top:-26px;transform:translateX(-50%);
+    padding:3px 12px;border-radius:14px;font-family:Georgia,serif;font-size:16px;white-space:nowrap;
+    background:#fffdf3;color:#1b1b1b;box-shadow:0 3px 8px #000a;animation:pop .25s ease-out}
+  .seat .balao::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-6px;
+    border:6px solid transparent;border-top-color:#fffdf3;border-bottom:0}
+  .seat .balao.corro{background:#e9e4d8;color:#7a2b2b;font-style:italic}
+  .seat .balao.vou{background:#f6e7a8;color:#3b2a00}
+  .seat.eu .nome{font-size:20px}
+  @keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.seat .balao{animation:none}.seat{transition:none}}
+  .btn-rapido{position:absolute;top:4px;right:8px;z-index:3;font-size:19px;padding:10px 18px;
+    background:#00000066;color:#fff;border:2px solid #ffffff44;margin:0}
+  .btn-rapido.on{background:var(--gold);color:#2e1a0d;border-color:var(--gold)}
+  @media (max-width:700px){.btn-rapido{font-size:15px;padding:7px 12px}}
+  .leque{display:flex;justify-content:center;margin:14px 0 0;padding:0 10px}
+  .leque .fc{margin-left:-22px;transition:transform .12s;touch-action:none;cursor:grab}
+  .leque .fc.drag{opacity:.6;transform:translateY(-16px) rotate(3deg);z-index:5;cursor:grabbing;
+    box-shadow:0 12px 22px #000a;transition:none}
+  .leque .fc:first-child{margin-left:0}
+  .leque .fc.click:hover{transform:translateY(-16px);z-index:2}
+  @media (max-width:700px){.seat{width:90px}.seat .nome{font-size:15px}.centro .msg{font-size:17px}
+    .leque .fc{width:68px;height:102px;margin-left:-26px}}
+  .bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:22px;margin:4px 0 10px;opacity:.9}
+
+  .overlay{position:fixed;inset:0;background:#000000c0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+  .box{background:var(--giz);color:var(--madeira2);border-radius:8px;padding:26px 28px;text-align:center;
+       max-width:640px;box-shadow:4px 6px 0 #00000088;transform:rotate(-1deg)}
+  .box p{font-family:var(--disp);font-size:30px;margin:0 0 18px;line-height:1.2}
+  #modal-vira{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0 0 16px}
+  #modal-vira span{font-family:var(--txt);font-size:18px;color:var(--madeira2)}
+  #modal-vira b{font-family:var(--disp);font-size:22px}
+  details{background:#00000044;border-radius:8px;padding:10px 16px;margin-top:22px;font-size:20px;line-height:1.45}
+  summary{cursor:pointer;font-size:22px;color:var(--copag-am);font-weight:700}
+  @media (prefers-reduced-motion:reduce){ .card.click{transition:none} }
+  @media (max-width:560px){
+    .card{width:78px;height:117px}.slot{width:78px;height:117px}
+    .card .n{font-size:19px}.card .n1{top:10px;left:10px}.card .n2{bottom:10px;right:10px}
+    .card .pips{inset:10px}.placar-t .num{font-size:30px}
+  }
+  /* =============== TRUCO: mesa (prefixo tt-) =============== */
+  #scr-truco{max-width:1200px;padding:8px 8px 20px}
+  .tt-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .tt-stage{position:relative;width:100%;aspect-ratio:1200/760;border-radius:14px;overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% 50%,#0000 55%,#0006 100%),
+      repeating-linear-gradient(90deg,#e2c59a 0 90px,#d4b486 90px 92px),
+      repeating-linear-gradient(0deg,#0000 0 7px,#00000008 7px 8px),#dcbd8f;
+    box-shadow:0 20px 50px #000a}
+  .tt-table{position:absolute;left:18%;right:18%;top:0;bottom:0;
+    background:
+      radial-gradient(ellipse at 50% 40%,#3c9a5c 0%,#2a7f47 40%,#1f6a3a 75%,#17552e 100%);
+    border:14px solid #2b2b2b;border-top-width:12px;border-bottom-width:12px;
+    box-shadow:inset 0 0 0 3px #b38b4f, inset 0 0 80px 10px #0007, 0 0 0 4px #1a1a1a, 0 0 40px #0008}
+  .tt-table::before{content:"";position:absolute;inset:10px;border:2px solid #ffffff18;border-radius:6px;pointer-events:none}
+
+  /* placar a giz no feltro */
+  .tt-placar{position:absolute;left:21%;top:6%;z-index:2;color:#b8f0a8;font-size:22px;letter-spacing:.06em;
+    text-shadow:0 1px 2px #0008;display:grid;grid-template-columns:auto auto;gap:2px 26px;align-items:baseline}
+  .tt-placar b{font-family:var(--disp);font-size:34px;line-height:1;text-align:right}
+  .tt-placar .pal{grid-column:1/-1;height:34px;display:flex;gap:8px}
+  .tt-placar .pal svg{height:34px;filter:drop-shadow(0 1px 1px #0008)}
+  .tt-vale{position:absolute;right:21%;top:6%;z-index:2;text-align:center;color:#fffdf3;font-size:18px;letter-spacing:.08em;
+    text-transform:uppercase;text-shadow:0 2px 3px #000a}
+  .tt-vale > b{display:block;font-family:var(--disp);font-size:44px;line-height:1;color:var(--copag-am)}
+  .tt-vale.alto > b{color:#ff6b5b;animation:tt-pulse 1s infinite}
+  @keyframes tt-pulse{50%{transform:scale(1.12)}}
+
+  /* cadeiras */
+  .tt-seat{position:absolute;transform:translate(-50%,-50%);text-align:center;width:150px;z-index:3}
+  .tt-av{width:86px;height:86px;margin:0 auto;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:54px;line-height:1;border:4px solid #fff;box-shadow:0 6px 14px #000a;
+    background:linear-gradient(160deg,#f7e6c8,#dcb98a)}
+  .tt-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+  .tt-seat.amigo .tt-av{background:linear-gradient(160deg,#cfe3ff,#8fb6ea)}
+  .tt-seat .tt-nome{margin-top:5px;display:inline-block;padding:3px 12px;border-radius:999px;background:#000a;color:#fff;
+    font-size:18px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+  .tt-seat.vez .tt-av{box-shadow:0 0 0 5px var(--copag-am),0 0 26px 8px #f2c400aa;animation:tt-pulse 1.2s infinite}
+  .tt-seat.vez .tt-nome{background:var(--copag-am);color:#2e1a0d}
+  .tt-backs{position:absolute;width:110px;height:70px;transform:translate(-50%,-50%);z-index:2}
+  .tt-backs .card{position:absolute;width:48px;height:70px;left:50%;top:0;margin-left:-24px;transform-origin:50% 110%;box-shadow:0 3px 6px #000a}
+  .tt-backs .card::before{inset:4px;border-width:2px}
+  .tt-balao{position:absolute;left:50%;top:-12px;transform:translate(-50%,-100%);padding:8px 18px;border-radius:18px;
+    background:#fffdf3;color:#1b1b1b;font-family:var(--disp);font-size:24px;white-space:nowrap;
+    box-shadow:0 4px 10px #000b;animation:tt-pop .25s ease-out;z-index:6}
+  .tt-balao::after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-8px;border:8px solid transparent;border-top-color:#fffdf3;border-bottom:0}
+  .tt-balao.grito{background:var(--copag-vm);color:#fff;font-size:30px}
+  .tt-balao.grito::after{border-top-color:var(--copag-vm)}
+  @keyframes tt-pop{from{transform:translate(-50%,-100%) scale(.5);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}
+
+  /* cartas jogadas */
+  .tt-slot{position:absolute;transform:translate(-50%,-50%);z-index:2}
+  .tt-slot .card{width:96px;height:144px;box-shadow:0 6px 12px #000a;transform:rotate(var(--rot,0deg))}
+  .tt-slot .card.in{animation:tt-play .4s cubic-bezier(.2,.8,.3,1)}
+  .tt-slot .card.ganhou{box-shadow:0 0 0 5px var(--copag-am),0 0 28px 6px #f2c400aa,0 6px 12px #000a}
+  @keyframes tt-play{from{transform:translate(var(--dx),var(--dy)) scale(.4) rotate(-30deg);opacity:0}}
+
+  /* monte + vira */
+  .tt-deck{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150px;height:96px;z-index:1}
+  .tt-deck .card{position:absolute;width:62px;height:92px;left:0;top:0;box-shadow:0 2px 4px #000a}
+  .tt-deck .card::before{inset:4px;border-width:2px}.tt-deck .card::after{display:none}
+  .tt-deck .vira{left:62px;top:2px;transform:rotate(90deg);width:62px;height:92px;z-index:2;box-shadow:0 4px 8px #000b}
+  .tt-deck .vira .n{font-size:16px}.tt-deck .vira .n1{top:7px;left:7px}.tt-deck .vira .n2{bottom:7px;right:7px}
+  .tt-deck .vira .pips{inset:8px}.tt-deck .vira::before{inset:4px;border-width:1.5px}.tt-deck .vira::after{inset:6px}
+  .tt-manilha{margin-top:10px;font-size:17px;letter-spacing:0;text-transform:none;color:#fff;opacity:.95;line-height:1.25}
+  .tt-manilha b{font-family:var(--disp);font-size:24px;color:var(--copag-am)}
+
+  .tt-msg{font-family:var(--disp);font-size:30px;color:#fff;text-shadow:0 2px 4px #000c;text-align:center;flex:1;min-height:40px}
+  .tt-vazas{position:absolute;left:9%;top:46%;transform:translate(-50%,-50%);z-index:3;
+    display:flex;flex-direction:column;gap:7px}
+  .tt-vazas .cab{font-size:15px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;
+    text-align:center;margin-bottom:2px}
+  .tt-vazas .lin{display:flex;align-items:center;gap:8px;min-width:112px;
+    padding:5px 10px;border-radius:9px;background:#00000055;border-left:6px solid #ffffff33}
+  .tt-vazas .lin b{font-family:var(--disp);font-size:17px;opacity:.85}
+  .tt-vazas .lin span{font-size:17px;font-weight:800;letter-spacing:.02em}
+  .tt-vazas .lin.p{background:#1d3f77cc;border-left-color:#5b9bff}
+  .tt-vazas .lin.b{background:#6b1616cc;border-left-color:#ff6b5b}
+  .tt-vazas .lin.t{background:#3d3d3dcc;border-left-color:#bbb}
+  .tt-vazas .lin.vazio{opacity:.4}
+  @media (max-width:760px){
+    .tt-vazas{left:4%;top:30%;transform:none;gap:4px}
+    .tt-vazas .cab{font-size:11px}
+    .tt-vazas .lin{min-width:0;padding:3px 7px;gap:5px}
+    .tt-vazas .lin b,.tt-vazas .lin span{font-size:12px}
+  }
+
+  /* sua mão */
+  .tt-bottom{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:5;
+    display:flex;align-items:flex-end;justify-content:center;gap:24px}
+  .tt-bottom.comparceiro{left:44%}
+  .tt-hand{display:flex;align-items:flex-end}
+  .tt-hand .card{width:118px;height:176px;margin:0 4px;transform-origin:50% 130%;transition:transform .15s, box-shadow .15s;
+    box-shadow:0 8px 14px #000b;overflow:visible}
+  .tt-hand .card .n{font-size:28px}.tt-hand .card .n1{top:13px;left:13px}.tt-hand .card .n2{bottom:13px;right:13px}
+  .tt-hand .card .pips{inset:18px}
+  .tt-hand .card:nth-child(1){transform:rotate(-7deg) translateY(6px)}
+  .tt-hand .card:nth-child(3){transform:rotate(7deg) translateY(6px)}
+  .tt-hand .card.click:hover,.tt-hand .card.click:focus-visible{transform:translateY(-30px) scale(1.06);z-index:3;box-shadow:0 18px 24px #000c}
+  .tt-hand .card:not(.click){filter:brightness(.8)}
+
+  .tt-btn{position:absolute;right:2%;bottom:6%;z-index:5;font-size:34px;padding:18px 40px;border-radius:999px;
+    background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 6px 0 #6a1410,0 10px 18px #000a}
+  .tt-btn:disabled{opacity:.25}
+  .tt-you{position:absolute;left:2%;bottom:6%;z-index:5;display:flex;align-items:center;gap:12px}
+  .tt-you .tt-av{margin:0}
+  .tt-you .tt-nome{display:inline-block;padding:3px 12px;border-radius:999px;background:#000a;color:#fff;font-size:18px;font-weight:700}
+  .tt-you.vez .tt-av{box-shadow:0 0 0 5px var(--copag-am),0 0 26px 8px #f2c400aa;animation:tt-pulse 1.2s infinite}
+  .tt-you.vez .tt-nome{background:var(--copag-am);color:#2e1a0d}
+  .tt-legenda{text-align:center;margin-top:10px;font-size:19px;opacity:.85}
+
+  @media (max-width:760px){
+    .tt-stage{aspect-ratio:1/1.35}
+    .tt-table{left:0;right:0}
+    .tt-placar{left:4%;top:3%;font-size:17px;gap:0 14px}.tt-placar b{font-size:26px}.tt-placar .pal{height:24px}.tt-placar .pal svg{height:24px}
+    .tt-vale{right:4%;top:3%;font-size:14px}.tt-vale b{font-size:32px}
+    .tt-seat{width:100px}.tt-av{width:58px;height:58px;font-size:36px}.tt-seat .tt-nome{font-size:14px;padding:2px 9px}
+    .tt-backs{width:70px;height:46px}.tt-backs .card{width:32px;height:46px;margin-left:-16px}
+    .tt-slot .card{width:66px;height:99px}.tt-slot .card .n{font-size:15px}.tt-slot .card .pips{inset:8px}
+    .tt-deck{transform:translate(-50%,-50%) scale(.7)}.tt-manilha{font-size:13px}.tt-manilha b{font-size:17px}
+    .tt-hand .card{width:92px;height:138px;margin:0 2px}.tt-hand .card .n{font-size:20px}
+    .tt-msg{font-size:20px;flex-basis:100%}
+    .tt-btn{font-size:22px;padding:12px 22px;bottom:2%}.tt-you{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){.tt-balao,.tt-slot .card.in,.tt-seat.vez .tt-av,.tt-you.vez .tt-av,.tt-vale.alto b{animation:none}.tt-hand .card{transition:none}}
+  .tt-aposta{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+    margin:14px auto 0;max-width:920px;padding:14px 22px;border-radius:16px;
+    background:linear-gradient(180deg,#3d2614,#211206);border:3px solid var(--copag-am);
+    box-shadow:0 8px 22px #000b}
+  .tt-aposta .txt{font-family:var(--disp);font-size:26px;color:var(--copag-am);text-align:center}
+  .tt-aposta button{font-size:24px;padding:12px 26px;margin:0}
+  @media (max-width:760px){ .tt-aposta{gap:9px;padding:10px 12px;margin-top:10px}
+    .tt-aposta .txt{font-size:18px;flex-basis:100%} .tt-aposta button{font-size:17px;padding:9px 15px} }
+  .tt-backs.aberto{width:150px;height:96px;transform:translate(-50%,-22%);z-index:4}
+  .tt-backs.aberto .card{width:64px;height:96px;margin-left:-32px;box-shadow:0 0 0 3px var(--copag-am),0 3px 6px #000a}
+  @media (max-width:760px){ .tt-backs.aberto{width:96px;height:62px} .tt-backs.aberto .card{width:42px;height:62px;margin-left:-21px} }
+  .tt-hand.comparceiro .card{width:98px;height:147px}
+  .tt-par{text-align:center}
+  .tt-par .tag{display:inline-block;margin-bottom:5px;padding:3px 14px;border-radius:999px;
+    background:var(--copag-am);color:#2e1a0d;font-size:15px;font-weight:800;
+    letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;box-shadow:0 3px 6px #000a}
+  .tt-par .cartas{display:flex;align-items:flex-end;justify-content:center}
+  .tt-par .card{width:76px;height:114px;margin:0 1px;
+    box-shadow:0 0 0 3px var(--copag-am),0 6px 12px #000b}
+  @media (max-width:760px){
+    .tt-bottom{gap:8px}.tt-bottom.comparceiro{left:50%}
+    .tt-hand.comparceiro .card{width:62px;height:93px}
+    .tt-par .tag{font-size:11px;padding:2px 9px;margin-bottom:2px}
+    .tt-par .card{width:46px;height:69px;margin:0 1px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= MENU ================= -->
+<div id="scr-menu" class="screen">
+  <h1>Mesa de Truco<br><span style="font-size:.55em;color:var(--giz)">&amp; Cacheta</span></h1>
+  <p style="text-align:center;font-size:22px;opacity:.8;margin:10px 0 0">Puxa uma cadeira.</p>
+  <button class="menu-btn" onclick="abrirTruco()">Truco</button>
+  <button class="menu-btn" onclick="abrirCacheta()">Cacheta</button>
+</div>
+
+<!-- ================= TRUCO ================= -->
+<div id="scr-truco" class="screen hidden">
+  <div class="tt-top">
+    <button class="voltar" onclick="voltar()">← Sair da mesa</button>
+    <div class="tt-msg" id="t-msg"></div>
+    <div class="modos">
+      <button id="t-m2" onclick="setModoTruco(2)">1 x 1</button>
+      <button id="t-m4" onclick="setModoTruco(4)">Dupla 2 x 2</button>
+      <button id="t-df" class="on" onclick="ciclaDificuldade()">Difícil</button>
+    </div>
+  </div>
+
+  <div class="tt-stage" id="tt-stage">
+    <div class="tt-table"></div>
+    <div class="tt-placar">
+      <span id="t-lbl-p">Nós</span><b id="t-sp">0</b>
+      <div class="pal hidden" id="t-pal-p"></div>
+      <span id="t-lbl-b">Eles</span><b id="t-sb">0</b>
+      <div class="pal hidden" id="t-pal-b"></div>
+    </div>
+    <div class="tt-vale" id="t-vale-box">Vale<b id="t-val">1</b><div class="tt-manilha hidden" id="t-manilha"></div></div>
+    <div class="tt-vazas" id="t-vazas"></div>
+    <div id="tt-seats"></div>
+    <div class="tt-deck" id="t-deck"></div>
+    <div id="tt-slots"></div>
+    <div class="tt-you" id="tt-you"><div class="tt-av"><img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')"></div><span class="tt-nome">Você</span></div>
+    <div class="tt-bottom" id="t-bottom">
+      <div class="tt-hand" id="t-phand"></div>
+      <div class="tt-par hidden" id="t-parhand"></div>
+    </div>
+    <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
+  </div>
+  <div class="tt-aposta hidden" id="t-aposta"></div>
+</div>
+
+<!-- ================= CACHETA ================= -->
+<div id="scr-cacheta-cfg" class="screen hidden">
+  <button class="voltar" onclick="voltar()">← Sair da mesa</button>
+  <h2>Cacheta</h2>
+  <div class="lbl2">Quantos jogadores? (você + máquinas)</div>
+  <div class="opts" id="cfg-nj"></div>
+  <div class="lbl2">Dificuldade</div>
+  <div class="opts" id="cfg-dif"></div>
+  <div class="actions" style="margin-top:26px">
+    <button class="menu-btn" onclick="cacComecar()">COMEÇAR</button>
+  </div>
+</div>
+
+<div id="scr-cacheta" class="screen hidden">
+  <button class="voltar" onclick="voltar()">← Voltar</button>
+  <div class="mesa-wrap">
+    <div class="mesa-oval"></div>
+    <button id="c-rapido" class="btn-rapido hidden" onclick="cacRapido()">AVANÇAR ▶▶</button>
+    <div id="c-seats"></div>
+    <div class="centro">
+      <div class="pilhas">
+        <div><div id="c-monte"></div><div class="lbl" style="margin-top:4px">monte <b id="c-deck">0</b></div></div>
+        <div><div id="c-lixo"></div><div class="lbl" style="margin-top:4px">descarte</div></div>
+      </div>
+      <div class="msg" id="c-msg"></div>
+    </div>
+  </div>
+  <div class="leque" id="c-phand"></div>
+  <div class="actions" id="c-acts">
+    <button id="c-vou" onclick="cacDeclarar(true)">VOU</button>
+    <button id="c-corro" onclick="cacDeclarar(false)">CORRO</button>
+    <button id="c-bater" onclick="cacBater()">BATER!</button>
+    <button id="c-org" class="voltar" onclick="cacOrganizar()">Organizar</button>
+  </div>
+</div>
+
+<div id="modal" class="overlay hidden"><div class="box">
+  <div id="modal-vira" class="hidden"></div>
+  <p id="modal-txt"></p><div id="modal-btns"></div>
+</div></div>
+
+<script src="cacheta_core.js"></script>
+<script>
+"use strict";
+const $ = s => document.getElementById(s);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* =========================================================
+   CARTAS DO TRUCO — fotos em cartas/es/*.png (baralho Basquetteur)
+   O=ouros/moeda, E=espada, C=copa, P=paus/basto
+   ========================================================= */
+const NAIPE_NOME  = { P:"Gato", C:"Copa", E:"Espada", O:"Mole" };
+const NAIPE_FORCA = { O:1, E:2, C:3, P:4 };          // mole < espada < copa < gato
+const ES_ARQ      = { O:"oros", E:"espadas", C:"copas", P:"bastos" };
+
+function cardEl(c, cls, onclick){
+  const d = document.createElement("div");
+  if(!c) d.className = "card back " + (cls||"");
+  else{
+    d.className = "card foto " + (cls||"");
+    d.innerHTML = `<img src="cartas/es/${String(c.r).padStart(2,"0")}-${ES_ARQ[c.s]}.png" alt="">`;
+    d.setAttribute("aria-label", c.r + " de " + NAIPE_NOME[c.s]);
+  }
+  if(onclick){ d.classList.add("click"); d.onclick = onclick; d.tabIndex = 0;
+               d.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); onclick(); } }; }
+  return d;
+}
+
+/* placar de palitos de fósforo: grupos de 5 (4 em pé + 1 atravessado) */
+function palitosSVG(n){
+  const grupos = [];
+  for(let i=0;i<n;i+=5) grupos.push(Math.min(5, n-i));
+  return grupos.map(g=>{
+    let s = `<svg viewBox="0 0 ${g>=5?60:12*g+8} 46">`;
+    for(let k=0;k<Math.min(g,4);k++)
+      s += `<rect x="${6+k*12}" y="6" width="4" height="38" rx="1.5" fill="#e8c38a"/>
+            <rect x="${5+k*12}" y="4" width="6" height="8" rx="3" fill="#b3261e"/>`;
+    if(g===5) s += `<g transform="rotate(-12 28 23)"><rect x="0" y="21" width="56" height="4" rx="1.5" fill="#e8c38a"/>
+                    <rect x="-1" y="19" width="9" height="7" rx="3" fill="#b3261e"/></g>`;
+    return s + `</svg>`;
+  }).join("");
+}
+function slot(){ const d=document.createElement("div"); d.className="slot"; return d; }
+function fill(id, nodes){ const e=$(id); e.innerHTML=""; nodes.forEach(n=>e.appendChild(n)); }
+function coluna(rotulo, node, destaque){
+  const d = document.createElement("div"); d.className = "col";
+  const l = document.createElement("div"); l.className = "lbl" + (destaque?" eu":"");
+  l.textContent = rotulo; d.appendChild(l); d.appendChild(node); return d;
+}
+
+function voltar(){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+                   $("scr-menu").classList.remove("hidden"); fecharModal(); }
+function mostrar(id){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+                      $(id).classList.remove("hidden"); }
+function modal(txt, botoes, vira){
+  // a caixa fica no meio da mesa e tapa o vira; quando a decisão depende dele, mostra aqui
+  const v = $("modal-vira");
+  v.innerHTML = "";
+  v.classList.toggle("hidden", !vira);
+  if(vira){
+    v.appendChild(cardEl(vira));
+    v.insertAdjacentHTML("beforeend",
+      `<span>vira <b>${vira.r}</b> &middot; manilha <b>${T.manilha}</b></span>`);
+  }
+  $("modal-txt").textContent = txt;
+  const b = $("modal-btns"); b.innerHTML = "";
+  botoes.forEach(([lbl,fn])=>{ const x=document.createElement("button"); x.textContent=lbl;
+    x.onclick=()=>{ fecharModal(); fn(); }; b.appendChild(x); });
+  $("modal").classList.remove("hidden");
+}
+function fecharModal(){ $("modal").classList.add("hidden"); }
+
+/* =========================================================
+   TRUCO — baralho espanhol 40 cartas, manilha móvel pelo vira.
+   Mesmo motor para 1x1 (2 assentos) e dupla 2x2 (4 assentos).
+   Assento 0 = você. Time 0 = "p" (você/sua dupla), time 1 = "b".
+   ========================================================= */
+const T_ORDEM  = ["4","5","6","7","10","11","12","1","2","3"];   // fraca -> forte
+const T_NAIPES = ["O","E","C","P"];
+const proxValor  = v => ({1:3,3:6,6:9,9:12})[v] || null;
+const nomeAposta = v => ({3:"TRUCO",6:"SEIS",9:"NOVE",12:"DOZE"})[v];
+const NOMES = { 2:["Você","Máquina"], 4:["Você","Adversário 1","Parceiro","Adversário 2"] };
+
+let T = null;
+let modoTruco = 2;
+
+const manilhaDe = vira => T_ORDEM[(T_ORDEM.indexOf(vira.r) + 1) % T_ORDEM.length];
+const forcaM = (c, man) => c.r === man ? 10 + NAIPE_FORCA[c.s] : T_ORDEM.indexOf(c.r) + 1;
+function forca(c){ return forcaM(c, T.manilha); }
+
+const timeSigla = t => t === 0 ? "p" : "b";
+const assentosDoTime = t => T.times.map((x,i)=>x===t?i:-1).filter(i=>i>=0);
+
+function abrirTruco(){
+  mostrar("scr-truco");
+  modal("Como quer jogar?", [["Sozinho (1 x 1)", ()=>setModoTruco(2)], ["Em dupla (2 x 2)", ()=>setModoTruco(4)]]);
+}
+
+function setModoTruco(n){
+  modoTruco = n;
+  $("t-m2").classList.toggle("on", n===2);
+  $("t-m4").classList.toggle("on", n===4);
+  T = { n, times: n===2 ? [0,1] : [0,1,0,1], placar:[0,0], abreMao:0, dif: dificuldade,
+        persona: Array.from({length:n}, ()=>PERSONAS[(Math.random()*PERSONAS.length)|0]) };
+  $("t-df").textContent = DIF_NOME[dificuldade];
+  novaMao();
+}
+
+function novaMao(){
+  const baralho = shuffle(T_ORDEM.flatMap(r => T_NAIPES.map(s => ({r,s}))));
+  T.aReceber = []; for(let i=0;i<T.n;i++) T.aReceber.push(baralho.slice(i*3, i*3+3));
+  T.maos = []; for(let i=0;i<T.n;i++) T.maos.push([]);
+  T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
+  $("t-aposta").classList.add("hidden");
+  T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
+  T.abreVaza = T.abreMao;
+  // estado neutro pro render enquanto as cartas caem
+  T.mesa = new Array(T.n).fill(null); T.ordem = []; T.pos = 0;
+  T.ultimaJogada = -1; T.balao = null;
+  T.msg = "Dando as cartas...";
+  render();
+  darCartasTruco(0);
+}
+/* uma carta por jogador, na volta da mesa */
+function darCartasTruco(k){
+  if(k >= 3){ iniciarVaza(); return; }
+  for(let i=0;i<T.n;i++){
+    const a = (T.abreMao + i) % T.n;
+    T.maos[a].push(T.aReceber[a][k]);
+  }
+  render();
+  setTimeout(()=>darCartasTruco(k+1), 170);
+}
+
+function iniciarVaza(){
+  T.mesa = new Array(T.n).fill(null); T.ultimaJogada = -1; T.balao = null;
+  T.ordem = []; for(let k=0;k<T.n;k++) T.ordem.push((T.abreVaza + k) % T.n);
+  T.pos = 0;
+  seguir();
+}
+
+function seguir(){
+  if(T.fim) return;
+  if(T.pos >= T.n) return resolverVaza();
+  const a = T.ordem[T.pos];
+  T.msg = a === 0 ? "Sua vez! Escolha uma carta." : `${NOMES[T.n][a]} pensando...`;
+  render();
+  if(a !== 0) setTimeout(()=>turnoBot(a), 800);
+}
+
+const AVATAR = { 2:["👴","🤖"], 4:["👴","🧔","👩","👨‍🦰"] };
+/* assento 0 = o dono do jogo. Se perfil/pai.jpg nao existir, o onerror devolve o emoji. */
+const avatarHTML = a => a === 0 ? `<img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')">` : AVATAR[T.n][a];
+// posições (% da mesa) por assento: av = avatar, bk = cartas viradas, sl = carta jogada
+const POS = {
+  2:{ 1:{av:[50,8], bk:[50,21], sl:[50,36]}, 0:{sl:[50,68]} },
+  4:{ 1:{av:[21,50], bk:[31,50], sl:[39,52]}, 2:{av:[50,8], bk:[50,21], sl:[50,36]},
+      3:{av:[79,50], bk:[69,50], sl:[61,52]}, 0:{sl:[50,68]} }
+};
+const pct = (el,[x,y]) => { el.style.left = x+"%"; el.style.top = y+"%"; };
+
+function render(){
+  const nomeTime = s => T.n===4 ? (s==="p"?"Nós":"Eles") : (s==="p"?"Você":"Máquina");
+  $("t-lbl-p").textContent = nomeTime("p"); $("t-lbl-b").textContent = nomeTime("b");
+  $("t-sp").textContent = T.placar[0]; $("t-sb").textContent = T.placar[1];
+  $("t-pal-p").innerHTML = palitosSVG(T.placar[0]); $("t-pal-b").innerHTML = palitosSVG(T.placar[1]);
+  $("t-val").textContent = T.valor;
+  $("t-vale-box").classList.toggle("alto", T.valor > 1);
+
+  const vez = (!T.fim && T.pos < T.n) ? T.ordem[T.pos] : -1;
+  const stage = $("tt-stage"), W = stage.clientWidth || 1200, H = stage.clientHeight || 760;
+
+  // cadeiras dos outros
+  const seats = [];
+  for(let a=1;a<T.n;a++){
+    const p = POS[T.n][a];
+    const s = document.createElement("div");
+    s.className = "tt-seat" + (T.times[a]===0?" amigo":"") + (a===vez?" vez":"");
+    pct(s, p.av);
+    s.innerHTML = `<div class="tt-av">${avatarHTML(a)}</div><span class="tt-nome">${NOMES[T.n][a]}</span>`;
+    if(T.balao && T.balao.a===a) s.insertAdjacentHTML("afterbegin",
+      `<div class="tt-balao${T.balao.grito?" grito":""}">${T.balao.txt}</div>`);
+    seats.push(s);
+    const bk = document.createElement("div"); bk.className = "tt-backs"; pct(bk, p.bk);
+    const n = T.maos[a].length, rot = [-14,0,14].slice(0,n);
+    T.maos[a].forEach((_,k)=>{ const c = cardEl(null); c.style.transform = `rotate(${rot[k] - (n===2?7:0)}deg)`; bk.appendChild(c); });
+    seats.push(bk);
+  }
+  fill("tt-seats", seats);
+
+  // balão meu
+  const you = $("tt-you");
+  you.classList.toggle("vez", vez===0);
+  you.querySelector(".tt-balao")?.remove();
+  if(T.balao && T.balao.a===0) you.insertAdjacentHTML("afterbegin",
+    `<div class="tt-balao${T.balao.grito?" grito":""}" style="left:60px">${T.balao.txt}</div>`);
+
+  // monte + vira
+  const deck = $("t-deck"); deck.innerHTML = "";
+  [0,1,2].forEach(k=>{ const c = cardEl(null); c.style.left = (k*1.5)+"px"; c.style.top = (-k*1.5)+"px"; deck.appendChild(c); });
+  const v = cardEl(T.vira, "vira"); deck.appendChild(v);
+  $("t-manilha").innerHTML = `Manilha: <b>${T.manilha}</b><br><small>${T_NAIPES.slice().reverse().map(s=>NAIPE_NOME[s]).join(" › ")}</small>`;
+
+  // cartas jogadas
+  const fim = T.pos >= T.n;
+  const lider = liderAtual();
+  const slots = [];
+  T.mesa.forEach((c,a)=>{
+    if(!c) return;
+    const d = document.createElement("div"); d.className = "tt-slot"; pct(d, POS[T.n][a].sl);
+    const el = cardEl(c);
+    el.style.setProperty("--rot", ((a*37)%9-4)+"deg");
+    if(a === T.ultimaJogada){
+      const from = a===0 ? [50,110] : POS[T.n][a].av, to = POS[T.n][a].sl;
+      el.style.setProperty("--dx", ((from[0]-to[0])*W/100)+"px");
+      el.style.setProperty("--dy", ((from[1]-to[1])*H/100)+"px");
+      el.classList.add("in");
+    }
+    if(fim && lider && forca(c)===lider.f) el.classList.add("ganhou");
+    d.appendChild(el); slots.push(d);
+  });
+  fill("tt-slots", slots);
+
+  // minha mão — sem dica nenhuma, quem lê a carta é o jogador
+  const minhaVez = !T.fim && !T.pendente && vez === 0;
+  fill("t-phand", T.maos[0].map((c,i)=>
+    cardEl(c, "", minhaVez ? ()=>jogar(0,i) : null)));
+
+  // mão do parceiro aberta: grande, ao lado da sua
+  const par = T.parceiroAberto ? parceiroDe(0) : -1;
+  $("t-bottom").classList.toggle("comparceiro", par >= 0);
+  $("t-phand").classList.toggle("comparceiro", par >= 0);
+  const pw = $("t-parhand");
+  pw.classList.toggle("hidden", par < 0);
+  if(par >= 0){
+    pw.innerHTML = '<div class="tag">Mão do Parceiro</div>';
+    const box = document.createElement("div"); box.className = "cartas";
+    T.maos[par].forEach(c => box.appendChild(cardEl(c)));
+    pw.appendChild(box);
+  }
+  $("t-msg").textContent = T.msg;
+  $("t-vazas").innerHTML = '<div class="cab">Rodadas</div>' + [0,1,2].map(k=>{
+    const r = T.vazas[k];
+    const txt = r ? (r === "t" ? "Empate" : nomeTime(r)) : "—";
+    return `<div class="lin ${r || "vazio"}"><b>${k+1}ª</b><span>${txt}</span></div>`;
+  }).join("");
+
+  const prox = proxValor(T.valor);
+  const bt = $("t-truco");
+  bt.textContent = prox ? nomeAposta(prox) + "!" : "—";
+  bt.disabled = !(minhaVez && prox && T.ultimoPediu !== "p");
+}
+window.addEventListener("resize", ()=>{ if(T && !$("scr-truco").classList.contains("hidden")) render(); });
+
+function jogar(a, i){
+  if(T.fim || T.pendente || T.ordem[T.pos] !== a) return;
+  T.mesa[a] = T.maos[a].splice(i,1)[0]; T.ultimaJogada = a; T.jogadas.push(T.mesa[a]);
+  if(a !== 0 && Math.random() < 0.35) T.balao = { a, txt: fala(FALAS.joga) };
+  if(a === 0) reg("jogou", { carta: chaveC(T.mesa[a]), manilha:T.manilha, vale:T.valor, restam:T.maos[0].length });
+  T.pos++;
+  seguir();
+}
+
+/* --- quem está ganhando a rodada agora: {assento, forca} ou null --- */
+function liderAtual(){
+  let melhor = null;
+  T.mesa.forEach((c,i)=>{ if(c && (!melhor || forca(c) > melhor.f)) melhor = {i, f:forca(c)}; });
+  return melhor;
+}
+
+/* =========================================================
+   IA DO TRUCO — Monte Carlo por determinização.
+
+   O bot NÃO enxerga a mão de ninguém e o baralho continua
+   100% aleatório. Ele só usa o que qualquer jogador na mesa
+   veria: a própria mão, o vira e as cartas já jogadas.
+   A partir daí sorteia as cartas que faltam, joga a mão até
+   o fim centenas de vezes e escolhe a carta que mais vence.
+   ========================================================= */
+const DIF = {
+  facil:   { sims: 24,  erro: 0.38, margem: 0.12, blefe: 0.05 },
+  normal:  { sims: 90,  erro: 0.12, margem: 0.03, blefe: 0.10 },
+  dificil: { sims: 260, erro: 0.00, margem:-0.03, blefe: 0.17 }
+};
+const DIF_ORDEM = ["facil","normal","dificil"];
+const DIF_NOME  = { facil:"Fácil", normal:"Normal", dificil:"Difícil" };
+let dificuldade = "dificil";
+
+// cada bot joga de um jeito: uns seguram, outros vão pra cima
+const PERSONAS = [
+  { nome:"calmo",   ped:+0.07, blefe:0.5 },
+  { nome:"valente", ped:-0.09, blefe:1.7 },
+  { nome:"raposa",  ped:-0.01, blefe:1.2 }
+];
+
+function ciclaDificuldade(){
+  dificuldade = DIF_ORDEM[(DIF_ORDEM.indexOf(dificuldade)+1) % DIF_ORDEM.length];
+  if(T) T.dif = dificuldade;
+  $("t-df").textContent = DIF_NOME[dificuldade];
+}
+
+const chaveC = c => c.r + c.s;
+/* Regra da casa: assim que alguém pede truco, cada dupla pode olhar a mão do parceiro.
+   Vale pros dois lados — inclusive pros bots, que passam a contar com essa informação. */
+function parceiroDe(a){ return T.n === 4 ? T.times.findIndex((tm,i)=> i !== a && tm === T.times[a]) : -1; }
+function parceiroVisivel(a){ return T.parceiroAberto ? parceiroDe(a) : -1; }
+
+function desconhecidas(a){
+  const par = parceiroVisivel(a);
+  const minhas = par >= 0 ? T.maos[a].concat(T.maos[par]) : T.maos[a];
+  const vistas = new Set([chaveC(T.vira), ...T.jogadas.map(chaveC), ...minhas.map(chaveC)]);
+  const fora = [];
+  T_ORDEM.forEach(r => T_NAIPES.forEach(s => { if(!vistas.has(r+s)) fora.push({r,s}); }));
+  return fora;
+}
+
+/* política rápida usada dentro da simulação (não é a decisão real) */
+function politica(S, a){
+  const mao = S.maos[a];
+  const ord = mao.map((c,i)=>({f:forcaM(c,S.manilha), i})).sort((x,y)=>x.f-y.f);
+  let lider = null;
+  for(let i=0;i<S.n;i++){ const c = S.mesa[i]; if(!c) continue;
+    const f = forcaM(c,S.manilha); if(!lider || f > lider.f) lider = {i,f}; }
+  if(!lider) return ord[ord.length-1].i;
+  let empateContra = false;
+  for(let i=0;i<S.n;i++){ const c = S.mesa[i];
+    if(c && i!==lider.i && forcaM(c,S.manilha)===lider.f && S.times[i]!==S.times[lider.i]) empateContra = true; }
+  if(S.times[lider.i] === S.times[a] && !empateContra) return ord[0].i;
+  for(const o of ord) if(o.f > lider.f) return o.i;
+  return ord[0].i;
+}
+
+/* joga a mão até o fim; devolve "p", "b" ou "n" */
+function simulaMao(S){
+  let guard = 0;
+  while(donoDaMao(S.vazas) === null && guard++ < 24){
+    if(S.pos >= S.n){
+      let mx = -1, topos = [];
+      for(let i=0;i<S.n;i++){ const c = S.mesa[i]; if(!c) continue;
+        const f = forcaM(c,S.manilha);
+        if(f > mx){ mx = f; topos = [i]; } else if(f === mx) topos.push(i); }
+      const times = new Set(topos.map(i=>S.times[i]));
+      const r = times.size > 1 ? "t" : (S.times[topos[0]] === 0 ? "p" : "b");
+      S.vazas.push(r);
+      if(donoDaMao(S.vazas) !== null) break;
+      if(r !== "t") S.abreVaza = topos[0];
+      S.mesa = new Array(S.n).fill(null);
+      S.ordem = []; for(let k=0;k<S.n;k++) S.ordem.push((S.abreVaza + k) % S.n);
+      S.pos = 0;
+      continue;
+    }
+    const a = S.ordem[S.pos];
+    if(!S.maos[a].length) break;
+    S.mesa[a] = S.maos[a].splice(politica(S,a), 1)[0];
+    S.pos++;
+  }
+  return donoDaMao(S.vazas);
+}
+
+function estadoBase(a, maos){
+  return { n:T.n, times:T.times, manilha:T.manilha, mesa:T.mesa.slice(),
+           vazas:T.vazas.slice(), abreVaza:T.abreVaza, ordem:T.ordem.slice(), pos:T.pos, maos };
+}
+function reparte(a, fora){
+  shuffle(fora);
+  const par = parceiroVisivel(a);
+  let p = 0;
+  return T.maos.map((m,i)=>{
+    if(i === a || i === par) return m.slice();   // parceiro já mostrou: não sorteia
+    const q = fora.slice(p, p + m.length); p += m.length; return q;
+  });
+}
+const pontoDe = (dono, time) => dono === "n" ? 0.5 : (dono === timeSigla(time) ? 1 : 0);
+
+/* chance de cada carta da mão de `a` ganhar a mão (mesmo sorteio para todas) */
+function avaliaJogadas(a, sims){
+  const mao = T.maos[a], fora = desconhecidas(a), res = mao.map(()=>0);
+  for(let s=0;s<sims;s++){
+    const base = reparte(a, fora);
+    for(let k=0;k<mao.length;k++){
+      const maos = base.map(m=>m.slice());
+      const S = estadoBase(a, maos);
+      S.mesa[a] = S.maos[a].splice(k,1)[0];
+      S.pos++;
+      res[k] += pontoDe(simulaMao(S), T.times[a]);
+    }
+  }
+  return res.map(x => x / sims);
+}
+
+/* chance do time de `a` ganhar a mão daqui pra frente */
+function probMao(a, sims){
+  const fora = desconhecidas(a);
+  let tot = 0;
+  for(let s=0;s<sims;s++) tot += pontoDe(simulaMao(estadoBase(a, reparte(a, fora))), T.times[a]);
+  return tot / sims;
+}
+
+/* aceitar só compensa se a chance passa do preço da aposta */
+const limiteAceite = (vNovo, vVelho) => (vNovo - vVelho) / (2 * vNovo);
+
+function assentoQueDecide(time){
+  const meus = assentosDoTime(time).filter(i => T.maos[i].length);
+  if(!meus.length) return assentosDoTime(time)[0];
+  for(let k=0;k<T.n;k++){ const i = T.ordem[(T.pos + k) % T.n]; if(meus.includes(i)) return i; }
+  return meus[0];
+}
+
+/* Quando um truqueiro de verdade pede — e quando cala a boca.
+   Sem isso o bot pede truco na hora errada e blefa nove como se fosse um.  */
+const ESCALA_BLEFE = { 1:1, 3:0.40, 6:0.18, 9:0.08 };   // blefar sobe de preço junto com a aposta
+
+function momento(a){
+  const semCartas = !T.maos[a].length;
+  const primeiraVaza = T.vazas.length === 0;
+  const mesaVazia = T.mesa.every(c => !c);
+  let f = 1;
+
+  if(primeiraVaza && mesaVazia) f = 0.25;        // pedir de saída, sem ver nada: raro
+  else if(primeiraVaza)         f = 0.55;        // já viu a carta do outro: começa a valer
+  else if(T.vazas[0] === timeSigla(T.times[a])) f = 1.35;   // ganhou a primeira: a hora clássica
+
+  // já jogou tudo e o adversário ainda decide a vaza olhando a carta dele:
+  // pressionar aí só ganha se ele correr com carta boa — quase nunca
+  const faltaAdversario = T.mesa.some((c,i) => !c && T.times[i] !== T.times[a] && T.maos[i].length);
+  if(semCartas && faltaAdversario) f *= 0.35;
+  else if(semCartas) f *= 0.6;
+
+  return f;
+}
+
+function botResponde(time){
+  const a = assentoQueDecide(time);
+  const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
+  const p = probMao(a, d.sims), r = Math.random();
+  const prox = proxValor(T.pendente);
+  const lim = limiteAceite(T.pendente, T.valor) + d.margem + per.ped;
+  const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * momento(a);
+
+  // sobe com mão de ferro; blefa só se ainda sobrar alguma chance real
+  if(prox && (p > 0.70 || (p > 0.22 && r < blefe))) return pedirTruco(a);
+  if(p > lim || r < 0.22) return aceitar(timeSigla(time));   // paga pra ver
+  correr(timeSigla(time));
+}
+
+function turnoBot(a){
+  if(T.fim || T.pendente || T.ordem[T.pos] !== a) return;
+  const mao = T.maos[a], meuTime = T.times[a];
+  const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
+
+  const prox = proxValor(T.valor);
+  if(prox && T.ultimoPediu !== timeSigla(meuTime)){
+    const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
+    const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
+    const forte = p > 0.64 + per.ped;
+    if(forte ? r < 0.58 * m : (p > 0.22 && p < 0.40 && r < blefe)) return pedirTruco(a);
+  }
+
+  const probs = avaliaJogadas(a, d.sims);
+  let melhor = 0;
+  for(let i=1;i<probs.length;i++){
+    const dif = probs[i] - probs[melhor];
+    // empatou? guarda a carta forte pra depois
+    if(dif > 1e-9 || (Math.abs(dif) < 1e-9 && forca(mao[i]) < forca(mao[melhor]))) melhor = i;
+  }
+  // ponytail: erro = pegar a segunda melhor, não uma carta qualquer.
+  // Sortear às cegas fazia o bot matar 5 com 3 e guardar o 7 — cara de principiante.
+  if(probs.length > 1 && Math.random() < d.erro){
+    const ordenadas = probs.map((p,i)=>({p,i})).sort((x,y)=>y.p-x.p);
+    melhor = ordenadas[1].i;
+  }
+  jogar(a, melhor);
+}
+
+function resolverVaza(){
+  const jogadas = T.mesa.map((c,i)=>({c,i})).filter(o=>o.c);
+  const maxF  = Math.max(...jogadas.map(o=>forca(o.c)));
+  const topos = jogadas.filter(o=>forca(o.c) === maxF);
+  const times = new Set(topos.map(o=>T.times[o.i]));
+  const r = times.size > 1 ? "t" : timeSigla(T.times[topos[0].i]);
+  T.vazas.push(r);
+  const nomeTime = s => T.n===4 ? (s==="p"?"Sua dupla":"Os adversários") : (s==="p"?"Você":"A máquina");
+  const botsDo = tm => T.times.map((x,i)=> x===tm && i>0 ? i : -1).filter(i=>i>0);
+  if(r !== "t"){
+    const meuTimeGanhou = r === "p";
+    const falantes = botsDo(meuTimeGanhou ? 0 : 1);
+    if(falantes.length && Math.random() < 0.55)
+      T.balao = { a: falantes[(Math.random()*falantes.length)|0],
+                  txt: fala(meuTimeGanhou ? FALAS.parceiro : FALAS.ganhou) };
+    else if(meuTimeGanhou){
+      const adv = botsDo(1);
+      if(adv.length && Math.random() < 0.5) T.balao = { a: adv[(Math.random()*adv.length)|0], txt: fala(FALAS.perdeu) };
+    }
+  }
+  T.msg = r === "t" ? "Rodada empatada." : `${nomeTime(r)} ganhou a rodada!`;
+  render();
+
+  const dono = donoDaMao(T.vazas);
+  setTimeout(()=>{
+    if(dono !== null) return fimDaMao(dono, T.valor);
+    T.abreVaza = (r === "t") ? T.abreVaza : topos[0].i;   // empate: reabre quem abriu
+    iniciarVaza();
+  }, 1400);
+}
+
+// null = indefinido; "p"/"b" = time vencedor; "n" = mão anulada
+function donoDaMao(r){
+  const conta = w => r.filter(x=>x===w).length;
+  if(conta("p")>=2) return "p";
+  if(conta("b")>=2) return "b";
+  if(r.length===0) return null;
+  if(r[0]==="t"){
+    const primeiro = r.find(x=>x!=="t");
+    if(primeiro) return primeiro;
+    return r.length===3 ? "n" : null;
+  }
+  if(r.length>=2 && r[1]==="t") return r[0];
+  if(r.length===3) return r[0];
+  return null;
+}
+
+/* ---------------- apostas ---------------- */
+/* gíria de mesa — o bot responde como gente, não como caixa de diálogo */
+const FALAS = {
+  pede:   { 3:["TRUCO!","Truco, ladrão!","Truco!"], 6:["SEIS!","Seis!"], 9:["NOVE!"], 12:["DOZE!"] },
+  aceita: ["Tô dentro!","Manda ver!","Pode vir!","Tô junto!","Vem que tem!","Cara a cara!"],
+  joga:     ["Toma essa!","Vai essa.","Segura essa.","Essa é minha.","Olha aí.","Pode vir."],
+  ganhou:   ["Minha!","É nossa!","Essa foi boa.","Tá comigo."],
+  perdeu:   ["Boa...","Essa foi tua.","Tá bom, tá bom.","Passou essa."],
+  parceiro: ["Boa, parceiro!","É isso aí!","Assim que se faz!"],
+  corre:  ["Corro...","Tá teu.","Essa é tua.","Não vou não.","Fica pra próxima."]
+};
+const fala = arr => arr[(Math.random()*arr.length)|0];
+
+function barraAposta(txt, botoes){
+  const b = $("t-aposta");
+  b.innerHTML = `<span class="txt">${txt}</span>`;
+  botoes.forEach(([lbl,fn])=>{ const x = document.createElement("button"); x.textContent = lbl;
+    x.onclick = ()=>{ b.classList.add("hidden"); fn(); }; b.appendChild(x); });
+  b.classList.remove("hidden");
+  b.querySelector("button").focus({preventScroll:true});
+}
+
+function pedirTruco(a){
+  const prox = proxValor(T.pendente || T.valor);
+  if(!prox || T.fim) return;
+  const quem = timeSigla(T.times[a]);
+  if(T.ultimoPediu === quem) return;
+  T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = true; T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
+  reg("pediu", { quem: a===0 ? "voce" : "bot", assento:a, aposta:prox });
+  T.msg = `${NOMES[T.n][a]} pediu ${nomeAposta(prox)}!`;
+  render();
+
+  const respondente = quem === "p" ? 1 : 0;              // time que responde
+  if(respondente === 0){
+    const opcoes = [["Aceitar", ()=>aceitar("p")], ["Correr", ()=>correr("p")]];
+    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0)]);
+    barraAposta(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. E aí?`, opcoes);
+  } else {
+    setTimeout(()=>botResponde(respondente), 900);
+  }
+}
+
+function aceitar(quem){
+  T.parceiroAberto = false;   // consultou pra decidir; decidiu, fecha
+  reg("aceitou", { quem: quem==="p" ? "voce" : "bot", aposta:T.pendente });
+  T.valor = T.pendente; T.pendente = null;
+  T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.aceita) };
+  const suaVez = T.pos < T.n && T.ordem[T.pos] === 0;
+  T.msg = (quem === "p" ? (T.n===4 ? "Vocês toparam" : "Você topou") : "Toparam!")
+        + ` Vale ${T.valor}` + (suaVez ? " — manda ver!" : ".");
+  render();
+  const a = T.ordem[T.pos];
+  if(T.pos < T.n && a !== 0) setTimeout(()=>turnoBot(a), 800);
+}
+
+function correr(quem){
+  T.parceiroAberto = false;
+  reg("correu", { quem: quem==="p" ? "voce" : "bot", valia:T.valor });
+  T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.corre) };
+  T.msg = quem === "p" ? "Vocês correram." : "Correram! Ponto é seu.";
+  fimDaMao(quem === "p" ? "b" : "p", T.valor);
+}
+
+function fimDaMao(vencedor, pontos){
+  reg("fim_mao", { vencedor, pontos });
+  T.pendente = null;
+  if(vencedor === "n") T.msg = "Mão empatada — ninguém pontua.";
+  else{
+    T.placar[vencedor === "p" ? 0 : 1] += pontos;
+    const quem = vencedor === "p" ? (T.n===4?"Sua dupla fez ":"Você fez ") : "Os adversários fizeram ";
+    T.msg = quem + pontos + (pontos>1 ? " pontos." : " ponto.");
+  }
+  T.mesa = new Array(T.n).fill(null);
+  render();
+
+  if(T.placar[0] >= 12 || T.placar[1] >= 12){
+    T.fim = true;
+    const ganhou = T.placar[0] >= 12;
+    setTimeout(()=>modal(ganhou ? "Vocês venceram o jogo!" : "Os adversários venceram. Revanche?",
+      [["Jogar de novo", ()=>setModoTruco(T.n)], ["Sair da mesa", voltar]]), 1200);
+    return;
+  }
+  T.abreMao = (T.abreMao + 1) % T.n;
+  setTimeout(novaMao, 1800);
+}
+
+/* =========================================================
+   CACHETA — 2 baralhos (108 cartas, 4 coringas), 6–10 jogadores,
+   regras da casa: declaração vou/corro, pontos 10/−1/−2, recompra
+   ========================================================= */
+/* regras, política e simulação moram em cacheta_core.js — o mesmo motor que
+   o treinador usa. Aqui em cima fica só a interface. */
+const C_ORDEM = CAC.ORDEM, C_NAIPES = CAC.NAIPES, JOKER = CAC.JOKER;
+/* cartas/fr/<rank>_of_<naipe>.png — nomes do baralho Byron Knoll */
+const FR_R = { A:"ace", J:"jack", Q:"queen", K:"king" };
+const FR_S = { "♦":"diamonds", "♠":"spades", "♥":"hearts", "♣":"clubs" };
+const FR_ARQ = c => ehCoringa(c) ? "red_joker" : (FR_R[c.r] || c.r) + "_of_" + FR_S[c.s];
+const ci = CAC.ci, ehCoringa = CAC.ehCoringa;
+let G = null;
+let CFG = { nj: 6, dif: "medio" };
+
+const ehJogo = CAC.ehJogo, fecha = CAC.fecha, indiceParaBater = CAC.indiceParaBater;
+
+/* deixa a mão arrumada: jogos fechados, depois pares, coringa na direita */
+function ordenar(m){ const o = CAC.organizarMao(m); m.length = 0; o.forEach(c=>m.push(c)); return m; }
+
+/* tabela aprendida no treinador (treino.html). Sem ela o bot usa o palpite do motor. */
+let TABELA = null;
+try{ TABELA = JSON.parse(localStorage.getItem("cacheta_tabela") || "null"); }catch(e){}
+
+const NIVEL_POL = {
+  facil:   Object.assign({}, CAC.POL_PADRAO, { ruidoDecl:.45, ruidoDesc:14, perigo:0, ganhoLixo:99 }),
+  medio:   Object.assign({}, CAC.POL_PADRAO, { ruidoDecl:.12, ruidoDesc:4 }),
+  dificil: Object.assign({}, CAC.POL_PADRAO)
+};
+const POL = () => NIVEL_POL[(G && G.dif) || CFG.dif] || CAC.POL_PADRAO;
+const pontuar = cs => CAC.pontuar(cs, POL());
+const melhorDescarte = mao => CAC.escolherDescarte(mao, POL(), G && G.perigo);
+
+/* ---- registro de jogadas: Supabase + cópia local ---- */
+const SB_URL = "https://yvwfyhjhxbvxpcqejdsa.supabase.co";
+const SB_KEY = "sb_publishable_Xv7FzSBFEFozSc9EoEdGcg_WTtOltFp";
+const SESSAO = Date.now().toString(36);
+function reg(tipo, dados){
+  const jogo = $("scr-truco").classList.contains("hidden") ? "cacheta" : "truco";
+  let estado = null;
+  try{
+    estado = jogo === "truco"
+      ? (T && { placar:T.placar, valor:T.valor, modo:T.n, dif:T.dif, vazas:T.vazas,
+                mao:(T.maos||[])[0], mesa:T.mesa, vira:T.vira })
+      : (G && { pts:G.jog.map(j=>j.pts), dif:G.dif, mao:G.jog[0].mao,
+                lixo_topo:G.lixo[G.lixo.length-1] || null });
+  }catch(e){}
+  const evento = Object.assign({ t:Date.now(), jogo, tipo }, dados||{});
+  try{   // ponytail: guarda só os últimos 500; sem isso o localStorage cresce sem fim
+    const L = JSON.parse(localStorage.getItem("jogos_log") || "[]");
+    L.push(evento);
+    localStorage.setItem("jogos_log", JSON.stringify(L.slice(-500)));
+  }catch(e){}
+  fetch(SB_URL + "/rest/v1/eventos", { method:"POST",
+    headers:{ "Content-Type":"application/json", apikey:SB_KEY, Authorization:"Bearer "+SB_KEY },
+    body: JSON.stringify({ sessao:SESSAO, jogo, tipo,
+                           dados: Object.assign({}, dados||{}, { estado }) })
+  }).catch(()=>{});   // ponytail: sem fila offline; perde evento se cair a internet
+}
+const maoStr = m => m.map(c=>c.r+(c.s||"")).join(" ");
+
+/* ---- configuração ---- */
+const C_NOMES = ["Você","Beto","Cida","Duda","Edu","Fabi","Gil","Hugo","Iara","Juca"];
+function abrirCacheta(){
+  mostrar("scr-cacheta-cfg");
+  const nj = $("cfg-nj"); nj.innerHTML = "";
+  for(let n=6;n<=10;n++){ const b=document.createElement("button"); b.textContent=n;
+    b.className = CFG.nj===n?"on":""; b.onclick=()=>{CFG.nj=n; abrirCacheta();}; nj.appendChild(b); }
+  const dif = $("cfg-dif"); dif.innerHTML = "";
+  [["facil","Fácil"],["medio","Médio"],["dificil","Difícil"]].forEach(([k,lbl])=>{
+    const b=document.createElement("button"); b.textContent=lbl;
+    b.className = CFG.dif===k?"on":""; b.onclick=()=>{CFG.dif=k; abrirCacheta();}; dif.appendChild(b); });
+}
+function cacComecar(){
+  G = {
+    dif: CFG.dif,
+    jog: Array.from({length:CFG.nj}, (_,i)=>({ nome:C_NOMES[i], humano:i===0, pts:10, fora:false })),
+    dealer: (Math.random()*CFG.nj)|0,
+  };
+  mostrar("scr-cacheta");
+  cacNovaRodada();
+}
+
+/* ---- rodada ---- */
+function vivos(){ return G.jog.filter(j=>!j.fora); }
+function ordemDesde(d){ // dealer+1, dealer+2, ..., dealer — pulando quem está fora
+  const o=[]; const n=G.jog.length;
+  for(let k=1;k<=n;k++){ const j=G.jog[(d+k)%n]; if(!j.fora) o.push(j); }
+  return o;
+}
+function cacNovaRodada(){
+  const baralho = CAC.embaralhar(CAC.novoBaralho());
+  G.jog.forEach(j=>{ if(!j.fora){ j.aReceber = baralho.splice(0,9); j.mao = []; j.foi = null; } });
+  G.deck = baralho; G.lixo = [];
+  G.ordem = ordemDesde(G.dealer);          // último = dealer
+  G.fase = "dando"; G.di = 0; G.rapido = false;
+  G.comprou = false; G.nova = null; G.fim = false;
+  G.perigo = new Set();
+  G.msg = "Dando as cartas...";
+  cacRender();
+  darCartas(0);
+}
+/* uma carta por vez, na volta da mesa, como na mesa de verdade */
+function darCartas(k){
+  if(k >= 9){
+    G.lixo = [G.deck.pop()];
+    ordenar(G.jog[0].mao);
+    G.fase = "declara"; G.msg = "";
+    cacRender();
+    setTimeout(proxDeclara, 300);
+    return;
+  }
+  G.ordem.forEach(j => j.mao.push(j.aReceber[k]));
+  cacRender();
+  setTimeout(()=>darCartas(k+1), 105);
+}
+function proxDeclara(){
+  if(G.di >= G.ordem.length){ fimDeclara(); return; }
+  const j = G.ordem[G.di];
+  const ehDealer = G.di === G.ordem.length-1;
+  const ninguemFoi = G.ordem.slice(0,G.di).every(x=>x.foi===false);
+  if(ehDealer && ninguemFoi){                       // dealer obrigado
+    j.foi = true;
+    G.msg = j.nome + (j.humano?" (você)":"") + " é obrigado a ir — ninguém foi.";
+    G.di++; cacRender(); setTimeout(proxDeclara, espera(1000)); return;
+  }
+  if(j.humano){
+    G.msg = "Sua vez: você vai ou corre?";
+    cacRender(); return;                            // espera o clique
+  }
+  // bot declara: mesma conta de EV do motor, com a tabela aprendida se houver
+  const jaForam = G.ordem.slice(0, G.di).filter(x=>x.foi).length;
+  const vai = CAC.decidirIr(
+    { falta: CAC.falta(j.mao), jaForam, nMesa: G.ordem.length, pts: j.pts, obrigado:false },
+    POL(), TABELA);
+  j.foi = vai;
+  G.msg = j.nome + (vai ? " vai." : " correu.");
+  G.di++; cacRender(); setTimeout(proxDeclara, espera(700));
+}
+function cacDeclarar(vai){
+  const j = G.ordem[G.di];
+  if(G.fase!=="declara" || !j || !j.humano) return;
+  j.foi = vai;
+  reg("declara", { mao:maoStr(j.mao), pts:j.pts, foi:vai, pos:G.di, njRodada:G.ordem.length });
+  G.di++; cacRender(); setTimeout(proxDeclara, 400);
+}
+function fimDeclara(){
+  const foram = G.ordem.filter(j=>j.foi);
+  if(foram.length === 1){
+    G.msg = foram[0].nome + " ganhou sozinho — ninguém mais foi!";
+    return fimRodada(foram[0]);
+  }
+  G.fase = "jogo";
+  G.ativos = G.ordem.filter(j=>j.foi);
+  G.vi = 0;
+  proxVez();
+}
+function proxVez(){
+  if(G.fim) return;
+  const j = G.ativos[G.vi];
+  G.comprou = false; G.nova = null;
+  if(j.humano){ G.msg = "Sua vez — compre uma carta."; cacRender(); return; }
+  G.msg = j.nome + " jogando...";
+  cacRender();
+  setTimeout(()=>botJoga(j), espera(800));
+}
+function repor(){
+  if(G.deck.length) return;
+  const topo = G.lixo.pop();
+  G.deck = shuffle(G.lixo); G.lixo = [topo];
+}
+function passaVez(){
+  G.vi = (G.vi+1) % G.ativos.length;
+  proxVez();
+}
+
+/* ---- humano joga ---- */
+function cacComprar(de){
+  const j = G.ativos && G.ativos[G.vi];
+  if(G.fase!=="jogo" || !j || !j.humano || G.comprou) return;
+  if(de==="monte"){ repor(); if(!G.deck.length) return; G.nova = G.deck.pop(); }
+  else{ if(!G.lixo.length) return; G.nova = G.lixo.pop(); }
+  reg("compra", { de, carta:G.nova.r+G.nova.s, mao:maoStr(j.mao) });
+  j.mao.push(G.nova); G.comprou = true;   // entra na ponta; quem organiza é o jogador
+  G.msg = "Agora descarte uma carta — ou bata.";
+  cacRender();
+}
+function cacDescartar(i){
+  const j = G.ativos && G.ativos[G.vi];
+  if(G.fase!=="jogo" || !j || !j.humano || !G.comprou) return;
+  const c = j.mao[i];
+  reg("descarta", { carta:c.r+c.s, mao:maoStr(j.mao) });
+  G.lixo.push(j.mao.splice(i,1)[0]);
+  passaVez();
+}
+function cacBater(){
+  const j = G.ativos && G.ativos[G.vi];
+  if(!j || !j.humano || !G.comprou) return;
+  const i = indiceParaBater(j.mao);
+  if(i === -1) return;
+  reg("bateu", { mao:maoStr(j.mao) });
+  G.lixo.push(j.mao.splice(i,1)[0]);
+  G.msg = "Você bateu!";
+  fimRodada(j);
+}
+
+/* ---- bot joga ---- */
+function botJoga(j){
+  if(G.fim) return;
+  const topo = G.lixo[G.lixo.length-1];
+  let pegou = false;
+  if(topo && CAC.pegarDoLixo(j.mao, topo, POL())){
+    j.mao.push(G.lixo.pop()); pegou = true;
+    G.perigo.add(topo.r); G.perigo.add(topo.s);   // ele quer isso: não alimentar
+  }
+  if(!pegou){ repor(); if(!G.deck.length) return fimRodada(null); j.mao.push(G.deck.pop()); }
+
+  const bi = indiceParaBater(j.mao);
+  if(bi !== -1){
+    G.lixo.push(j.mao.splice(bi,1)[0]);
+    G.msg = j.nome + " bateu!";
+    return fimRodada(j);
+  }
+  const di = melhorDescarte(j.mao);
+  G.lixo.push(j.mao.splice(di,1)[0]);
+  passaVez();
+}
+
+/* ---- fim de rodada, pontos, recompra ---- */
+function fimRodada(vencedor){
+  G.fim = true; G.fase = "fim";
+  if(!vencedor) G.msg = "Acabaram as cartas — rodada anulada.";
+  else{
+    G.ordem.forEach(j=>{
+      if(j === vencedor) return;                    // bateu/ganhou: mantém
+      j.pts = Math.max(0, j.pts - (j.foi ? 2 : 1)); // foi e perdeu −2, correu −1
+    });
+    reg("rodada", { venceu: vencedor.humano, pontos: G.jog.map(j=>j.pts) });
+  }
+  cacRender();
+  setTimeout(trataZerados, espera(1400));
+}
+function trataZerados(){
+  const z = G.ordem.find(j => j.pts===0 && !j.fora);
+  if(!z) return fimOuProxima();
+  const vivosComPonto = G.jog.filter(j=>!j.fora && j.pts>0);
+  if(!vivosComPonto.length) return fimOuProxima();
+  const minPts = Math.min(...vivosComPonto.map(j=>j.pts));
+  if(z.humano){
+    modal("Você zerou! Recomprar e voltar com "+minPts+" ponto(s)? (Se recusar, está fora do jogo.)",
+      [["Recomprar", ()=>{ z.pts = minPts; reg("recompra",{aceitou:true,pts:minPts}); trataZerados(); }],
+       ["Ficar fora", ()=>{ z.fora = true; reg("recompra",{aceitou:false}); trataZerados(); }]]);
+  }else{
+    // ponytail: bot recompra 1 vez; ilimitado deixaria o jogo sem fim
+    z.rec = (z.rec||0)+1;
+    if(z.rec<=1){ z.pts = minPts; G.msg = z.nome+" recomprou com "+minPts+" ponto(s)."; }
+    else{ z.fora = true; G.msg = z.nome+" está fora do jogo."; }
+    cacRender();
+    setTimeout(trataZerados, espera(900));
+  }
+}
+function fimOuProxima(){
+  const v = vivos();
+  const eu = G.jog[0];
+  if(v.length <= 1){
+    const win = v[0];
+    modal(win ? (win.humano ? "VOCÊ VENCEU O JOGO!" : win.nome+" venceu o jogo.") : "Jogo encerrado.",
+      [["Jogar de novo", cacComecar],["Menu", voltar]]);
+    return;
+  }
+  if(eu.fora){
+    modal("Você ficou fora do jogo.", [["Jogar de novo", cacComecar],["Menu", voltar]]);
+    return;
+  }
+  // próximo dealer: próximo vivo depois do atual
+  let d = G.dealer;
+  do{ d = (d+1)%G.jog.length; }while(G.jog[d].fora);
+  G.dealer = d;
+  cacNovaRodada();
+}
+
+/* ---- render ---- */
+function cacRender(){
+  if(!G) return;
+  const vezJog = G.fase==="jogo" ? G.ativos[G.vi]
+               : G.fase==="declara" ? G.ordem[G.di] : null;
+  // cadeiras em elipse; humano (índice 0) embaixo, sentido anti-horário
+  const n = G.jog.length, W = $("c-seats").parentElement.clientWidth || 980, H = W*560/980;
+  fill("c-seats", G.jog.map((j,i)=>{
+    const ang = Math.PI/2 + (i/n)*2*Math.PI;
+    const x = W/2 + Math.cos(ang)*(W/2-70), y = H/2 + Math.sin(ang)*(H/2-58);
+    const d = document.createElement("div");
+    d.className = "seat" + (j===vezJog?" vez":"") + (j.fora?" fora":"") + (j.humano?" eu":"");
+    d.style.left = x+"px"; d.style.top = y+"px";
+    const cartas = j.fora || j.foi===false ? 0 : Math.min(9,(j.mao||[]).length);
+    const stack = Array.from({length:Math.min(cartas,4)},(_,k)=>
+      '<div class="mini" style="left:'+(k*2)+'px;top:'+(-k*2)+'px"></div>').join("");
+    const balao = j.foi===true && G.fase!=="fim" ? '<div class="balao vou">vou</div>'
+                : j.foi===false ? '<div class="balao corro">corro</div>' : "";
+    d.innerHTML = balao + '<div class="stack">'+stack+'</div>'
+      + '<div class="nome">'+j.nome+'</div><div class="pts">'+j.pts+'</div>'
+      + (G.jog[G.dealer]===j ? '<div class="dealer" title="dá as cartas">D</div>' : "");
+    return d;
+  }));
+  $("c-deck").textContent = G.deck ? G.deck.length : 0;
+
+  const eu = G.jog[0];
+  const minhaVez = vezJog && vezJog.humano;
+  const podeComprar = G.fase==="jogo" && minhaVez && !G.comprou && !G.fim;
+  fill("c-monte", [ G.deck && G.deck.length ? cardEl(null,"",podeComprar?()=>cacComprar("monte"):null) : slot() ]);
+  fill("c-lixo",  [ G.lixo && G.lixo.length
+      ? cardCac(G.lixo[G.lixo.length-1],"",podeComprar?()=>cacComprar("lixo"):null) : slot() ]);
+
+  const podeDescartar = G.fase==="jogo" && minhaVez && G.comprou && !G.fim;
+  // A mão só é redesenhada quando muda de verdade. Sem isso, cada bot que
+  // declarava disparava um cacRender e arrancava a carta da mão do jogador
+  // no meio do arrasto.
+  const cont = $("c-phand");
+  const assinatura = (eu.mao||[]).map(c=>c.r+c.s).join(",") + "|" + podeDescartar
+                   + "|" + (G.nova ? G.nova.r+G.nova.s : "");
+  if(!cont._arrastando && cont._assinatura !== assinatura){
+    cont._assinatura = assinatura;
+    fill("c-phand", (eu.mao||[]).map(c=>{
+      const el = cardCac(c, c===G.nova ? "new" : "", null);
+      el._c = c;
+      if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
+      return el;
+    }));
+  }
+  arrastavel(cont);
+  $("c-msg").textContent = G.msg;
+
+  // só aparece quando você já está fora da rodada — não tem o que esperar
+  const eu_fora = eu.foi === false || (G.fase==="jogo" && G.ativos && !G.ativos.includes(eu));
+  const mostrarRapido = eu_fora && G.fase !== "fim";
+  $("c-rapido").classList.toggle("hidden", !mostrarRapido);
+  $("c-rapido").classList.toggle("on", !!G.rapido);
+  $("c-rapido").textContent = G.rapido ? "RÁPIDO ✓" : "AVANÇAR ▶▶";
+
+  const declara = G.fase==="declara" && minhaVez;
+  $("c-vou").classList.toggle("hidden", !declara);
+  $("c-corro").classList.toggle("hidden", !declara);
+  const podeBater = podeDescartar && indiceParaBater(eu.mao) !== -1;
+  $("c-bater").classList.toggle("hidden", !podeBater);
+  $("c-bater").disabled = !podeBater;
+}
+window.addEventListener("resize", ()=>{ if(G && !$("scr-cacheta").classList.contains("hidden")) cacRender(); });
+// ponytail: um multiplicador só; nada de fila de animação
+const espera = ms => (G && G.rapido) ? Math.max(30, ms/12) : ms;
+function cacRapido(){ if(G){ G.rapido = !G.rapido; cacRender(); } }
+
+function cacOrganizar(){ if(G) { ordenar(G.jog[0].mao); cacRender(); } }
+
+/* arrasta as cartas da mão pra reorganizar (mouse e toque).
+   A ordem do DOM vira a ordem da mão no soltar. */
+function arrastavel(cont){
+  if(cont._pronto) return; cont._pronto = true;
+  let alvo = null, movido = false, x0 = 0;
+  cont.addEventListener("pointerdown", e=>{
+    const el = e.target.closest(".fc"); if(!el || !cont.contains(el)) return;
+    alvo = el; movido = false; x0 = e.clientX; cont._arrastando = true;
+    el.setPointerCapture(e.pointerId); el.classList.add("drag");
+  });
+  cont.addEventListener("pointermove", e=>{
+    if(!alvo) return;
+    if(Math.abs(e.clientX - x0) > 6) movido = true;
+    for(const n of [...cont.children]){
+      if(n === alvo) continue;
+      const r = n.getBoundingClientRect(), meio = r.left + r.width/2;
+      const pos = n.compareDocumentPosition(alvo);
+      if(e.clientX < meio && (pos & Node.DOCUMENT_POSITION_FOLLOWING)){ cont.insertBefore(alvo, n); break; }
+      if(e.clientX > meio && (pos & Node.DOCUMENT_POSITION_PRECEDING)){ cont.insertBefore(alvo, n.nextSibling); break; }
+    }
+  });
+  const soltar = ()=>{
+    cont._arrastando = false;
+    if(!alvo) return;
+    alvo.classList.remove("drag");
+    const nova = [...cont.children].map(n=>n._c).filter(Boolean);
+    if(G && nova.length === G.jog[0].mao.length){ G.jog[0].mao = nova; cont._assinatura = null; }
+    const clique = (!movido && alvo._click) || null;
+    alvo = null;
+    if(clique) clique(); else cacRender();
+  };
+  cont.addEventListener("pointerup", soltar);
+  cont.addEventListener("pointercancel", soltar);
+}
+
+/* cartas da cacheta: cartas/fr/*.png (Byron Knoll) — ver FR_ARQ */
+
+function cardCac(c, cls, onclick){
+  const d = document.createElement("div");
+  const red = c && (c.s === "♥" || c.s === "♦" || ehCoringa(c));
+  d.className = "fc " + (cls || "") + (red ? " red" : "") + (c && ehCoringa(c) ? " jok" : "");
+  d.innerHTML = `<img src="cartas/fr/${FR_ARQ(c)}.png" alt="">`;
+  d.setAttribute("aria-label", ehCoringa(c) ? "coringa" : c.r + " de " + c.s);
+  if(onclick){ d.classList.add("click"); d.onclick = onclick; }
+  return d;
+}
+
+/* ---- autoteste: abra o console (F12) e veja "testes ok" ---- */
+(function(){
+  const c = (r,s)=>({r,s});
+  const salvo = T;
+  T = { manilha: manilhaDe(c("7","O")) };
+  console.assert(T.manilha === "10", "vira 7 -> manilha 10");
+  console.assert(manilhaDe(c("3","P")) === "4", "vira 3 -> manilha 4 (dá a volta)");
+  console.assert(forca(c("10","P")) > forca(c("10","C")), "gato > copa");
+  console.assert(forca(c("10","C")) > forca(c("10","E")), "copa > espada");
+  console.assert(forca(c("10","E")) > forca(c("10","O")), "espada > mole");
+  console.assert(forca(c("10","O")) > forca(c("3","P")), "qualquer manilha > 3");
+  console.assert(forca(c("3","O")) > forca(c("2","P")), "3 > 2 fora da manilha");
+  console.assert(forca(c("1","O")) > forca(c("12","P")), "1 > 12 fora da manilha");
+  T = { manilha: manilhaDe(c("12","O")) };
+  console.assert(T.manilha === "1" && forca(c("1","P")) === 14, "vira 12 -> gato é o 1 de paus");
+
+  // rodada em dupla: 4 cartas na mesa, ganha o time da mais forte
+  T = { n:4, times:[0,1,0,1], manilha:"4", mesa:[c("7","O"),c("2","C"),c("4","P"),c("3","E")],
+        vazas:[], abreVaza:0, valor:1 };
+  const jg = T.mesa.map((x,i)=>({c:x,i}));
+  const mx = Math.max(...jg.map(o=>forca(o.c)));
+  console.assert(T.times[jg.find(o=>forca(o.c)===mx).i] === 0, "gato do parceiro leva a rodada");
+  // empate entre times = rodada empatada
+  T.mesa = [c("3","O"),c("3","C"),c("5","P"),c("6","E")];
+  const jg2 = T.mesa.map((x,i)=>({c:x,i}));
+  const mx2 = Math.max(...jg2.map(o=>forca(o.c)));
+  console.assert(new Set(jg2.filter(o=>forca(o.c)===mx2).map(o=>T.times[o.i])).size === 2,
+                 "dois 3 de times diferentes = empate");
+
+  console.assert(donoDaMao(["p","p"]) === "p", "duas rodadas ganha");
+  console.assert(donoDaMao(["t","b"]) === "b", "empate na 1a: leva a seguinte");
+  console.assert(donoDaMao(["p","b","t"]) === "p", "empate na 3a: leva quem fez a 1a");
+  console.assert(donoDaMao(["t","t","t"]) === "n", "tudo empate = anulada");
+  console.assert(donoDaMao(["p"]) === null, "1 rodada não decide");
+
+  console.assert(ehJogo([c("5","♥"),c("6","♥"),c("7","♥")]), "sequência");
+  console.assert(ehJogo([c("Q","♠"),c("K","♠"),c("A","♠")]), "Q K A");
+  console.assert(!ehJogo([c("5","♥"),c("6","♠"),c("7","♥")]), "naipe diferente não é sequência");
+  console.assert(ehJogo([c("9","♥"),c("9","♠"),c("9","♣")]), "trinca");
+  console.assert(ehJogo([c("9","♥"),c("9","♥"),c("9","♣")]), "2 baralhos: trinca com naipe repetido vale");
+  console.assert(ehJogo([c("9","♥"),c("★",""),c("9","♣")]), "trinca com coringa");
+  console.assert(ehJogo([c("5","♥"),c("★",""),c("7","♥")]), "sequência com coringa no meio");
+  console.assert(!ehJogo([c("5","♥"),c("★",""),c("9","♥")]), "coringa não cobre buraco de 2");
+  console.assert(ehJogo([c("★",""),c("★",""),c("2","♦")]), "dois coringas fecham qualquer coisa");
+  console.assert(fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
+                        c("Q","♠"),c("K","♠"),c("A","♠")]), "mão fechada");
+  console.assert(!fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
+                         c("Q","♠"),c("K","♠"),c("2","♦")]), "mão aberta");
+  T = salvo;
+  console.log("testes ok");
+})();
+</script>
+</body>
+</html>

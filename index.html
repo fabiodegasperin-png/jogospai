@@ -174,6 +174,9 @@
   .box{background:var(--giz);color:var(--madeira2);border-radius:8px;padding:26px 28px;text-align:center;
        max-width:640px;box-shadow:4px 6px 0 #00000088;transform:rotate(-1deg)}
   .box p{font-family:var(--disp);font-size:30px;margin:0 0 18px;line-height:1.2}
+  #modal-vira{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0 0 16px}
+  #modal-vira span{font-family:var(--txt);font-size:18px;color:var(--madeira2)}
+  #modal-vira b{font-family:var(--disp);font-size:22px}
   details{background:#00000044;border-radius:8px;padding:10px 16px;margin-top:22px;font-size:20px;line-height:1.45}
   summary{cursor:pointer;font-size:22px;color:var(--copag-am);font-weight:700}
   @media (prefers-reduced-motion:reduce){ .card.click{transition:none} }
@@ -215,6 +218,7 @@
   .tt-av{width:86px;height:86px;margin:0 auto;border-radius:14px;display:flex;align-items:center;justify-content:center;
     font-size:54px;line-height:1;border:4px solid #fff;box-shadow:0 6px 14px #000a;
     background:linear-gradient(160deg,#f7e6c8,#dcb98a)}
+  .tt-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
   .tt-seat.amigo .tt-av{background:linear-gradient(160deg,#cfe3ff,#8fb6ea)}
   .tt-seat .tt-nome{margin-top:5px;display:inline-block;padding:3px 12px;border-radius:999px;background:#000a;color:#fff;
     font-size:18px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
@@ -265,14 +269,6 @@
   .tt-hand .card:nth-child(3){transform:rotate(7deg) translateY(6px)}
   .tt-hand .card.click:hover,.tt-hand .card.click:focus-visible{transform:translateY(-30px) scale(1.06);z-index:3;box-shadow:0 18px 24px #000c}
   .tt-hand .card:not(.click){filter:brightness(.8)}
-  .tt-hand .card.manilha{box-shadow:0 0 0 4px var(--copag-am),0 8px 14px #000b}
-  .tt-tag{position:absolute;left:50%;top:-16px;transform:translateX(-50%);padding:3px 12px;border-radius:999px;
-    font-family:var(--txt);font-size:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
-    box-shadow:0 3px 6px #000a;z-index:3}
-  .tt-tag.man{background:var(--copag-am);color:#2e1a0d}
-  .tt-tag.ganha{background:#2e8b3e;color:#fff}
-  .tt-tag.perde{background:#6b6b6b;color:#fff}
-  .tt-tag.empata{background:#9a7b1e;color:#fff}
 
   .tt-btn{position:absolute;right:2%;bottom:6%;z-index:5;font-size:34px;padding:18px 40px;border-radius:999px;
     background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 6px 0 #6a1410,0 10px 18px #000a}
@@ -293,12 +289,22 @@
     .tt-backs{width:70px;height:46px}.tt-backs .card{width:32px;height:46px;margin-left:-16px}
     .tt-slot .card{width:66px;height:99px}.tt-slot .card .n{font-size:15px}.tt-slot .card .pips{inset:8px}
     .tt-deck{transform:translate(-50%,-50%) scale(.7)}.tt-manilha{font-size:13px}.tt-manilha b{font-size:17px}
-    .tt-hand .card{width:92px;height:138px;margin:0 2px}.tt-hand .card .n{font-size:20px}.tt-hand .card .pips{inset:11px}
-    .tt-tag{font-size:12px;padding:2px 8px}
+    .tt-hand .card{width:92px;height:138px;margin:0 2px}.tt-hand .card .n{font-size:20px}
     .tt-msg{font-size:20px;flex-basis:100%}
     .tt-btn{font-size:22px;padding:12px 22px;bottom:2%}.tt-you{display:none}
   }
   @media (prefers-reduced-motion:reduce){.tt-balao,.tt-slot .card.in,.tt-seat.vez .tt-av,.tt-you.vez .tt-av,.tt-vale.alto b{animation:none}.tt-hand .card{transition:none}}
+  .tt-aposta{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+    margin:14px auto 0;max-width:920px;padding:14px 22px;border-radius:16px;
+    background:linear-gradient(180deg,#3d2614,#211206);border:3px solid var(--copag-am);
+    box-shadow:0 8px 22px #000b}
+  .tt-aposta .txt{font-family:var(--disp);font-size:26px;color:var(--copag-am);text-align:center}
+  .tt-aposta button{font-size:24px;padding:12px 26px;margin:0}
+  @media (max-width:760px){ .tt-aposta{gap:9px;padding:10px 12px;margin-top:10px}
+    .tt-aposta .txt{font-size:18px;flex-basis:100%} .tt-aposta button{font-size:17px;padding:9px 15px} }
+  .tt-backs.aberto{width:150px;height:96px;transform:translate(-50%,-22%);z-index:4}
+  .tt-backs.aberto .card{width:64px;height:96px;margin-left:-32px;box-shadow:0 0 0 3px var(--copag-am),0 3px 6px #000a}
+  @media (max-width:760px){ .tt-backs.aberto{width:96px;height:62px} .tt-backs.aberto .card{width:42px;height:62px;margin-left:-21px} }
 </style>
 </head>
 <body>
@@ -336,10 +342,11 @@
     <div id="tt-seats"></div>
     <div class="tt-deck" id="t-deck"></div>
     <div id="tt-slots"></div>
-    <div class="tt-you" id="tt-you"><div class="tt-av">👴</div><span class="tt-nome">Você</span></div>
+    <div class="tt-you" id="tt-you"><div class="tt-av"><img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')"></div><span class="tt-nome">Você</span></div>
     <div class="tt-hand" id="t-phand"></div>
     <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
   </div>
+  <div class="tt-aposta hidden" id="t-aposta"></div>
 </div>
 
 <!-- ================= CACHETA ================= -->
@@ -390,6 +397,7 @@
 </div>
 
 <div id="modal" class="overlay hidden"><div class="box">
+  <div id="modal-vira" class="hidden"></div>
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
@@ -445,7 +453,16 @@ function voltar(){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forE
                    $("scr-menu").classList.remove("hidden"); fecharModal(); }
 function mostrar(id){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
                       $(id).classList.remove("hidden"); }
-function modal(txt, botoes){
+function modal(txt, botoes, vira){
+  // a caixa fica no meio da mesa e tapa o vira; quando a decisão depende dele, mostra aqui
+  const v = $("modal-vira");
+  v.innerHTML = "";
+  v.classList.toggle("hidden", !vira);
+  if(vira){
+    v.appendChild(cardEl(vira));
+    v.insertAdjacentHTML("beforeend",
+      `<span>vira <b>${vira.r}</b> &middot; manilha <b>${T.manilha}</b></span>`);
+  }
   $("modal-txt").textContent = txt;
   const b = $("modal-btns"); b.innerHTML = "";
   botoes.forEach(([lbl,fn])=>{ const x=document.createElement("button"); x.textContent=lbl;
@@ -494,7 +511,8 @@ function novaMao(){
   const baralho = shuffle(T_ORDEM.flatMap(r => T_NAIPES.map(s => ({r,s}))));
   T.maos = []; for(let i=0;i<T.n;i++) T.maos.push(baralho.slice(i*3, i*3+3));
   T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
-  T.vazas = []; T.jogadas = []; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
+  $("t-aposta").classList.add("hidden");
+  T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
   T.abreVaza = T.abreMao;
   iniciarVaza();
 }
@@ -516,6 +534,8 @@ function seguir(){
 }
 
 const AVATAR = { 2:["👴","🤖"], 4:["👴","🧔","👩","👨‍🦰"] };
+/* assento 0 = o dono do jogo. Se perfil/pai.jpg nao existir, o onerror devolve o emoji. */
+const avatarHTML = a => a === 0 ? `<img src="perfil/pai.jpg" alt="" onerror="this.replaceWith('👴')">` : AVATAR[T.n][a];
 // posições (% da mesa) por assento: av = avatar, bk = cartas viradas, sl = carta jogada
 const POS = {
   2:{ 1:{av:[50,8], bk:[50,21], sl:[50,36]}, 0:{sl:[50,68]} },
@@ -542,13 +562,14 @@ function render(){
     const s = document.createElement("div");
     s.className = "tt-seat" + (T.times[a]===0?" amigo":"") + (a===vez?" vez":"");
     pct(s, p.av);
-    s.innerHTML = `<div class="tt-av">${AVATAR[T.n][a]}</div><span class="tt-nome">${NOMES[T.n][a]}</span>`;
+    s.innerHTML = `<div class="tt-av">${avatarHTML(a)}</div><span class="tt-nome">${NOMES[T.n][a]}</span>`;
     if(T.balao && T.balao.a===a) s.insertAdjacentHTML("afterbegin",
       `<div class="tt-balao${T.balao.grito?" grito":""}">${T.balao.txt}</div>`);
     seats.push(s);
-    const bk = document.createElement("div"); bk.className = "tt-backs"; pct(bk, p.bk);
+    const aberto = T.parceiroAberto && T.times[a] === T.times[0];   // só a mão do SEU parceiro
+    const bk = document.createElement("div"); bk.className = "tt-backs" + (aberto ? " aberto" : ""); pct(bk, p.bk);
     const n = T.maos[a].length, rot = [-14,0,14].slice(0,n);
-    T.maos[a].forEach((_,k)=>{ const c = cardEl(null); c.style.transform = `rotate(${rot[k] - (n===2?7:0)}deg)`; bk.appendChild(c); });
+    T.maos[a].forEach((cc,k)=>{ const c = cardEl(aberto ? cc : null); c.style.transform = `rotate(${rot[k] - (n===2?7:0)}deg)`; bk.appendChild(c); });
     seats.push(bk);
   }
   fill("tt-seats", seats);
@@ -586,19 +607,10 @@ function render(){
   });
   fill("tt-slots", slots);
 
-  // minha mão com dicas
+  // minha mão — sem dica nenhuma, quem lê a carta é o jogador
   const minhaVez = !T.fim && !T.pendente && vez === 0;
-  fill("t-phand", T.maos[0].map((c,i)=>{
-    const el = cardEl(c, c.r===T.manilha ? "manilha" : "", minhaVez ? ()=>jogar(0,i) : null);
-    const man = c.r===T.manilha;
-    let k = man ? ["man","Manilha"] : null;
-    if(minhaVez && lider){
-      const f = forca(c), r = f>lider.f ? ["ganha","Ganha"] : f===lider.f ? ["empata","Empata"] : ["perde","Perde"];
-      k = man ? [r[0], "Manilha · "+r[1]] : r;
-    }
-    if(k) el.insertAdjacentHTML("beforeend", `<span class="tt-tag ${k[0]}">${k[1]}</span>`);
-    return el;
-  }));
+  fill("t-phand", T.maos[0].map((c,i)=>
+    cardEl(c, "", minhaVez ? ()=>jogar(0,i) : null)));
 
   $("t-msg").textContent = T.msg;
   $("t-vazas").innerHTML = T.vazas.map(r=>`<span class="${r}" title="${r==="t"?"empate":nomeTime(r)}"></span>`).join("");
@@ -657,8 +669,15 @@ function ciclaDificuldade(){
 }
 
 const chaveC = c => c.r + c.s;
+/* Regra da casa: assim que alguém pede truco, cada dupla pode olhar a mão do parceiro.
+   Vale pros dois lados — inclusive pros bots, que passam a contar com essa informação. */
+function parceiroDe(a){ return T.n === 4 ? T.times.findIndex((tm,i)=> i !== a && tm === T.times[a]) : -1; }
+function parceiroVisivel(a){ return T.parceiroAberto ? parceiroDe(a) : -1; }
+
 function desconhecidas(a){
-  const vistas = new Set([chaveC(T.vira), ...T.jogadas.map(chaveC), ...T.maos[a].map(chaveC)]);
+  const par = parceiroVisivel(a);
+  const minhas = par >= 0 ? T.maos[a].concat(T.maos[par]) : T.maos[a];
+  const vistas = new Set([chaveC(T.vira), ...T.jogadas.map(chaveC), ...minhas.map(chaveC)]);
   const fora = [];
   T_ORDEM.forEach(r => T_NAIPES.forEach(s => { if(!vistas.has(r+s)) fora.push({r,s}); }));
   return fora;
@@ -713,9 +732,10 @@ function estadoBase(a, maos){
 }
 function reparte(a, fora){
   shuffle(fora);
+  const par = parceiroVisivel(a);
   let p = 0;
   return T.maos.map((m,i)=>{
-    if(i === a) return m.slice();
+    if(i === a || i === par) return m.slice();   // parceiro já mostrou: não sorteia
     const q = fora.slice(p, p + m.length); p += m.length; return q;
   });
 }
@@ -755,15 +775,40 @@ function assentoQueDecide(time){
   return meus[0];
 }
 
+/* Quando um truqueiro de verdade pede — e quando cala a boca.
+   Sem isso o bot pede truco na hora errada e blefa nove como se fosse um.  */
+const ESCALA_BLEFE = { 1:1, 3:0.40, 6:0.18, 9:0.08 };   // blefar sobe de preço junto com a aposta
+
+function momento(a){
+  const semCartas = !T.maos[a].length;
+  const primeiraVaza = T.vazas.length === 0;
+  const mesaVazia = T.mesa.every(c => !c);
+  let f = 1;
+
+  if(primeiraVaza && mesaVazia) f = 0.25;        // pedir de saída, sem ver nada: raro
+  else if(primeiraVaza)         f = 0.55;        // já viu a carta do outro: começa a valer
+  else if(T.vazas[0] === timeSigla(T.times[a])) f = 1.35;   // ganhou a primeira: a hora clássica
+
+  // já jogou tudo e o adversário ainda decide a vaza olhando a carta dele:
+  // pressionar aí só ganha se ele correr com carta boa — quase nunca
+  const faltaAdversario = T.mesa.some((c,i) => !c && T.times[i] !== T.times[a] && T.maos[i].length);
+  if(semCartas && faltaAdversario) f *= 0.35;
+  else if(semCartas) f *= 0.6;
+
+  return f;
+}
+
 function botResponde(time){
   const a = assentoQueDecide(time);
   const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
   const p = probMao(a, d.sims), r = Math.random();
   const prox = proxValor(T.pendente);
   const lim = limiteAceite(T.pendente, T.valor) + d.margem + per.ped;
-  const blefe = d.blefe * per.blefe;
-  if(prox && (p > 0.66 || r < blefe * 0.45)) return pedirTruco(a);   // sobe: de verdade ou blefando
-  if(p > lim || r < blefe) return aceitar(timeSigla(time));          // paga pra ver
+  const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * momento(a);
+
+  // sobe com mão de ferro; blefa só se ainda sobrar alguma chance real
+  if(prox && (p > 0.70 || (p > 0.22 && r < blefe))) return pedirTruco(a);
+  if(p > lim || r < 0.22) return aceitar(timeSigla(time));   // paga pra ver
   correr(timeSigla(time));
 }
 
@@ -774,9 +819,10 @@ function turnoBot(a){
 
   const prox = proxValor(T.valor);
   if(prox && T.ultimoPediu !== timeSigla(meuTime)){
-    const p = probMao(a, d.sims), r = Math.random();
-    const forte = p > 0.62 + per.ped;
-    if(forte ? r < 0.6 : (p < 0.34 && r < d.blefe * per.blefe * 0.55)) return pedirTruco(a);
+    const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
+    const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
+    const forte = p > 0.64 + per.ped;
+    if(forte ? r < 0.58 * m : (p > 0.22 && p < 0.40 && r < blefe)) return pedirTruco(a);
   }
 
   const probs = avaliaJogadas(a, d.sims);
@@ -826,12 +872,29 @@ function donoDaMao(r){
 }
 
 /* ---------------- apostas ---------------- */
+/* gíria de mesa — o bot responde como gente, não como caixa de diálogo */
+const FALAS = {
+  pede:   { 3:["TRUCO!","Truco, ladrão!","Truco!"], 6:["SEIS!","Seis!"], 9:["NOVE!"], 12:["DOZE!"] },
+  aceita: ["Tô dentro!","Manda ver!","Pode vir!","Tô junto!","Vem que tem!","Cara a cara!"],
+  corre:  ["Corro...","Tá teu.","Essa é tua.","Não vou não.","Fica pra próxima."]
+};
+const fala = arr => arr[(Math.random()*arr.length)|0];
+
+function barraAposta(txt, botoes){
+  const b = $("t-aposta");
+  b.innerHTML = `<span class="txt">${txt}</span>`;
+  botoes.forEach(([lbl,fn])=>{ const x = document.createElement("button"); x.textContent = lbl;
+    x.onclick = ()=>{ b.classList.add("hidden"); fn(); }; b.appendChild(x); });
+  b.classList.remove("hidden");
+  b.querySelector("button").focus({preventScroll:true});
+}
+
 function pedirTruco(a){
   const prox = proxValor(T.pendente || T.valor);
   if(!prox || T.fim) return;
   const quem = timeSigla(T.times[a]);
   if(T.ultimoPediu === quem) return;
-  T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; T.balao = { a, txt: nomeAposta(prox)+"!", grito:true };
+  T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = true; T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
   reg("pediu", { quem: a===0 ? "voce" : "bot", assento:a, aposta:prox });
   T.msg = `${NOMES[T.n][a]} pediu ${nomeAposta(prox)}!`;
   render();
@@ -840,7 +903,7 @@ function pedirTruco(a){
   if(respondente === 0){
     const opcoes = [["Aceitar", ()=>aceitar("p")], ["Correr", ()=>correr("p")]];
     if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0)]);
-    modal(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. O que você faz?`, opcoes);
+    barraAposta(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. E aí?`, opcoes);
   } else {
     setTimeout(()=>botResponde(respondente), 900);
   }
@@ -848,9 +911,11 @@ function pedirTruco(a){
 
 function aceitar(quem){
   reg("aceitou", { quem: quem==="p" ? "voce" : "bot", aposta:T.pendente });
-  T.valor = T.pendente; T.pendente = null; T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt:"Aceito!" };
-  T.msg = (quem === "p" ? (T.n===4?"Sua dupla aceitou":"Você aceitou") : "Aceitaram")
-        + ` — vale ${T.valor}.`;
+  T.valor = T.pendente; T.pendente = null;
+  T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.aceita) };
+  const suaVez = T.pos < T.n && T.ordem[T.pos] === 0;
+  T.msg = (quem === "p" ? (T.n===4 ? "Vocês toparam" : "Você topou") : "Toparam!")
+        + ` Vale ${T.valor}` + (suaVez ? " — manda ver!" : ".");
   render();
   const a = T.ordem[T.pos];
   if(T.pos < T.n && a !== 0) setTimeout(()=>turnoBot(a), 800);
@@ -858,8 +923,8 @@ function aceitar(quem){
 
 function correr(quem){
   reg("correu", { quem: quem==="p" ? "voce" : "bot", valia:T.valor });
-  T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt:"Corro..." };
-  T.msg = quem === "p" ? "Vocês correram." : "Os adversários correram!";
+  T.balao = { a: assentosDoTime(quem==="p"?0:1)[0], txt: fala(FALAS.corre) };
+  T.msg = quem === "p" ? "Vocês correram." : "Correram! Ponto é seu.";
   fimDaMao(quem === "p" ? "b" : "p", T.valor);
 }
 

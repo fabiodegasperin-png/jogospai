@@ -160,7 +160,22 @@
     background:#00000066;color:#fff;border:2px solid #ffffff44;margin:0}
   .btn-rapido.on{background:var(--gold);color:#2e1a0d;border-color:var(--gold)}
   @media (max-width:700px){.btn-rapido{font-size:15px;padding:7px 12px}}
-  .leque{display:flex;justify-content:center;margin:14px 0 0;padding:0 10px}
+  .resumo{text-align:center;font-family:Georgia,serif;font-size:19px;color:#e9e2cd;
+    opacity:.85;margin:10px 0 0;min-height:23px}
+  .resumo.pronta{color:#7fe08a;opacity:1;font-weight:bold}
+  .bloco{display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:7px 8px 5px;border-radius:12px;background:#ffffff12}
+  .bloco.fechado{background:#1c5c2a66;box-shadow:inset 0 0 0 2px #4caf5088}
+  .bloco .cartas{display:flex}
+  .bloco .cartas .fc{margin-left:-20px}
+  .bloco .cartas .fc:first-child{margin-left:0}
+  .etiqueta{font-family:Georgia,serif;font-size:15px;line-height:1.2;min-height:18px;
+    color:transparent;letter-spacing:.5px;white-space:nowrap}
+  .bloco.fechado .etiqueta{color:#0d2a12;background:#5bc46a;border-radius:7px;
+    padding:2px 13px;font-weight:bold}
+  .leque.solto .fc{margin-left:-22px}
+  .leque.solto .fc:first-child{margin-left:0}
+  .leque{display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:10px;margin:10px 0 0;padding:0 8px}
   .leque .fc{margin-left:-22px;transition:transform .12s;touch-action:none;cursor:grab}
   .leque .fc.drag{opacity:.6;transform:translateY(-16px) rotate(3deg);z-index:5;cursor:grabbing;
     box-shadow:0 12px 22px #000a;transition:none}
@@ -361,8 +376,14 @@
     .centro .lbl{font-size:12px;margin-top:2px}
     .centro .msg{font-size:15px;margin:5px 0 0;min-height:19px}
     .btn-rapido{font-size:14px;padding:6px 11px;top:2px;right:4px}
-    .leque{margin-top:8px}
-    .leque .fc{width:58px;height:87px;margin-left:-24px}
+    .resumo{font-size:16px;margin:7px 0 0;min-height:20px}
+    .leque{margin-top:6px;gap:6px;padding:0 4px}
+    .leque .fc{width:56px;height:84px}
+    .bloco{padding:5px 5px 3px;gap:3px;border-radius:9px}
+    .bloco .cartas .fc{margin-left:-26px}
+    .etiqueta{font-size:13px;min-height:16px}
+    .bloco.fechado .etiqueta{padding:1px 9px}
+    .leque.solto .fc{margin-left:-26px}
     #c-acts button{font-size:19px;padding:11px 16px;margin:4px 3px}
   }
   /* telas baixas: a mesa encolhe primeiro, a mão e os botões nunca */
@@ -460,6 +481,7 @@
       <div class="msg" id="c-msg"></div>
     </div>
   </div>
+  <div class="resumo" id="c-resumo"></div>
   <div class="leque" id="c-phand"></div>
   <div class="actions" id="c-acts">
     <button id="c-vou" onclick="cacDeclarar(true)">VOU</button>
@@ -474,7 +496,7 @@
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
-<script src="cacheta_core.js"></script>
+<script src="cacheta_core.js?v=3"></script>
 <script>
 "use strict";
 const $ = s => document.getElementById(s);
@@ -588,6 +610,7 @@ function novaMao(){
   T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
   $("t-aposta").classList.add("hidden");
   T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
+  T.travada = false;
   T.abreVaza = T.abreMao;
   // estado neutro pro render enquanto as cartas caem
   T.mesa = new Array(T.n).fill(null); T.ordem = []; T.pos = 0;
@@ -611,7 +634,57 @@ function iniciarVaza(){
   T.mesa = new Array(T.n).fill(null); T.ultimaJogada = -1; T.balao = null;
   T.ordem = []; for(let k=0;k<T.n;k++) T.ordem.push((T.abreVaza + k) % T.n);
   T.pos = 0;
+  if(T.vazas.length === 0 && maoDeOnze()) return;   // decisão antes da primeira carta
   seguir();
+}
+
+/* =========================================================
+   MÃO DE ONZE — quem chega a 11 olha as cartas (e a do parceiro)
+   e escolhe: vai valendo 3, ou não vai e entrega 1 ponto.
+   11 x 11: os dois são obrigados a ir, vale 3.
+   Em qualquer mão com um 11 na mesa, não se pede truco.
+   ========================================================= */
+function maoDeOnze(){
+  const onze = [0,1].filter(t => T.placar[t] === 11);
+  if(!onze.length) return false;
+  T.valor = 3; T.travada = true;
+
+  if(onze.length === 2){
+    T.msg = "Onze a onze! Os dois vão, vale 3 — quem ganhar, ganha.";
+    render();
+    return false;                                  // segue o jogo normal
+  }
+  const time = onze[0];
+  if(time === 0){
+    if(T.n === 4) T.parceiroAberto = true;         // consulta a mão do parceiro pra decidir
+    T.msg = "Mão de onze: olhe as cartas e decida.";
+    render();
+    barraAposta("Mão de onze — vale 3. Vai ou não vai?", [
+      ["Vou!",     ()=>{ T.parceiroAberto = false; reg("onze", {vai:true});
+                         T.msg = "Mão de onze valendo 3!"; render(); seguir(); }],
+      ["Não vou",  ()=>{ T.parceiroAberto = false; reg("onze", {vai:false});
+                         T.msg = "Não foram na mão de onze — 1 ponto pra eles.";
+                         fimDaMao("b", 1); }]
+    ]);
+  } else {
+    T.msg = "Mão de onze deles...";
+    render();
+    setTimeout(()=>{
+      const a = assentoQueDecide(time), d = DIF[T.dif] || DIF.dificil;
+      const per = T.persona[a] || PERSONAS[0];
+      // vai se a mão paga o risco: ganhar fecha o jogo, correr custa só 1
+      if(probMao(a, d.sims) > 0.55 + per.ped){
+        T.balao = { a, txt:"Vou!", grito:true };
+        T.msg = "Foram na mão de onze — vale 3!";
+        render(); seguir();
+      } else {
+        T.balao = { a, txt:"Não vou." };
+        T.msg = "Não foram na mão de onze — 1 ponto é seu.";
+        fimDaMao("p", 1);
+      }
+    }, 1100);
+  }
+  return true;
 }
 
 function seguir(){
@@ -722,8 +795,8 @@ function render(){
 
   const prox = proxValor(T.valor);
   const bt = $("t-truco");
-  bt.textContent = prox ? nomeAposta(prox) + "!" : "—";
-  bt.disabled = !(minhaVez && prox && T.ultimoPediu !== "p");
+  bt.textContent = T.travada ? "Mão de onze" : (prox ? nomeAposta(prox) + "!" : "—");
+  bt.disabled = !(minhaVez && prox && !T.travada && T.ultimoPediu !== "p");
 }
 window.addEventListener("resize", ()=>{ if(T && !$("scr-truco").classList.contains("hidden")) render(); });
 
@@ -924,7 +997,7 @@ function turnoBot(a){
   const mao = T.maos[a], meuTime = T.times[a];
   const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
 
-  const prox = proxValor(T.valor);
+  const prox = T.travada ? null : proxValor(T.valor);
   if(prox && T.ultimoPediu !== timeSigla(meuTime)){
     const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
     const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
@@ -1022,7 +1095,7 @@ function barraAposta(txt, botoes){
 
 function pedirTruco(a){
   const prox = proxValor(T.pendente || T.valor);
-  if(!prox || T.fim) return;
+  if(!prox || T.fim || T.travada) return;          // mão de onze: ninguém pede
   const quem = timeSigla(T.times[a]);
   if(T.ultimoPediu === quem) return;
   T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = true; T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
@@ -1448,14 +1521,39 @@ function cacRender(){
                    + "|" + (G.nova ? G.nova.r+G.nova.s : "");
   if(!cont._arrastando && cont._assinatura !== assinatura){
     cont._assinatura = assinatura;
-    fill("c-phand", (eu.mao||[]).map(c=>{
-      const el = cardCac(c, c===G.nova ? "new" : "", null);
-      el._c = c;
-      if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
-      return el;
-    }));
+    cont.classList.remove("solto");
+    cont.innerHTML = "";
+    CAC.gruposVisiveis(eu.mao || []).forEach(g=>{
+      const bl = document.createElement("div");
+      bl.className = "bloco" + (g.tipo ? " fechado" : "");
+      const linha = document.createElement("div");
+      linha.className = "cartas";
+      g.cartas.forEach(c=>{
+        const el = cardCac(c, c===G.nova ? "new" : "", null);
+        el._c = c;
+        if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
+        linha.appendChild(el);
+      });
+      bl.appendChild(linha);
+      const et = document.createElement("div");
+      et.className = "etiqueta";
+      et.textContent = g.tipo || "";
+      bl.appendChild(et);
+      cont.appendChild(bl);
+    });
   }
   arrastavel(cont);
+
+  // quantas cartas faltam pra bater — é o que decide o vou/corro
+  const res = $("c-resumo");
+  const m = eu.mao || [];
+  if(G.fim || !m.length) res.textContent = "";
+  else if(m.length === 9){
+    const f = CAC.falta(m);
+    res.textContent = f === 0 ? "Mão fechada!"
+      : "Falta " + f + (f === 1 ? " carta" : " cartas") + " pra bater";
+    res.classList.toggle("pronta", f === 0);
+  }else{ res.textContent = ""; res.classList.remove("pronta"); }
   $("c-msg").textContent = G.msg;
 
   // só aparece quando você já está fora da rodada — não tem o que esperar
@@ -1492,6 +1590,12 @@ function arrastavel(cont){
   let alvo = null, movido = false, x0 = 0;
   cont.addEventListener("pointerdown", e=>{
     const el = e.target.closest(".fc"); if(!el || !cont.contains(el)) return;
+    // desmancha os blocos antes de capturar o ponteiro: com as cartas soltas
+    // o arraste atravessa bloco sem precisar saber que blocos existem
+    const cartas = [...cont.querySelectorAll(".fc")];
+    cont.innerHTML = "";
+    cont.classList.add("solto");
+    cartas.forEach(c => cont.appendChild(c));
     alvo = el; movido = false; x0 = e.clientX; cont._arrastando = true;
     el.setPointerCapture(e.pointerId); el.classList.add("drag");
   });
@@ -1580,6 +1684,15 @@ function cardCac(c, cls, onclick){
                         c("Q","♠"),c("K","♠"),c("A","♠")]), "mão fechada");
   console.assert(!fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
                          c("Q","♠"),c("K","♠"),c("2","♦")]), "mão aberta");
+  // mão de onze: 11x11 vale 3, obrigados a ir e sem pedir truco
+  T = { n:2, times:[0,1], placar:[11,11], valor:1, travada:false, vazas:[], msg:"" };
+  const rd = render; render = ()=>{};
+  console.assert(maoDeOnze() === false, "11x11: joga direto, ninguém escolhe");
+  console.assert(T.valor === 3 && T.travada, "11x11: vale 3 e trava o truco");
+  T = { n:2, times:[0,1], placar:[7,4], valor:1, travada:false, vazas:[], msg:"" };
+  console.assert(maoDeOnze() === false && T.valor === 1 && !T.travada, "sem 11: mão normal");
+  render = rd;
+
   T = salvo;
   console.log("testes ok");
 })();

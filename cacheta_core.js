@@ -164,13 +164,14 @@ function melhorParticao(cs){
 /* Ordem "de mesa": jogos fechados primeiro, depois pares e quase-sequências,
    depois cartas soltas, coringa sempre na ponta direita. */
 function organizarMao(mao){
-  const cor   = mao.filter(ehCoringa);
-  const resto = mao.filter(c => !ehCoringa(c));
-  const { grupos } = melhorParticao(resto);
+  // o coringa entra na busca de jogos: senão uma mão fechada COM coringa
+  // não aparecia fechada. Só o coringa que sobra vai pra direita.
+  const { grupos } = melhorParticao(mao);
   const usados = new Set(), saida = [];
   grupos.forEach(g => { ordenar(g); g.forEach(c => { usados.add(c); saida.push(c); }); });
 
-  const sobra = resto.filter(c => !usados.has(c));
+  const cor   = mao.filter(c => !usados.has(c) && ehCoringa(c));
+  const sobra = mao.filter(c => !usados.has(c) && !ehCoringa(c));
   const feito = new Set(), blocos = [];
   sobra.forEach(c => {
     if(feito.has(c)) return;
@@ -186,6 +187,39 @@ function organizarMao(mao){
   blocos.sort((a,b) => b.length - a.length || ci(a[0]) - ci(b[0]));
   blocos.forEach(b => { ordenar(b); b.forEach(c => saida.push(c)); });
   return saida.concat(cor);
+}
+
+/* Como a mão deve aparecer na tela: blocos na ORDEM em que o jogador
+   deixou as cartas. Ler a ordem dele (e não recalcular a melhor divisão)
+   é o que faz o arraste continuar valendo — se ele junta uma quadra na
+   mão, o bloco se forma e ganha etiqueta sozinho. */
+function tipoDoJogo(g){
+  const nat = g.filter(c => !ehCoringa(c));
+  if(!nat.length) return "Coringas";
+  if(nat.every(c => c.r === nat[0].r))
+    return g.length === 3 ? "Trinca" : g.length === 4 ? "Quadra" : "Quina";
+  return "Sequência";
+}
+function gruposVisiveis(mao){
+  const grupos = [];
+  const comecaJogo = i => {                      // maior jogo que começa aqui
+    for(let t = Math.min(5, mao.length - i); t >= 3; t--)
+      if(ehJogo(mao.slice(i, i+t))) return t;
+    return 0;
+  };
+  let soltas = [];
+  const despeja = () => { if(soltas.length){ grupos.push({ cartas: soltas, tipo: null }); soltas = []; } };
+  for(let i = 0; i < mao.length; ){
+    const t = comecaJogo(i);
+    if(t){
+      despeja();
+      const g = mao.slice(i, i+t);
+      grupos.push({ cartas: g, tipo: tipoDoJogo(g) });
+      i += t;
+    }else{ soltas.push(mao[i]); i++; }
+  }
+  despeja();
+  return grupos;
 }
 
 /* combinações de tamanho k dos índices 0..n-1 */
@@ -660,6 +694,7 @@ return {
   ORDEM, NAIPES, JOKER, ci, ehCoringa, rot,
   novoBaralho, embaralhar, semente, ordenar,
   ehJogo, fecha, maxCob, falta, indiceParaBater, melhorParticao, organizarMao,
+  gruposVisiveis, tipoDoJogo,
   POL_PADRAO, pontuar, evIr, chaveDecl, probEstimada, probIr, decidirIr,
   pegarDoLixo, escolherDescarte, MIN_AMOSTRA,
   simularRodada, simularPartida, treinar, avaliar, otimizar, perfil

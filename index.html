@@ -118,11 +118,12 @@
   .card.sm .pips{inset:10px}
   .card.sm::before{inset:4px}.card.sm::after{inset:6px}
   .slot{width:104px;height:156px;border:3px dashed #ffffff44;border-radius:7px;flex:none}
+  #c-lixo .fc{box-shadow:0 0 0 3px #f5ecd8cc,0 0 18px 4px #f5ecd855,0 3px 7px #00000055}
 
   /* ---- mesa da cacheta ---- */
   .mesa-wrap{position:relative;width:100%;max-width:980px;aspect-ratio:980/560;margin:8px auto 0}
   .mesa-oval{position:absolute;inset:0;border-radius:50%/50%;
-    background:radial-gradient(ellipse at 50% 40%,#2f8f57 0%,#227447 45%,#175a36 100%);
+    background:radial-gradient(ellipse at 50% 38%,#4bbd77 0%,#2f8f57 26%,#1f6b40 62%,#114529 100%);
     box-shadow:inset 0 0 60px #0006, 0 0 0 14px #6b3f1d, 0 0 0 18px #3f2310, 0 18px 40px #0008}
   .mesa-oval::before{content:"";position:absolute;inset:22px;border-radius:50%;
     border:2px solid #ffffff22;pointer-events:none}
@@ -142,6 +143,13 @@
   .seat.vez .nome{color:var(--gold)}
   .seat.vez .stack{filter:drop-shadow(0 0 8px var(--gold))}
   .seat.vez{transform:translate(-50%,-50%) scale(1.08)}
+  /* anel da vez: o Cacheta League marca quem joga com um halo, nao com texto */
+  .seat.vez::before{content:"";position:absolute;left:50%;top:50%;width:104px;height:104px;
+    margin:-52px 0 0 -52px;border-radius:50%;pointer-events:none;z-index:-1;
+    background:radial-gradient(circle,#f2c40040 0%,transparent 70%);
+    box-shadow:0 0 0 3px #f2c400bb,0 0 22px 7px #f2c40055;
+    animation:seat-anel 1.4s ease-in-out infinite}
+  @keyframes seat-anel{50%{transform:scale(1.1)}}
   .seat.fora{opacity:.35;filter:grayscale(1)}
   .seat .dealer{position:absolute;top:-6px;right:6px;width:22px;height:30px;border-radius:3px;
     background:#b8222c;border:2px solid #f3d27a;font-size:9px;color:#f3d27a;line-height:26px;
@@ -155,12 +163,30 @@
   .seat .balao.vou{background:#f6e7a8;color:#3b2a00}
   .seat.eu .nome{font-size:20px}
   @keyframes pop{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
-  @media (prefers-reduced-motion:reduce){.seat .balao{animation:none}.seat{transition:none}}
+  @media (prefers-reduced-motion:reduce){.seat .balao,.seat.vez::before{animation:none}.seat{transition:none}}
   .btn-rapido{position:absolute;top:4px;right:8px;z-index:3;font-size:19px;padding:10px 18px;
     background:#00000066;color:#fff;border:2px solid #ffffff44;margin:0}
   .btn-rapido.on{background:var(--gold);color:#2e1a0d;border-color:var(--gold)}
   @media (max-width:700px){.btn-rapido{font-size:15px;padding:7px 12px}}
-  .leque{display:flex;justify-content:center;margin:14px 0 0;padding:0 10px}
+  .versao{text-align:center;font-size:15px;opacity:.5;margin:18px 0 0}
+  .versao button{font-size:18px;padding:10px 18px;background:var(--copag-am);
+    color:#2e1a0d;opacity:1;font-weight:bold}
+  .resumo{text-align:center;font-family:Georgia,serif;font-size:19px;color:#e9e2cd;
+    opacity:.85;margin:10px 0 0;min-height:23px}
+  .resumo.pronta{color:#7fe08a;opacity:1;font-weight:bold}
+  .bloco{display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:7px 8px 5px;border-radius:12px;background:#ffffff12}
+  .bloco.fechado{background:#1c5c2a66;box-shadow:inset 0 0 0 2px #4caf5088}
+  .bloco .cartas{display:flex}
+  .bloco .cartas .fc{margin-left:-20px}
+  .bloco .cartas .fc:first-child{margin-left:0}
+  .etiqueta{font-family:Georgia,serif;font-size:15px;line-height:1.2;min-height:18px;
+    color:transparent;letter-spacing:.5px;white-space:nowrap}
+  .bloco.fechado .etiqueta{align-self:stretch;margin:2px -8px -5px;padding:3px 0;text-align:center;
+    color:#0d2a12;background:#5bc46a;border-radius:0 0 10px 10px;font-weight:bold}
+  .leque.solto .fc{margin-left:-22px}
+  .leque.solto .fc:first-child{margin-left:0}
+  .leque{display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:10px;margin:10px 0 0;padding:0 8px}
   .leque .fc{margin-left:-22px;transition:transform .12s;touch-action:none;cursor:grab}
   .leque .fc.drag{opacity:.6;transform:translateY(-16px) rotate(3deg);z-index:5;cursor:grabbing;
     box-shadow:0 12px 22px #000a;transition:none}
@@ -337,45 +363,58 @@
   }
 
   /* ==================== CELULAR (cacheta) ====================
-     A mesa oval não cabe em 375px: com 10 jogadores os assentos ficavam a
-     26px de distância medindo 60px de altura, empilhando uns nos outros e
-     cobrindo o monte. No telefone viram fichas em grade, mesma informação. */
+     A mesa continua sendo mesa: o oval só gira pra retrato, como no
+     Cacheta League. A altura acompanha a tela pra mão e botões sempre
+     caberem sem rolagem. */
   @media (max-width:760px){
-    #scr-cacheta{padding:8px}
-    #scr-cacheta h2{font-size:24px;margin:4px 0}
-    .mesa-wrap{aspect-ratio:auto;max-width:none;margin:6px 0 0}
-    .mesa-oval{display:none}
-    #c-seats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
-      background:radial-gradient(ellipse at 50% 0,#2f8f57,#1a6039);
-      border:3px solid #6b3f1d;border-radius:14px;padding:9px 7px;
-      box-shadow:inset 0 0 26px #0006}
-    .seat{position:static;transform:none;width:auto;min-width:70px;flex:0 0 auto;
-      display:flex;flex-direction:column;align-items:center;gap:1px;
-      padding:5px 7px;border-radius:10px;background:#00000038}
-    .seat.vez{transform:none;background:#00000060;outline:2px solid var(--gold)}
-    .seat .stack{height:20px;width:24px;margin:0 0 2px}
-    .seat .stack .mini{width:16px;height:24px;border-width:1px;border-radius:3px}
-    .seat .nome{font-size:14px}
-    .seat .pts{font-size:14px;min-width:26px;padding:1px 7px;margin-top:1px}
-    .seat .balao{position:static;transform:none;animation:none;
-      font-size:11px;padding:0 7px;margin-bottom:2px;box-shadow:none}
-    .seat .balao::after{display:none}
-    .seat .dealer{position:static;width:auto;height:auto;line-height:1.4;
-      padding:0 5px;font-size:10px;margin-top:2px}
-    .centro{position:static;transform:none;margin:10px 0 0}
-    .centro .pilhas{gap:18px}
-    .centro .msg{font-size:17px;margin:8px 0 0;min-height:24px}
-    .btn-rapido{position:static;display:block;margin:8px auto 0}
-    .leque{margin-top:10px}
-    .leque .fc{width:62px;height:93px;margin-left:-25px}
+    #scr-cacheta{padding:6px}
+    #scr-cacheta h2{font-size:22px;margin:2px 0 0}
+    .mesa-wrap{aspect-ratio:auto;max-width:none;width:100%;
+      height:min(56vh, 470px);margin:4px auto 0}
+    .mesa-oval{border-radius:48%/34%;
+      box-shadow:inset 0 0 40px #0007, 0 0 0 9px #6b3f1d, 0 0 0 12px #3f2310, 0 10px 22px #0008}
+    .mesa-oval::before{inset:14px}
+    .seat{width:64px}
+    .seat .stack{height:26px;width:20px;margin:0 auto 2px}
+    .seat .stack .mini{width:15px;height:23px;border-width:1px;border-radius:3px}
+    .seat .nome{font-size:12px}
+    .seat .pts{font-size:13px;min-width:24px;padding:1px 7px;margin-top:1px;border-width:1px}
+    .seat.vez{transform:translate(-50%,-50%) scale(1.05)}
+    .seat .balao{font-size:11px;padding:1px 8px;top:-19px}
+    .seat .dealer{width:17px;height:23px;font-size:8px;line-height:20px;top:-4px;right:2px}
+    .centro .card,.centro .fc,.centro .slot{width:58px;height:87px}
+    .centro .pilhas{gap:14px}
+    .centro .lbl{font-size:12px;margin-top:2px}
+    .centro .msg{font-size:15px;margin:5px 0 0;min-height:19px}
+    .btn-rapido{font-size:14px;padding:6px 11px;top:2px;right:4px}
+    .resumo{font-size:16px;margin:7px 0 0;min-height:20px}
+    .leque{margin-top:6px;gap:6px;padding:0 4px}
+    .leque .fc{width:56px;height:84px}
+    .bloco{padding:5px 5px 3px;gap:3px;border-radius:9px}
+    .bloco .cartas .fc{margin-left:-26px}
+    .etiqueta{font-size:13px;min-height:16px}
+    .bloco.fechado .etiqueta{padding:1px 9px}
+    .leque.solto .fc{margin-left:-26px}
     #c-acts button{font-size:19px;padding:11px 16px;margin:4px 3px}
-    #scr-cacheta-cfg .opts button{font-size:20px;padding:10px 16px}
   }
-  /* telas bem estreitas: aperta mais a mão pra caber as 9 cartas */
+  /* telas baixas: a mesa encolhe primeiro, a mão e os botões nunca */
+  @media (max-height:700px){
+    #c-seats.cheia .seat .stack{display:none}
+    #c-seats.cheia .seat .balao{top:-16px}
+    #scr-cacheta h2{display:none}
+    .mesa-wrap{height:min(50vh, 340px)}
+    .seat{width:58px}
+    .seat .nome{font-size:11px}
+    .seat .stack{height:20px;width:17px}
+    .seat .stack .mini{width:13px;height:19px}
+    .centro .card,.centro .fc,.centro .slot{width:52px;height:78px}
+    .centro .msg{font-size:14px;margin:4px 0 0;min-height:18px}
+    .leque{margin-top:6px}
+    #c-acts button{padding:9px 14px;margin:3px}
+  }
   @media (max-width:400px){
-    .leque .fc{width:56px;height:84px;margin-left:-25px}
-    .seat{min-width:64px;padding:4px 5px}
-    .seat .nome{font-size:13px}
+    .leque .fc{width:53px;height:80px;margin-left:-23px}
+    .seat{width:58px}
   }
 </style>
 </head>
@@ -389,6 +428,7 @@
   <p style="text-align:center;margin:0"><button class="voltar" onclick="escolherJogador()">Trocar jogador</button></p>
   <button class="menu-btn" onclick="abrirTruco()">Truco</button>
   <button class="menu-btn" onclick="abrirCacheta()">Cacheta</button>
+  <div class="versao" id="versao"></div>
 </div>
 
 <!-- ================= TRUCO ================= -->
@@ -453,12 +493,12 @@
       <div class="msg" id="c-msg"></div>
     </div>
   </div>
+  <div class="resumo" id="c-resumo"></div>
   <div class="leque" id="c-phand"></div>
   <div class="actions" id="c-acts">
     <button id="c-vou" onclick="cacDeclarar(true)">VOU</button>
     <button id="c-corro" onclick="cacDeclarar(false)">CORRO</button>
     <button id="c-bater" onclick="cacBater()">BATER!</button>
-    <button id="c-org" class="voltar" onclick="cacOrganizar()">Organizar</button>
   </div>
 </div>
 
@@ -467,7 +507,7 @@
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
-<script src="cacheta_core.js"></script>
+<script src="cacheta_core.js?v=3"></script>
 <script>
 "use strict";
 const $ = s => document.getElementById(s);
@@ -581,6 +621,7 @@ function novaMao(){
   T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
   $("t-aposta").classList.add("hidden");
   T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
+  T.travada = false;
   T.abreVaza = T.abreMao;
   // estado neutro pro render enquanto as cartas caem
   T.mesa = new Array(T.n).fill(null); T.ordem = []; T.pos = 0;
@@ -604,7 +645,57 @@ function iniciarVaza(){
   T.mesa = new Array(T.n).fill(null); T.ultimaJogada = -1; T.balao = null;
   T.ordem = []; for(let k=0;k<T.n;k++) T.ordem.push((T.abreVaza + k) % T.n);
   T.pos = 0;
+  if(T.vazas.length === 0 && maoDeOnze()) return;   // decisão antes da primeira carta
   seguir();
+}
+
+/* =========================================================
+   MÃO DE ONZE — quem chega a 11 olha as cartas (e a do parceiro)
+   e escolhe: vai valendo 3, ou não vai e entrega 1 ponto.
+   11 x 11: os dois são obrigados a ir, vale 3.
+   Em qualquer mão com um 11 na mesa, não se pede truco.
+   ========================================================= */
+function maoDeOnze(){
+  const onze = [0,1].filter(t => T.placar[t] === 11);
+  if(!onze.length) return false;
+  T.valor = 3; T.travada = true;
+
+  if(onze.length === 2){
+    T.msg = "Onze a onze! Os dois vão, vale 3 — quem ganhar, ganha.";
+    render();
+    return false;                                  // segue o jogo normal
+  }
+  const time = onze[0];
+  if(time === 0){
+    if(T.n === 4) T.parceiroAberto = true;         // consulta a mão do parceiro pra decidir
+    T.msg = "Mão de onze: olhe as cartas e decida.";
+    render();
+    barraAposta("Mão de onze — vale 3. Vai ou não vai?", [
+      ["Vou!",     ()=>{ T.parceiroAberto = false; reg("onze", {vai:true});
+                         T.msg = "Mão de onze valendo 3!"; render(); seguir(); }],
+      ["Não vou",  ()=>{ T.parceiroAberto = false; reg("onze", {vai:false});
+                         T.msg = "Não foram na mão de onze — 1 ponto pra eles.";
+                         fimDaMao("b", 1); }]
+    ]);
+  } else {
+    T.msg = "Mão de onze deles...";
+    render();
+    setTimeout(()=>{
+      const a = assentoQueDecide(time), d = DIF[T.dif] || DIF.dificil;
+      const per = T.persona[a] || PERSONAS[0];
+      // vai se a mão paga o risco: ganhar fecha o jogo, correr custa só 1
+      if(probMao(a, d.sims) > 0.55 + per.ped){
+        T.balao = { a, txt:"Vou!", grito:true };
+        T.msg = "Foram na mão de onze — vale 3!";
+        render(); seguir();
+      } else {
+        T.balao = { a, txt:"Não vou." };
+        T.msg = "Não foram na mão de onze — 1 ponto é seu.";
+        fimDaMao("p", 1);
+      }
+    }, 1100);
+  }
+  return true;
 }
 
 function seguir(){
@@ -715,8 +806,8 @@ function render(){
 
   const prox = proxValor(T.valor);
   const bt = $("t-truco");
-  bt.textContent = prox ? nomeAposta(prox) + "!" : "—";
-  bt.disabled = !(minhaVez && prox && T.ultimoPediu !== "p");
+  bt.textContent = T.travada ? "Mão de onze" : (prox ? nomeAposta(prox) + "!" : "—");
+  bt.disabled = !(minhaVez && prox && !T.travada && T.ultimoPediu !== "p");
 }
 window.addEventListener("resize", ()=>{ if(T && !$("scr-truco").classList.contains("hidden")) render(); });
 
@@ -917,7 +1008,7 @@ function turnoBot(a){
   const mao = T.maos[a], meuTime = T.times[a];
   const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
 
-  const prox = proxValor(T.valor);
+  const prox = T.travada ? null : proxValor(T.valor);
   if(prox && T.ultimoPediu !== timeSigla(meuTime)){
     const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
     const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
@@ -1015,7 +1106,7 @@ function barraAposta(txt, botoes){
 
 function pedirTruco(a){
   const prox = proxValor(T.pendente || T.valor);
-  if(!prox || T.fim) return;
+  if(!prox || T.fim || T.travada) return;          // mão de onze: ninguém pede
   const quem = timeSigla(T.times[a]);
   if(T.ultimoPediu === quem) return;
   T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = true; T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
@@ -1207,7 +1298,6 @@ function cacNovaRodada(){
 /* uma carta por vez, na volta da mesa, como na mesa de verdade */
 function darCartas(k){
   if(k >= 9){
-    G.lixo = [G.deck.pop()];
     ordenar(G.jog[0].mao);
     G.fase = "declara"; G.msg = "";
     cacRender();
@@ -1254,6 +1344,9 @@ function fimDeclara(){
     G.msg = foram[0].nome + " ganhou sozinho — ninguém mais foi!";
     return fimRodada(foram[0]);
   }
+  // quem correu devolve as 9 cartas pro monte, que volta embaralhado
+  G.ordem.forEach(j=>{ if(!j.foi && j.mao.length){ G.deck.push(...j.mao); j.mao = []; } });
+  shuffle(G.deck);
   G.fase = "jogo";
   G.ativos = G.ordem.filter(j=>j.foi);
   G.vi = 0;
@@ -1269,7 +1362,7 @@ function proxVez(){
   setTimeout(()=>botJoga(j), espera(800));
 }
 function repor(){
-  if(G.deck.length) return;
+  if(G.deck.length || !G.lixo.length) return;
   const topo = G.lixo.pop();
   G.deck = shuffle(G.lixo); G.lixo = [topo];
 }
@@ -1400,10 +1493,16 @@ function cacRender(){
   const vezJog = G.fase==="jogo" ? G.ativos[G.vi]
                : G.fase==="declara" ? G.ordem[G.di] : null;
   // cadeiras em elipse; humano (índice 0) embaixo, sentido anti-horário
-  const n = G.jog.length, W = $("c-seats").parentElement.clientWidth || 980, H = W*560/980;
+  const cx = $("c-seats").parentElement;
+  const n = G.jog.length;
+  const W = cx.clientWidth || 980, H = cx.clientHeight || W*560/980;
+  const raioX = Math.max(40, W/2 - (W < 560 ? 38 : 70));
+  const raioY = Math.max(40, H/2 - (W < 560 ? 42 : 58));
+  // mesa cheia em tela baixa: o montinho de cartas sai pra ninguém encavalar
+  $("c-seats").classList.toggle("cheia", n >= 9);
   fill("c-seats", G.jog.map((j,i)=>{
     const ang = Math.PI/2 + (i/n)*2*Math.PI;
-    const x = W/2 + Math.cos(ang)*(W/2-70), y = H/2 + Math.sin(ang)*(H/2-58);
+    const x = W/2 + Math.cos(ang)*raioX, y = H/2 + Math.sin(ang)*raioY;
     const d = document.createElement("div");
     d.className = "seat" + (j===vezJog?" vez":"") + (j.fora?" fora":"") + (j.humano?" eu":"");
     d.style.left = x+"px"; d.style.top = y+"px";
@@ -1435,14 +1534,39 @@ function cacRender(){
                    + "|" + (G.nova ? G.nova.r+G.nova.s : "");
   if(!cont._arrastando && cont._assinatura !== assinatura){
     cont._assinatura = assinatura;
-    fill("c-phand", (eu.mao||[]).map(c=>{
-      const el = cardCac(c, c===G.nova ? "new" : "", null);
-      el._c = c;
-      if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
-      return el;
-    }));
+    cont.classList.remove("solto");
+    cont.innerHTML = "";
+    CAC.gruposVisiveis(eu.mao || []).forEach(g=>{
+      const bl = document.createElement("div");
+      bl.className = "bloco" + (g.tipo ? " fechado" : "");
+      const linha = document.createElement("div");
+      linha.className = "cartas";
+      g.cartas.forEach(c=>{
+        const el = cardCac(c, c===G.nova ? "new" : "", null);
+        el._c = c;
+        if(podeDescartar){ el.classList.add("click"); el._click = ()=>cacDescartar(eu.mao.indexOf(c)); }
+        linha.appendChild(el);
+      });
+      bl.appendChild(linha);
+      const et = document.createElement("div");
+      et.className = "etiqueta";
+      et.textContent = g.tipo || "";
+      bl.appendChild(et);
+      cont.appendChild(bl);
+    });
   }
   arrastavel(cont);
+
+  // quantas cartas faltam pra bater — é o que decide o vou/corro
+  const res = $("c-resumo");
+  const m = eu.mao || [];
+  if(G.fim || !m.length) res.textContent = "";
+  else if(m.length === 9){
+    const f = CAC.falta(m);
+    res.textContent = f === 0 ? "Mão fechada!"
+      : "Falta " + f + (f === 1 ? " carta" : " cartas") + " pra bater";
+    res.classList.toggle("pronta", f === 0);
+  }else{ res.textContent = ""; res.classList.remove("pronta"); }
   $("c-msg").textContent = G.msg;
 
   // só aparece quando você já está fora da rodada — não tem o que esperar
@@ -1470,7 +1594,6 @@ window.addEventListener("resize", ()=>{ if(G && !$("scr-cacheta").classList.cont
 const espera = ms => (G && G.rapido) ? Math.max(30, ms/12) : ms;
 function cacRapido(){ if(G){ G.rapido = !G.rapido; cacRender(); } }
 
-function cacOrganizar(){ if(G) { ordenar(G.jog[0].mao); cacRender(); } }
 
 /* arrasta as cartas da mão pra reorganizar (mouse e toque).
    A ordem do DOM vira a ordem da mão no soltar. */
@@ -1479,6 +1602,12 @@ function arrastavel(cont){
   let alvo = null, movido = false, x0 = 0;
   cont.addEventListener("pointerdown", e=>{
     const el = e.target.closest(".fc"); if(!el || !cont.contains(el)) return;
+    // desmancha os blocos antes de capturar o ponteiro: com as cartas soltas
+    // o arraste atravessa bloco sem precisar saber que blocos existem
+    const cartas = [...cont.querySelectorAll(".fc")];
+    cont.innerHTML = "";
+    cont.classList.add("solto");
+    cartas.forEach(c => cont.appendChild(c));
     alvo = el; movido = false; x0 = e.clientX; cont._arrastando = true;
     el.setPointerCapture(e.pointerId); el.classList.add("drag");
   });
@@ -1518,6 +1647,25 @@ function cardCac(c, cls, onclick){
   if(onclick){ d.classList.add("click"); d.onclick = onclick; }
   return d;
 }
+
+/* O GitHub Pages manda o navegador guardar a página por 10 minutos, então
+   dava pra corrigir algo, publicar, abrir e ver a versão velha sem perceber.
+   Aqui embaixo o jogo diz qual versão carregou e avisa quando tem outra. */
+(function(){
+  const el = document.getElementById("versao");
+  if(!el) return;
+  const carregada = new Date(document.lastModified);
+  const quando = carregada.toLocaleString("pt-BR",
+    { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+  el.textContent = "versão de " + quando;
+  if(location.protocol === "file:") return;
+  fetch(location.href, { cache:"no-store", method:"HEAD" }).then(r=>{
+    const lm = r.headers.get("last-modified");
+    if(lm && new Date(lm).getTime() > carregada.getTime() + 2000){
+      el.innerHTML = '<button onclick="location.reload(true)">Tem versão nova — tocar para atualizar</button>';
+    }
+  }).catch(()=>{});
+})();
 
 /* ---- autoteste: abra o console (F12) e veja "testes ok" ---- */
 (function(){
@@ -1567,6 +1715,15 @@ function cardCac(c, cls, onclick){
                         c("Q","♠"),c("K","♠"),c("A","♠")]), "mão fechada");
   console.assert(!fecha([c("9","♥"),c("9","♠"),c("9","♣"),c("5","♥"),c("6","♥"),c("7","♥"),
                          c("Q","♠"),c("K","♠"),c("2","♦")]), "mão aberta");
+  // mão de onze: 11x11 vale 3, obrigados a ir e sem pedir truco
+  T = { n:2, times:[0,1], placar:[11,11], valor:1, travada:false, vazas:[], msg:"" };
+  const rd = render; render = ()=>{};
+  console.assert(maoDeOnze() === false, "11x11: joga direto, ninguém escolhe");
+  console.assert(T.valor === 3 && T.travada, "11x11: vale 3 e trava o truco");
+  T = { n:2, times:[0,1], placar:[7,4], valor:1, travada:false, vazas:[], msg:"" };
+  console.assert(maoDeOnze() === false && T.valor === 1 && !T.travada, "sem 11: mão normal");
+  render = rd;
+
   T = salvo;
   console.log("testes ok");
 })();

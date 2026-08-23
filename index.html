@@ -507,6 +507,7 @@
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
+<script src="truco_core.js?v=1"></script>
 <script src="cacheta_core.js?v=3"></script>
 <script>
 "use strict";
@@ -592,9 +593,9 @@ const NOMES = { 2:["Você","Máquina"], 4:["Você","Adversário 1","Parceiro","A
 let T = null;
 let modoTruco = 2;
 
-const manilhaDe = vira => T_ORDEM[(T_ORDEM.indexOf(vira.r) + 1) % T_ORDEM.length];
-const forcaM = (c, man) => c.r === man ? 10 + NAIPE_FORCA[c.s] : T_ORDEM.indexOf(c.r) + 1;
-function forca(c){ return forcaM(c, T.manilha); }
+const manilhaDe = vira => TRUCO.manilhaDe(vira);
+const forcaM = TRUCO.forca;
+function forca(c){ return TRUCO.forca(c, T.manilha); }
 
 const timeSigla = t => t === 0 ? "p" : "b";
 const assentosDoTime = t => T.times.map((x,i)=>x===t?i:-1).filter(i=>i>=0);
@@ -681,10 +682,9 @@ function maoDeOnze(){
     T.msg = "Mão de onze deles...";
     render();
     setTimeout(()=>{
-      const a = assentoQueDecide(time), d = DIF[T.dif] || DIF.dificil;
-      const per = T.persona[a] || PERSONAS[0];
+      const a = TRUCO.assentoQueDecide(T, time), P = paramsDoBot(a);
       // vai se a mão paga o risco: ganhar fecha o jogo, correr custa só 1
-      if(probMao(a, d.sims) > 0.55 + per.ped){
+      if(TRUCO.probMao(T, a, P.sims, Math.random) > 0.55){
         T.balao = { a, txt:"Vou!", grito:true };
         T.msg = "Foram na mão de onze — vale 3!";
         render(); seguir();
@@ -828,29 +828,80 @@ function liderAtual(){
 }
 
 /* =========================================================
-   IA DO TRUCO — Monte Carlo por determinização.
+   O motor mora em truco_core.js (mesmo arquivo que o treinador
+   usa). Aqui ficam só as amarras com a tela.
 
-   O bot NÃO enxerga a mão de ninguém e o baralho continua
-   100% aleatório. Ele só usa o que qualquer jogador na mesa
-   veria: a própria mão, o vira e as cartas já jogadas.
-   A partir daí sorteia as cartas que faltam, joga a mão até
-   o fim centenas de vezes e escolhe a carta que mais vence.
+   Os números vieram de auto-jogo: 14 gerações de mutação e
+   seleção, validadas em 800 partidas. Ver truco_dna.json.
    ========================================================= */
+const CAMPEAO = {
+  pedir:0.88, subir:0.96, margem:0.25, freqPede:0.30, pagaPraVer:0.02,
+  blefe:0.00, bl3:0.33, bl6:0.20, bl9:0.08, blefeMin:0.22, blefeMax:0.35,
+  mSaida:0.24, mPrimeira:0.55, mGanhouPrimeira:1.09,
+  mSemCartas:0.74, mSemCartasExposto:0.33,
+  cegoPedir:0.04, cegoBlefe:0.30, cegoFreq:0.64
+};
+
+/* Blefe custa vitória contra qualquer adversário medido (0.10 de blefe
+   tira ~6 pontos percentuais). Então blefe deixou de ser "esperteza" e
+   virou o handicap dos níveis fáceis: quanto mais fácil, mais o bot
+   blefa e mais frouxo ele aceita. No difícil ele joga a conta seca. */
 const DIF = {
-  facil:   { sims: 24,  erro: 0.38, margem: 0.12, blefe: 0.05 },
-  normal:  { sims: 90,  erro: 0.12, margem: 0.03, blefe: 0.10 },
-  dificil: { sims: 260, erro: 0.00, margem:-0.03, blefe: 0.17 }
+  facil:   Object.assign({}, CAMPEAO, { sims:24,  erro:0.30, blefe:0.30,
+             pedir:0.55, subir:0.62, margem:-0.10, freqPede:0.75, pagaPraVer:0.30 }),
+  normal:  Object.assign({}, CAMPEAO, { sims:90,  erro:0.10, blefe:0.14,
+             pedir:0.70, subir:0.80, margem:0.05, freqPede:0.50, pagaPraVer:0.15 }),
+  dificil: Object.assign({}, CAMPEAO, { sims:260, erro:0 })
 };
 const DIF_ORDEM = ["facil","normal","dificil"];
 const DIF_NOME  = { facil:"Fácil", normal:"Normal", dificil:"Difícil" };
 let dificuldade = "dificil";
 
-// cada bot joga de um jeito: uns seguram, outros vão pra cima
+/* Personalidade: pequenos desvios no DNA, pra cada bot da mesa jogar
+   de um jeito. Sem isso os quatro assentos são clones. */
 const PERSONAS = [
-  { nome:"calmo",   ped:+0.07, blefe:0.5 },
-  { nome:"valente", ped:-0.09, blefe:1.7 },
-  { nome:"raposa",  ped:-0.01, blefe:1.2 }
+  { nome:"calmo",   pedir:+0.05, freqPede:-0.10, blefe:0.6 },
+  { nome:"valente", pedir:-0.07, freqPede:+0.20, blefe:1.8 },
+  { nome:"raposa",  pedir:-0.01, freqPede:+0.05, blefe:1.2 }
 ];
+
+/* ---- leitura do adversário ----
+   Medido no simulador: contra quem corre muito, subir freqPede de 0.30
+   para 0.90 vale +14 pontos percentuais. Blefar não vale nada (quem
+   corre te entrega só 1 ponto). Então o bot não blefa mais contra o
+   medroso — ele pede mais vezes, com mão de verdade. */
+function leituraDoAdversario(){
+  try{
+    const L = JSON.parse(localStorage.getItem("leitura_" + JOGADOR.id) || "null");
+    if(!L || (L.trucosRecebidos || 0) < 6) return null;   // pouca amostra: não inventa
+    return L.correu / L.trucosRecebidos;
+  }catch(e){ return null; }
+}
+function anotaResposta(correu){
+  try{
+    const k = "leitura_" + JOGADOR.id;
+    const L = JSON.parse(localStorage.getItem(k) || '{"trucosRecebidos":0,"correu":0}');
+    L.trucosRecebidos++; if(correu) L.correu++;
+    localStorage.setItem(k, JSON.stringify(L));
+  }catch(e){}
+}
+
+function paramsDoBot(a){
+  const d = DIF[T.dif] || DIF.dificil;
+  const per = (T.persona && T.persona[a]) || PERSONAS[0];
+  const P = Object.assign({}, d);
+  P.pedir    = Math.max(0.35, Math.min(0.98, P.pedir + per.pedir));
+  P.freqPede = Math.max(0.10, Math.min(1.00, P.freqPede + per.freqPede));
+  P.blefe    = P.blefe * per.blefe;
+
+  const fuga = leituraDoAdversario();
+  if(fuga !== null && T.dif !== "facil"){
+    // corre muito? pede mais. paga tudo? aperta a mão e cobra caro.
+    P.freqPede = Math.max(P.freqPede, Math.min(0.95, 0.30 + fuga * 0.75));
+    if(fuga < 0.25) P.margem = Math.max(P.margem, 0.30);
+  }
+  return P;
+}
 
 function ciclaDificuldade(){
   dificuldade = DIF_ORDEM[(DIF_ORDEM.indexOf(dificuldade)+1) % DIF_ORDEM.length];
@@ -858,181 +909,25 @@ function ciclaDificuldade(){
   $("t-df").textContent = DIF_NOME[dificuldade];
 }
 
-const chaveC = c => c.r + c.s;
-/* Regra da casa: assim que alguém pede truco, cada dupla pode olhar a mão do parceiro.
-   Vale pros dois lados — inclusive pros bots, que passam a contar com essa informação. */
-function parceiroDe(a){ return T.n === 4 ? T.times.findIndex((tm,i)=> i !== a && tm === T.times[a]) : -1; }
-function parceiroVisivel(a){ return T.parceiroAberto ? parceiroDe(a) : -1; }
-
-function desconhecidas(a){
-  const par = parceiroVisivel(a);
-  const minhas = par >= 0 ? T.maos[a].concat(T.maos[par]) : T.maos[a];
-  const vistas = new Set([chaveC(T.vira), ...T.jogadas.map(chaveC), ...minhas.map(chaveC)]);
-  const fora = [];
-  T_ORDEM.forEach(r => T_NAIPES.forEach(s => { if(!vistas.has(r+s)) fora.push({r,s}); }));
-  return fora;
-}
-
-/* política rápida usada dentro da simulação (não é a decisão real) */
-function politica(S, a){
-  const mao = S.maos[a];
-  const ord = mao.map((c,i)=>({f:forcaM(c,S.manilha), i})).sort((x,y)=>x.f-y.f);
-  let lider = null;
-  for(let i=0;i<S.n;i++){ const c = S.mesa[i]; if(!c) continue;
-    const f = forcaM(c,S.manilha); if(!lider || f > lider.f) lider = {i,f}; }
-  if(!lider) return ord[ord.length-1].i;
-  let empateContra = false;
-  for(let i=0;i<S.n;i++){ const c = S.mesa[i];
-    if(c && i!==lider.i && forcaM(c,S.manilha)===lider.f && S.times[i]!==S.times[lider.i]) empateContra = true; }
-  if(S.times[lider.i] === S.times[a] && !empateContra) return ord[0].i;
-  for(const o of ord) if(o.f > lider.f) return o.i;
-  return ord[0].i;
-}
-
-/* joga a mão até o fim; devolve "p", "b" ou "n" */
-function simulaMao(S){
-  let guard = 0;
-  while(donoDaMao(S.vazas) === null && guard++ < 24){
-    if(S.pos >= S.n){
-      let mx = -1, topos = [];
-      for(let i=0;i<S.n;i++){ const c = S.mesa[i]; if(!c) continue;
-        const f = forcaM(c,S.manilha);
-        if(f > mx){ mx = f; topos = [i]; } else if(f === mx) topos.push(i); }
-      const times = new Set(topos.map(i=>S.times[i]));
-      const r = times.size > 1 ? "t" : (S.times[topos[0]] === 0 ? "p" : "b");
-      S.vazas.push(r);
-      if(donoDaMao(S.vazas) !== null) break;
-      if(r !== "t") S.abreVaza = topos[0];
-      S.mesa = new Array(S.n).fill(null);
-      S.ordem = []; for(let k=0;k<S.n;k++) S.ordem.push((S.abreVaza + k) % S.n);
-      S.pos = 0;
-      continue;
-    }
-    const a = S.ordem[S.pos];
-    if(!S.maos[a].length) break;
-    S.mesa[a] = S.maos[a].splice(politica(S,a), 1)[0];
-    S.pos++;
-  }
-  return donoDaMao(S.vazas);
-}
-
-function estadoBase(a, maos){
-  return { n:T.n, times:T.times, manilha:T.manilha, mesa:T.mesa.slice(),
-           vazas:T.vazas.slice(), abreVaza:T.abreVaza, ordem:T.ordem.slice(), pos:T.pos, maos };
-}
-function reparte(a, fora){
-  shuffle(fora);
-  const par = parceiroVisivel(a);
-  let p = 0;
-  return T.maos.map((m,i)=>{
-    if(i === a || i === par) return m.slice();   // parceiro já mostrou: não sorteia
-    const q = fora.slice(p, p + m.length); p += m.length; return q;
-  });
-}
-const pontoDe = (dono, time) => dono === "n" ? 0.5 : (dono === timeSigla(time) ? 1 : 0);
-
-/* chance de cada carta da mão de `a` ganhar a mão (mesmo sorteio para todas) */
-function avaliaJogadas(a, sims){
-  const mao = T.maos[a], fora = desconhecidas(a), res = mao.map(()=>0);
-  for(let s=0;s<sims;s++){
-    const base = reparte(a, fora);
-    for(let k=0;k<mao.length;k++){
-      const maos = base.map(m=>m.slice());
-      const S = estadoBase(a, maos);
-      S.mesa[a] = S.maos[a].splice(k,1)[0];
-      S.pos++;
-      res[k] += pontoDe(simulaMao(S), T.times[a]);
-    }
-  }
-  return res.map(x => x / sims);
-}
-
-/* chance do time de `a` ganhar a mão daqui pra frente */
-function probMao(a, sims){
-  const fora = desconhecidas(a);
-  let tot = 0;
-  for(let s=0;s<sims;s++) tot += pontoDe(simulaMao(estadoBase(a, reparte(a, fora))), T.times[a]);
-  return tot / sims;
-}
-
-/* aceitar só compensa se a chance passa do preço da aposta */
-const limiteAceite = (vNovo, vVelho) => (vNovo - vVelho) / (2 * vNovo);
-
-function assentoQueDecide(time){
-  const meus = assentosDoTime(time).filter(i => T.maos[i].length);
-  if(!meus.length) return assentosDoTime(time)[0];
-  for(let k=0;k<T.n;k++){ const i = T.ordem[(T.pos + k) % T.n]; if(meus.includes(i)) return i; }
-  return meus[0];
-}
-
-/* Quando um truqueiro de verdade pede — e quando cala a boca.
-   Sem isso o bot pede truco na hora errada e blefa nove como se fosse um.  */
-const ESCALA_BLEFE = { 1:1, 3:0.40, 6:0.18, 9:0.08 };   // blefar sobe de preço junto com a aposta
-
-function momento(a){
-  const semCartas = !T.maos[a].length;
-  const primeiraVaza = T.vazas.length === 0;
-  const mesaVazia = T.mesa.every(c => !c);
-  let f = 1;
-
-  if(primeiraVaza && mesaVazia) f = 0.25;        // pedir de saída, sem ver nada: raro
-  else if(primeiraVaza)         f = 0.55;        // já viu a carta do outro: começa a valer
-  else if(T.vazas[0] === timeSigla(T.times[a])) f = 1.35;   // ganhou a primeira: a hora clássica
-
-  // já jogou tudo e o adversário ainda decide a vaza olhando a carta dele:
-  // pressionar aí só ganha se ele correr com carta boa — quase nunca
-  const faltaAdversario = T.mesa.some((c,i) => !c && T.times[i] !== T.times[a] && T.maos[i].length);
-  if(semCartas && faltaAdversario) f *= 0.35;
-  else if(semCartas) f *= 0.6;
-
-  return f;
-}
+/* ---- amarras: o core opera direto sobre T ---- */
+const parceiroDe      = a => TRUCO.parceiroDe(T, a);
+const parceiroVisivel = a => TRUCO.parceiroVisivel(T, a);
+const chaveC          = TRUCO.chave;
 
 function botResponde(time){
-  const a = assentoQueDecide(time);
-  const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
-  const p = probMao(a, d.sims), r = Math.random();
-  const prox = proxValor(T.pendente);
-  const lim = limiteAceite(T.pendente, T.valor) + d.margem + per.ped;
-  const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * momento(a);
-
-  // sobe com mão de ferro; blefa só se ainda sobrar alguma chance real
-  const cego = T.n === 4 && parceiroVisivel(a) < 0;
-  if(prox && (p > 0.70 + (cego ? 0.08 : 0) || (p > 0.22 && r < blefe * (cego ? 0.3 : 1)))) return pedirTruco(a);
-  if(p > lim || r < 0.22) return aceitar(timeSigla(time));   // paga pra ver
+  const a = TRUCO.assentoQueDecide(T, time);
+  const acao = TRUCO.responde(T, time, paramsDoBot(a), Math.random);
+  if(acao === "subir")   return pedirTruco(a);
+  if(acao === "aceitar") return aceitar(timeSigla(time));
   correr(timeSigla(time));
 }
 
 function turnoBot(a){
   if(T.fim || T.pendente || T.ordem[T.pos] !== a) return;
-  const mao = T.maos[a], meuTime = T.times[a];
-  const d = DIF[T.dif] || DIF.dificil, per = T.persona[a] || PERSONAS[0];
-
-  const prox = T.travada ? null : proxValor(T.valor);
-  if(prox && T.ultimoPediu !== timeSigla(meuTime)){
-    const p = probMao(a, d.sims), r = Math.random(), m = momento(a);
-    const blefe = d.blefe * per.blefe * (ESCALA_BLEFE[T.valor] || 0.08) * m;
-    // em dupla, apostar gasta os pontos do parceiro também: sem ver a mão dele, pega leve
-    const cego = T.n === 4 && parceiroVisivel(a) < 0;
-    const forte = p > 0.64 + per.ped + (cego ? 0.09 : 0);
-    if(forte ? r < 0.58 * m * (cego ? 0.55 : 1)
-             : (p > 0.22 && p < 0.40 && r < blefe * (cego ? 0.3 : 1))) return pedirTruco(a);
-  }
-
-  const probs = avaliaJogadas(a, d.sims);
-  let melhor = 0;
-  for(let i=1;i<probs.length;i++){
-    const dif = probs[i] - probs[melhor];
-    // empatou? guarda a carta forte pra depois
-    if(dif > 1e-9 || (Math.abs(dif) < 1e-9 && forca(mao[i]) < forca(mao[melhor]))) melhor = i;
-  }
-  // ponytail: erro = pegar a segunda melhor, não uma carta qualquer.
-  // Sortear às cegas fazia o bot matar 5 com 3 e guardar o 7 — cara de principiante.
-  if(probs.length > 1 && Math.random() < d.erro){
-    const ordenadas = probs.map((p,i)=>({p,i})).sort((x,y)=>y.p-x.p);
-    melhor = ordenadas[1].i;
-  }
-  jogar(a, melhor);
+  const P = paramsDoBot(a);
+  if(!T.travada && proxValor(T.valor) && TRUCO.querPedir(T, a, P, Math.random))
+    return pedirTruco(a);
+  jogar(a, TRUCO.decideCarta(T, a, P, Math.random));
 }
 
 function resolverVaza(){
@@ -1067,20 +962,7 @@ function resolverVaza(){
 }
 
 // null = indefinido; "p"/"b" = time vencedor; "n" = mão anulada
-function donoDaMao(r){
-  const conta = w => r.filter(x=>x===w).length;
-  if(conta("p")>=2) return "p";
-  if(conta("b")>=2) return "b";
-  if(r.length===0) return null;
-  if(r[0]==="t"){
-    const primeiro = r.find(x=>x!=="t");
-    if(primeiro) return primeiro;
-    return r.length===3 ? "n" : null;
-  }
-  if(r.length>=2 && r[1]==="t") return r[0];
-  if(r.length===3) return r[0];
-  return null;
-}
+const donoDaMao = TRUCO.donoDaMao;
 
 /* ---------------- apostas ---------------- */
 /* gíria de mesa — o bot responde como gente, não como caixa de diálogo */
@@ -1116,7 +998,8 @@ function pedirTruco(a){
 
   const respondente = quem === "p" ? 1 : 0;              // time que responde
   if(respondente === 0){
-    const opcoes = [["Aceitar", ()=>aceitar("p")], ["Correr", ()=>correr("p")]];
+    const opcoes = [["Aceitar", ()=>{ anotaResposta(false); aceitar("p"); }],
+                    ["Correr",  ()=>{ anotaResposta(true);  correr("p"); }]];
     if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0)]);
     barraAposta(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. E aí?`, opcoes);
   } else {

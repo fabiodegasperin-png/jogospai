@@ -487,7 +487,6 @@
     <button id="c-vou" onclick="cacDeclarar(true)">VOU</button>
     <button id="c-corro" onclick="cacDeclarar(false)">CORRO</button>
     <button id="c-bater" onclick="cacBater()">BATER!</button>
-    <button id="c-org" class="voltar" onclick="cacOrganizar()">Organizar</button>
   </div>
 </div>
 
@@ -1581,7 +1580,6 @@ window.addEventListener("resize", ()=>{ if(G && !$("scr-cacheta").classList.cont
 const espera = ms => (G && G.rapido) ? Math.max(30, ms/12) : ms;
 function cacRapido(){ if(G){ G.rapido = !G.rapido; cacRender(); } }
 
-function cacOrganizar(){ if(G) { ordenar(G.jog[0].mao); cacRender(); } }
 
 /* arrasta as cartas da mão pra reorganizar (mouse e toque).
    A ordem do DOM vira a ordem da mão no soltar. */

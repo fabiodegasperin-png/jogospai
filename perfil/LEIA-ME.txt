@@ -1,0 +1,5 @@
+pai.jpg = avatar do seu pai na mesa (canto de baixo, "Você").
+
+Pra trocar: substitua o arquivo, mesmo nome. Quadrada fica melhor —
+o jogo corta pelo centro (object-fit:cover) e mostra em 86x86.
+Se o arquivo sumir, o jogo cai no emoji e nada quebra.

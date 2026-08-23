@@ -1,0 +1,51 @@
+<!doctype html><meta charset="utf-8"><title>Escolha do baralho</title>
+<style>
+body{background:#1d6b45;color:#fff;font-family:Georgia,serif;margin:0;padding:22px}
+h1{color:#f0c419;font-size:24px;margin:0 0 4px} h2{color:#f0c419;font-size:19px;margin:26px 0 2px}
+p{margin:4px 0 10px;font-size:14px;max-width:900px;line-height:1.5}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#00000030;padding:14px;border-radius:10px}
+.row img{height:170px;border-radius:8px;background:#fff;box-shadow:0 3px 9px #0006}
+.tag{font-size:12px;background:#f2c400;color:#2e1a0d;padding:2px 8px;border-radius:99px;font-weight:700}
+.bad{background:#c62828;color:#fff} .ok{background:#2e8b3e;color:#fff}
+.fc{width:114px;height:170px;background:#fff;border-radius:8px;border:1px solid #d9d4c8;box-shadow:0 3px 9px #0006}
+.fc svg{display:block;width:100%;height:100%}
+</style>
+<h1>Baralhos que dá pra usar</h1>
+<p>Comparação lado a lado. Tudo abaixo é arte pronta e de verdade — nada desenhado por mim.</p>
+
+<h2>A — Baralho espanhol (Basquetteur / CC BY-SA) <span class="tag ok">truco</span></h2>
+<p>48 cartas: 1–9 + Sota(10), Cavalo(11), Rei(12), nos 4 naipes. É o padrão espanhol clássico, o mesmo que a Copag reproduz.
+<b>Problema:</b> os arquivos são vetor auto-traçado e pesam de 0,5 a 4 MB <i>por carta</i> (~100 MB no total). Precisa converter pra PNG 1x uma vez só → ~30 KB por carta.</p>
+<div class="row">
+  <img src="https://raw.githubusercontent.com/gjenkins20/spanish-playing-cards-svg/main/card_coins_01.svg" alt="Ás de ouros">
+  <img src="https://raw.githubusercontent.com/gjenkins20/spanish-playing-cards-svg/main/card_swords_03.svg" alt="3 de espadas">
+  <img src="https://raw.githubusercontent.com/gjenkins20/spanish-playing-cards-svg/main/card_cups_10.svg" alt="Sota de copas">
+  <img src="https://raw.githubusercontent.com/gjenkins20/spanish-playing-cards-svg/main/card_clubs_11.svg" alt="Cavalo de paus">
+  <img src="https://raw.githubusercontent.com/gjenkins20/spanish-playing-cards-svg/main/card_swords_12.svg" alt="Rei de espadas">
+</div>
+
+<h2>B — Baralho francês David Bellot (LGPL) <span class="tag ok">cacheta</span></h2>
+<p>52 cartas + 2 coringas + versos coloridos. PNG pronto, 45–120 KB por carta. É o baralho de carteado clássico que você vê em qualquer jogo de computador.</p>
+<div class="row">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/spade_1.png" alt="Ás de espadas">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/heart_queen.png" alt="Dama de copas">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/spade_king.png" alt="Rei de espadas">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/diamond_7.png" alt="7 de ouros">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/joker_red.png" alt="Coringa">
+  <img src="https://raw.githubusercontent.com/htdebeer/SVG-cards/master/png/2x/back-blue.png" alt="Verso">
+</div>
+
+<h2>C — O que o jogo tem hoje <span class="tag bad">inventado</span></h2>
+<p>Desenhado à mão em SVG dentro do <code>jogos.html</code>. Só pra comparar com A e B.</p>
+<div class="row" id="hoje"></div>
+
+<h2>D — O baralho Copag do seu pai <span class="tag">foto</span></h2>
+<p>Você fotografa/escaneia o baralho dele, eu recorto as 48 cartas e ligo no jogo. Aí é literalmente o baralho da mesa dele — melhor que A pra reconhecer.</p>
+<script>
+// puxa as cartas atuais direto do baralho.html já gerado
+fetch("baralho.html").then(r=>r.text()).then(t=>{
+  const d=document.createElement("div"); d.innerHTML=t;
+  const cs=[...d.querySelectorAll(".fc")].slice(0,6);
+  cs.forEach(c=>document.getElementById("hoje").appendChild(c));
+}).catch(()=>document.getElementById("hoje").textContent="(abra via servidor pra ver)");
+</script>

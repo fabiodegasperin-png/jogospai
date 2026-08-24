@@ -44,6 +44,8 @@ const PADRAO = {
   cegoBlefe:  0.30,   // quanto encolhe o blefe
   cegoFreq:   0.55,   // quanto encolhe a vontade de pedir
 
+  escondeCarta: 0.65,  // com que frequencia esconde quando a carta perde de qualquer jeito
+
   // motor
   sims: 260,          // simulações por decisão
   erro: 0             // chance de pegar a 2a melhor carta (handicap dos níveis fáceis)
@@ -51,7 +53,10 @@ const PADRAO = {
 
 /* ---- helpers ---- */
 const chave      = c => c.r + c.s;
-const forca      = (c, man) => c.r === man ? 10 + FORCA_NAIPE[c.s] : ORDEM.indexOf(c.r) + 1;
+/* Carta virada (jogada de costas) perde de qualquer carta aberta.
+   Serve pra descartar sem mostrar o que voce tinha. */
+const forca      = (c, man) => !c ? -1 : c.virada ? 0 :
+                   (c.r === man ? 10 + FORCA_NAIPE[c.s] : ORDEM.indexOf(c.r) + 1);
 const manilhaDe  = vira => ORDEM[(ORDEM.indexOf(vira.r) + 1) % ORDEM.length];
 const sigla      = t => t === 0 ? "p" : "b";
 const proxValor  = v => PROX[v] || null;
@@ -119,7 +124,7 @@ function simulaMao(S){
       if(donoDaMao(S.vazas) !== null) break;
       if(r !== "t") S.abreVaza = topos[0];
       S.mesa = new Array(S.n).fill(null);
-      S.ordem = []; for(let k=0;k<S.n;k++) S.ordem.push((S.abreVaza + k) % S.n);
+      S.ordem = []; for(let k=0;k<S.n;k++) S.ordem.push(((S.abreVaza - k) % S.n + S.n) % S.n);
       S.pos = 0;
       continue;
     }
@@ -137,12 +142,19 @@ function simulaMao(S){
 function parceiroDe(E, a){
   return E.n === 4 ? E.times.findIndex((tm,i)=> i !== a && tm === E.times[a]) : -1;
 }
-function parceiroVisivel(E, a){ return E.parceiroAberto ? parceiroDe(E, a) : -1; }
+/* Só consulta a mão do parceiro quem está RESPONDENDO a uma aposta.
+   Quem pede não olha — pediu por conta própria. */
+function parceiroVisivel(E, a){
+  if(!E.parceiroAberto) return -1;
+  if(E.parceiroAberto !== true && E.parceiroAberto !== sigla(E.times[a])) return -1;
+  return parceiroDe(E, a);
+}
 
 function desconhecidas(E, a){
   const par = parceiroVisivel(E, a);
   const minhas = par >= 0 ? E.maos[a].concat(E.maos[par]) : E.maos[a];
-  const vistas = new Set([chave(E.vira), ...E.jogadas.map(chave), ...minhas.map(chave)]);
+  const meusOcultos = (E.viradas && E.viradas[a]) || [];   // eu sei o que eu escondi
+  const vistas = new Set([chave(E.vira), ...E.jogadas.map(chave), ...minhas.map(chave), ...meusOcultos.map(chave)]);
   const fora = [];
   ORDEM.forEach(r => NAIPES.forEach(s => { if(!vistas.has(r+s)) fora.push({r,s}); }));
   return fora;
@@ -214,6 +226,14 @@ function assentoQueDecide(E, time){
 }
 
 /* qual carta jogar -> índice na mão */
+function liderDaVaza(E){
+  let l = null;
+  for(let i=0;i<E.n;i++){ const c = E.mesa[i]; if(!c) continue;
+    const f = forca(c, E.manilha); if(!l || f > l.f) l = { i, f }; }
+  return l;
+}
+
+/* devolve { i, virada } */
 function decideCarta(E, a, P, rnd){
   const probs = avaliaJogadas(E, a, P.sims, rnd);
   const mao = E.maos[a];
@@ -228,7 +248,11 @@ function decideCarta(E, a, P, rnd){
     const ord = probs.map((p,i)=>({p,i})).sort((x,y)=> y.p - x.p);
     melhor = ord[1].i;
   }
-  return melhor;
+  // esconder so faz sentido quando a carta perde de qualquer jeito (empatar e melhor que perder)
+  const lider = liderDaVaza(E);
+  const perdeAssim = lider && forca(E.maos[a][melhor], E.manilha) < lider.f;
+  const virada = !!(perdeAssim && E.vazas.length < 2 && rnd() < (P.escondeCarta || 0));
+  return { i: melhor, virada };
 }
 
 /* vai pedir truco agora? */
@@ -264,14 +288,14 @@ function novaMao(E, rnd){
   E.maos = []; for(let i=0;i<E.n;i++) E.maos.push(b.slice(i*3, i*3+3));
   E.vira = b[E.n*3];
   E.manilha = manilhaDe(E.vira);
-  E.vazas = []; E.jogadas = [];
+  E.vazas = []; E.jogadas = []; E.viradas = []; for(let i=0;i<E.n;i++) E.viradas.push([]);
   E.valor = 1; E.pendente = null; E.ultimoPediu = null; E.parceiroAberto = false;
   E.abreVaza = E.abreMao;
   iniciaVaza(E);
 }
 function iniciaVaza(E){
   E.mesa = new Array(E.n).fill(null);
-  E.ordem = []; for(let k=0;k<E.n;k++) E.ordem.push((E.abreVaza + k) % E.n);
+  E.ordem = []; for(let k=0;k<E.n;k++) E.ordem.push(((E.abreVaza - k) % E.n + E.n) % E.n);
   E.pos = 0;
 }
 function resolveVaza(E){
@@ -292,7 +316,7 @@ function negocia(E, pedinte, PS, rnd){
   let quem = sigla(E.times[pedinte]);
   E.pendente = proxValor(E.valor);
   E.ultimoPediu = quem;
-  if(E.n === 4) E.parceiroAberto = true;
+  if(E.n === 4) E.parceiroAberto = quem === "p" ? "b" : "p";   // quem responde é que consulta
   let guard = 0;
   while(guard++ < 6){
     const timeResp = quem === "p" ? 1 : 0;
@@ -329,9 +353,11 @@ function jogaMao(E, PS, rnd){
       const fim = negocia(E, a, PS, rnd);
       if(fim) return fim;
     }
-    const i = decideCarta(E, a, P, rnd);
-    E.mesa[a] = E.maos[a].splice(i,1)[0];
-    E.jogadas.push(E.mesa[a]);
+    const d = decideCarta(E, a, P, rnd);
+    const carta = E.maos[a].splice(d.i,1)[0];
+    if(d.virada){ carta.virada = true; E.viradas[a].push({ r:carta.r, s:carta.s }); }
+    else E.jogadas.push(carta);
+    E.mesa[a] = carta;
     E.pos++;
   }
   return { vencedor: donoDaMao(E.vazas) || "n", pontos: E.valor };
@@ -354,7 +380,7 @@ function partida(P0, P1, opts){
       if(r.pontos > 1){ stats.apostadas++; stats.ptsApostados[t] += r.pontos; }
       else stats.ptsSimples[t] += r.pontos;
     }
-    E.abreMao = (E.abreMao + 1) % E.n;
+    E.abreMao = ((E.abreMao - 1) % E.n + E.n) % E.n;
   }
   return { vencedor: placar[0] >= o.alvo ? 0 : 1, placar, stats };
 }

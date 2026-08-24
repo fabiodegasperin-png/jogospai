@@ -213,13 +213,6 @@
   }
   /* =============== TRUCO: mesa (prefixo tt-) =============== */
   #scr-truco{max-width:1200px;padding:8px 8px 20px}
-  .tt-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-  .tt-stage{position:relative;width:100%;aspect-ratio:1200/760;border-radius:14px;overflow:hidden;
-    background:
-      radial-gradient(ellipse at 50% 50%,#0000 55%,#0006 100%),
-      repeating-linear-gradient(90deg,#e2c59a 0 90px,#d4b486 90px 92px),
-      repeating-linear-gradient(0deg,#0000 0 7px,#00000008 7px 8px),#dcbd8f;
-    box-shadow:0 20px 50px #000a}
   .tt-table{position:absolute;left:18%;right:18%;top:0;bottom:0;
     background:
       radial-gradient(ellipse at 50% 40%,#3c9a5c 0%,#2a7f47 40%,#1f6a3a 75%,#17552e 100%);
@@ -269,39 +262,23 @@
   @keyframes tt-play{from{transform:translate(var(--dx),var(--dy)) scale(.4) rotate(-30deg);opacity:0}}
 
   /* monte + vira */
-  .tt-deck{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150px;height:96px;z-index:1}
-  .tt-deck .card{position:absolute;width:62px;height:92px;left:0;top:0;box-shadow:0 2px 4px #000a}
+  .tt-deck{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:212px;height:136px;z-index:1}
+  .tt-deck .card{position:absolute;width:88px;height:132px;left:0;top:0;box-shadow:0 2px 4px #000a}
   .tt-deck .card::before{inset:4px;border-width:2px}.tt-deck .card::after{display:none}
-  .tt-deck .vira{left:62px;top:2px;transform:rotate(90deg);width:62px;height:92px;z-index:2;box-shadow:0 4px 8px #000b}
-  .tt-deck .vira .n{font-size:16px}.tt-deck .vira .n1{top:7px;left:7px}.tt-deck .vira .n2{bottom:7px;right:7px}
-  .tt-deck .vira .pips{inset:8px}.tt-deck .vira::before{inset:4px;border-width:1.5px}.tt-deck .vira::after{inset:6px}
+  .tt-deck .vira{left:90px;top:0;transform:rotate(90deg);width:88px;height:132px;z-index:2;box-shadow:0 4px 8px #000b}
+  .tt-deck .vira .n{font-size:21px}.tt-deck .vira .n1{top:7px;left:7px}.tt-deck .vira .n2{bottom:7px;right:7px}
+  .tt-deck .vira .pips{inset:10px}.tt-deck .vira::before{inset:4px;border-width:1.5px}.tt-deck .vira::after{inset:6px}
   .tt-manilha{margin-top:10px;font-size:17px;letter-spacing:0;text-transform:none;color:#fff;opacity:.95;line-height:1.25}
   .tt-manilha b{font-family:var(--disp);font-size:24px;color:var(--copag-am)}
 
-  .tt-msg{font-family:var(--disp);font-size:30px;color:#fff;text-shadow:0 2px 4px #000c;text-align:center;flex:1;min-height:40px}
-  .tt-vazas{position:absolute;left:9%;top:46%;transform:translate(-50%,-50%);z-index:3;
-    display:flex;flex-direction:column;gap:7px}
-  .tt-vazas .cab{font-size:15px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;
-    text-align:center;margin-bottom:2px}
-  .tt-vazas .lin{display:flex;align-items:center;gap:8px;min-width:112px;
-    padding:5px 10px;border-radius:9px;background:#00000055;border-left:6px solid #ffffff33}
-  .tt-vazas .lin b{font-family:var(--disp);font-size:17px;opacity:.85}
-  .tt-vazas .lin span{font-size:17px;font-weight:800;letter-spacing:.02em}
-  .tt-vazas .lin.p{background:#1d3f77cc;border-left-color:#5b9bff}
-  .tt-vazas .lin.b{background:#6b1616cc;border-left-color:#ff6b5b}
-  .tt-vazas .lin.t{background:#3d3d3dcc;border-left-color:#bbb}
-  .tt-vazas .lin.vazio{opacity:.4}
   @media (max-width:760px){
-    .tt-vazas{left:4%;top:30%;transform:none;gap:4px}
-    .tt-vazas .cab{font-size:11px}
-    .tt-vazas .lin{min-width:0;padding:3px 7px;gap:5px}
-    .tt-vazas .lin b,.tt-vazas .lin span{font-size:12px}
+          .tt-vazas .lin b,.tt-vazas .lin span{font-size:12px}
   }
 
   /* sua mão */
-  .tt-bottom{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);z-index:5;
+  .tt-bottom{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);z-index:5;
     display:flex;align-items:flex-end;justify-content:center;gap:24px}
-  .tt-bottom.comparceiro{left:44%}
+  .tt-bottom.comparceiro{left:50%}
   .tt-hand{display:flex;align-items:flex-end}
   .tt-hand .card{width:118px;height:176px;margin:0 4px;transform-origin:50% 130%;transition:transform .15s, box-shadow .15s;
     box-shadow:0 8px 14px #000b;overflow:visible}
@@ -312,8 +289,8 @@
   .tt-hand .card.click:hover,.tt-hand .card.click:focus-visible{transform:translateY(-30px) scale(1.06);z-index:3;box-shadow:0 18px 24px #000c}
   .tt-hand .card:not(.click){filter:brightness(.8)}
 
-  .tt-btn{position:absolute;right:2%;bottom:6%;z-index:5;font-size:34px;padding:18px 40px;border-radius:999px;
-    background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 6px 0 #6a1410,0 10px 18px #000a}
+  .tt-btn{width:100%;margin:0;font-size:26px;padding:13px 8px;border-radius:12px;
+    background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 5px 0 #6a1410,0 8px 16px #000a}
   .tt-btn:disabled{opacity:.25}
   .tt-you{position:absolute;left:2%;bottom:6%;z-index:5;display:flex;align-items:center;gap:12px}
   .tt-you .tt-av{margin:0}
@@ -332,34 +309,27 @@
     .tt-slot .card{width:66px;height:99px}.tt-slot .card .n{font-size:15px}.tt-slot .card .pips{inset:8px}
     .tt-deck{transform:translate(-50%,-50%) scale(.7)}.tt-manilha{font-size:13px}.tt-manilha b{font-size:17px}
     .tt-hand .card{width:92px;height:138px;margin:0 2px}.tt-hand .card .n{font-size:20px}
-    .tt-msg{font-size:20px;flex-basis:100%}
-    .tt-btn{font-size:22px;padding:12px 22px;bottom:2%}.tt-you{display:none}
+      .tt-btn{font-size:22px;padding:12px 22px;bottom:2%}.tt-you{display:none}
   }
   @media (prefers-reduced-motion:reduce){.tt-balao,.tt-slot .card.in,.tt-seat.vez .tt-av,.tt-you.vez .tt-av,.tt-vale.alto b{animation:none}.tt-hand .card{transition:none}}
-  .tt-aposta{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
-    margin:14px auto 0;max-width:920px;padding:14px 22px;border-radius:16px;
-    background:linear-gradient(180deg,#3d2614,#211206);border:3px solid var(--copag-am);
-    box-shadow:0 8px 22px #000b}
-  .tt-aposta .txt{font-family:var(--disp);font-size:26px;color:var(--copag-am);text-align:center}
-  .tt-aposta button{font-size:24px;padding:12px 26px;margin:0}
   @media (max-width:760px){ .tt-aposta{gap:9px;padding:10px 12px;margin-top:10px}
     .tt-aposta .txt{font-size:18px;flex-basis:100%} .tt-aposta button{font-size:17px;padding:9px 15px} }
   .tt-backs.aberto{width:150px;height:96px;transform:translate(-50%,-22%);z-index:4}
   .tt-backs.aberto .card{width:64px;height:96px;margin-left:-32px;box-shadow:0 0 0 3px var(--copag-am),0 3px 6px #000a}
   @media (max-width:760px){ .tt-backs.aberto{width:96px;height:62px} .tt-backs.aberto .card{width:42px;height:62px;margin-left:-21px} }
-  .tt-hand.comparceiro .card{width:98px;height:147px}
+  .tt-hand.comparceiro .card{width:118px;height:176px}
   .tt-par{text-align:center}
   .tt-par .tag{display:inline-block;margin-bottom:5px;padding:3px 14px;border-radius:999px;
     background:var(--copag-am);color:#2e1a0d;font-size:15px;font-weight:800;
     letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;box-shadow:0 3px 6px #000a}
   .tt-par .cartas{display:flex;align-items:flex-end;justify-content:center}
-  .tt-par .card{width:76px;height:114px;margin:0 1px;
+  .tt-par .card{width:118px;height:176px;margin:0 4px;
     box-shadow:0 0 0 3px var(--copag-am),0 6px 12px #000b}
   @media (max-width:760px){
     .tt-bottom{gap:8px}.tt-bottom.comparceiro{left:50%}
     .tt-hand.comparceiro .card{width:62px;height:93px}
     .tt-par .tag{font-size:11px;padding:2px 9px;margin-bottom:2px}
-    .tt-par .card{width:46px;height:69px;margin:0 1px}
+    .tt-par .card{width:92px;height:138px;margin:0 2px}
   }
 
   /* ==================== CELULAR (cacheta) ====================
@@ -416,6 +386,53 @@
     .leque .fc{width:53px;height:80px;margin-left:-23px}
     .seat{width:58px}
   }
+  /* ---- coluna da esquerda + mesa que cabe na tela ----
+     A mesa tem tamanho fixo (1200x760) e é reduzida por transform:scale
+     até caber. Assim todo o desenho interno, que é em px, encolhe junto —
+     nada some embaixo da barra de tarefas num monitor pequeno. */
+  .tt-jogo{display:flex;gap:14px;align-items:flex-start}
+  .tt-lado{width:214px;flex:none;display:flex;flex-direction:column;gap:10px}
+  .tt-lado .voltar{width:100%;margin:0}
+  .tt-lado .modos{display:flex;flex-wrap:wrap;gap:6px}
+  .tt-lado .modos button{flex:1 1 46%;margin:0;font-size:17px;padding:8px 6px}
+  .tt-fit{flex:1;min-width:0;position:relative}
+  .tt-stage{position:absolute;top:0;left:0;width:1200px;height:760px;transform-origin:top left}
+
+  .tt-msg{font-family:var(--disp);font-size:21px;line-height:1.2;color:var(--copag-am);
+    background:#00000055;border-radius:10px;padding:10px 12px;min-height:52px;text-align:center}
+
+  .tt-vazas{display:flex;flex-direction:column;gap:5px}
+  .tt-vazas .cab{font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;text-align:center}
+  .tt-vazas .lin{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:8px;
+    background:#00000055;border-left:6px solid #ffffff33}
+  .tt-vazas .lin b{font-family:var(--disp);font-size:16px;opacity:.85}
+  .tt-vazas .lin span{font-size:16px;font-weight:800}
+  .tt-vazas .lin.p{background:#1d3f77cc;border-left-color:#5b9bff}
+  .tt-vazas .lin.b{background:#6b1616cc;border-left-color:#ff6b5b}
+  .tt-vazas .lin.t{background:#3d3d3dcc;border-left-color:#bbb}
+  .tt-vazas .lin.vazio{opacity:.4}
+
+  .tt-aposta{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;
+    background:linear-gradient(180deg,#3d2614,#211206);border:3px solid var(--copag-am);
+    box-shadow:0 8px 22px #000b}
+  .tt-aposta .txt{font-family:var(--disp);font-size:19px;line-height:1.15;color:var(--copag-am);text-align:center}
+  .tt-aposta button{width:100%;margin:0;font-size:21px;padding:11px 8px}
+
+  @media (max-width:820px){
+    .tt-jogo{flex-direction:column;gap:8px}
+    .tt-lado{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center}
+    .tt-lado .voltar{width:auto}
+    .tt-lado .modos{flex:1 1 auto}
+    .tt-msg{flex:1 1 100%;min-height:0;font-size:18px;padding:6px 10px}
+    .tt-vazas{flex-direction:row;flex:1 1 100%}
+    .tt-vazas .cab{display:none}
+    .tt-vazas .lin{flex:1;justify-content:center;padding:4px 6px}
+    .tt-aposta{flex:1 1 100%;flex-direction:row;align-items:center;padding:8px}
+    .tt-aposta .txt{flex:1 1 100%;font-size:16px}
+  }
+  .tt-esc{width:100%;margin:0;font-size:17px;padding:9px 8px;border-radius:10px;
+    background:#00000055;color:var(--giz);box-shadow:none;border:2px solid #ffffff33;text-transform:none}
+  .tt-esc.on{background:linear-gradient(180deg,#ffd93d,var(--copag-am));color:#2e1a0d;border-color:var(--copag-am)}
 </style>
 </head>
 <body>
@@ -433,16 +450,21 @@
 
 <!-- ================= TRUCO ================= -->
 <div id="scr-truco" class="screen hidden">
-  <div class="tt-top">
+  <div class="tt-jogo">
+  <aside class="tt-lado">
     <button class="voltar" onclick="voltar()">← Sair da mesa</button>
-    <div class="tt-msg" id="t-msg"></div>
     <div class="modos">
       <button id="t-m2" onclick="setModoTruco(2)">1 x 1</button>
       <button id="t-m4" onclick="setModoTruco(4)">Dupla 2 x 2</button>
       <button id="t-df" class="on" onclick="ciclaDificuldade()">Difícil</button>
     </div>
-  </div>
-
+    <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
+    <button class="tt-esc" id="t-esconder" onclick="alternaEsconder()">Esconder carta</button>
+    <div class="tt-msg" id="t-msg"></div>
+    <div class="tt-vazas" id="t-vazas"></div>
+    <div class="tt-aposta hidden" id="t-aposta"></div>
+  </aside>
+  <div class="tt-fit" id="t-fit">
   <div class="tt-stage" id="tt-stage">
     <div class="tt-table"></div>
     <div class="tt-placar">
@@ -452,7 +474,6 @@
       <div class="pal hidden" id="t-pal-b"></div>
     </div>
     <div class="tt-vale" id="t-vale-box">Vale<b id="t-val">1</b><div class="tt-manilha hidden" id="t-manilha"></div></div>
-    <div class="tt-vazas" id="t-vazas"></div>
     <div id="tt-seats"></div>
     <div class="tt-deck" id="t-deck"></div>
     <div id="tt-slots"></div>
@@ -461,9 +482,8 @@
       <div class="tt-hand" id="t-phand"></div>
       <div class="tt-par hidden" id="t-parhand"></div>
     </div>
-    <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
   </div>
-  <div class="tt-aposta hidden" id="t-aposta"></div>
+  </div></div>
 </div>
 
 <!-- ================= CACHETA ================= -->
@@ -621,7 +641,7 @@ function novaMao(){
   T.maos = []; for(let i=0;i<T.n;i++) T.maos.push([]);
   T.vira = baralho[T.n*3]; T.manilha = manilhaDe(T.vira);
   $("t-aposta").classList.add("hidden");
-  T.vazas = []; T.jogadas = []; T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
+  T.vazas = []; T.jogadas = []; T.viradas = []; for(let i=0;i<T.n;i++) T.viradas.push([]); T.parceiroAberto = false; T.valor = 1; T.pendente = null; T.ultimoPediu = null; T.fim = false;
   T.travada = false;
   T.abreVaza = T.abreMao;
   // estado neutro pro render enquanto as cartas caem
@@ -644,7 +664,8 @@ function darCartasTruco(k){
 
 function iniciarVaza(){
   T.mesa = new Array(T.n).fill(null); T.ultimaJogada = -1; T.balao = null;
-  T.ordem = []; for(let k=0;k<T.n;k++) T.ordem.push((T.abreVaza + k) % T.n);
+  // sentido anti-horário: da sua direita pra sua esquerda
+  T.ordem = []; for(let k=0;k<T.n;k++) T.ordem.push(((T.abreVaza - k) % T.n + T.n) % T.n);
   T.pos = 0;
   if(T.vazas.length === 0 && maoDeOnze()) return;   // decisão antes da primeira carta
   seguir();
@@ -668,7 +689,7 @@ function maoDeOnze(){
   }
   const time = onze[0];
   if(time === 0){
-    if(T.n === 4) T.parceiroAberto = true;         // consulta a mão do parceiro pra decidir
+    if(T.n === 4) T.parceiroAberto = quem === "p" ? "b" : "p";   // só o time que responde consulta         // consulta a mão do parceiro pra decidir
     T.msg = "Mão de onze: olhe as cartas e decida.";
     render();
     barraAposta("Mão de onze — vale 3. Vai ou não vai?", [
@@ -717,6 +738,28 @@ const POS = {
       3:{av:[79,50], bk:[69,50], sl:[61,52]}, 0:{sl:[50,68]} }
 };
 const pct = (el,[x,y]) => { el.style.left = x+"%"; el.style.top = y+"%"; };
+
+/* a mesa tem tamanho fixo e encolhe junto (transform) até caber na tela */
+/* Esconder carta: joga de costas. Perde a rodada, mas o adversário
+   não fica sabendo o que você tinha — é jogada de truco mesmo. */
+let esconderProxima = false;
+function alternaEsconder(){ esconderProxima = !esconderProxima; pintaEsconder(); }
+function pintaEsconder(){
+  const b = $("t-esconder"); if(!b) return;
+  b.classList.toggle("on", esconderProxima);
+  b.textContent = esconderProxima ? "Escondendo a próxima" : "Esconder carta";
+}
+
+function ajustaMesa(){
+  const fit = $("t-fit"), st = $("tt-stage");
+  if(!fit || !st || $("scr-truco").classList.contains("hidden")) return;
+  const larg = fit.clientWidth;
+  const alt  = window.innerHeight - fit.getBoundingClientRect().top - 14;
+  const s = Math.max(0.28, Math.min(larg/1200, alt/760));
+  st.style.transform = "scale(" + s + ")";
+  fit.style.height = (760*s) + "px";
+}
+addEventListener("resize", ajustaMesa);
 
 function render(){
   const nomeTime = s => T.n===4 ? (s==="p"?"Nós":"Eles") : (s==="p"?"Você":"Máquina");
@@ -767,7 +810,7 @@ function render(){
   T.mesa.forEach((c,a)=>{
     if(!c) return;
     const d = document.createElement("div"); d.className = "tt-slot"; pct(d, POS[T.n][a].sl);
-    const el = cardEl(c);
+    const el = cardEl(c.virada ? null : c);
     el.style.setProperty("--rot", ((a*37)%9-4)+"deg");
     if(a === T.ultimaJogada){
       const from = a===0 ? [50,110] : POS[T.n][a].av, to = POS[T.n][a].sl;
@@ -783,10 +826,10 @@ function render(){
   // minha mão — sem dica nenhuma, quem lê a carta é o jogador
   const minhaVez = !T.fim && !T.pendente && vez === 0;
   fill("t-phand", T.maos[0].map((c,i)=>
-    cardEl(c, "", minhaVez ? ()=>jogar(0,i) : null)));
+    cardEl(c, "", minhaVez ? ()=>jogar(0, i, esconderProxima) : null)));
 
   // mão do parceiro aberta: grande, ao lado da sua
-  const par = T.parceiroAberto ? parceiroDe(0) : -1;
+  const par = parceiroVisivel(0);
   $("t-bottom").classList.toggle("comparceiro", par >= 0);
   $("t-phand").classList.toggle("comparceiro", par >= 0);
   const pw = $("t-parhand");
@@ -798,6 +841,7 @@ function render(){
     pw.appendChild(box);
   }
   $("t-msg").textContent = T.msg;
+  ajustaMesa();
   $("t-vazas").innerHTML = '<div class="cab">Rodadas</div>' + [0,1,2].map(k=>{
     const r = T.vazas[k];
     const txt = r ? (r === "t" ? "Empate" : nomeTime(r)) : "—";
@@ -811,11 +855,15 @@ function render(){
 }
 window.addEventListener("resize", ()=>{ if(T && !$("scr-truco").classList.contains("hidden")) render(); });
 
-function jogar(a, i){
+function jogar(a, i, virada){
   if(T.fim || T.pendente || T.ordem[T.pos] !== a) return;
-  T.mesa[a] = T.maos[a].splice(i,1)[0]; T.ultimaJogada = a; T.jogadas.push(T.mesa[a]);
-  if(a !== 0 && Math.random() < 0.35) T.balao = { a, txt: fala(FALAS.joga) };
-  if(a === 0) reg("jogou", { carta: chaveC(T.mesa[a]), manilha:T.manilha, vale:T.valor, restam:T.maos[0].length });
+  const carta = T.maos[a].splice(i,1)[0];
+  // carta virada: perde a rodada, mas ninguém fica sabendo o que era
+  if(virada){ carta.virada = true; (T.viradas[a] = T.viradas[a] || []).push({ r:carta.r, s:carta.s }); }
+  else T.jogadas.push(carta);
+  T.mesa[a] = carta; T.ultimaJogada = a;
+  if(a === 0) reg("jogou", { carta: chaveC(carta), virada: !!virada, manilha:T.manilha, vale:T.valor, restam:T.maos[0].length });
+  if(a === 0){ esconderProxima = false; pintaEsconder(); }
   T.pos++;
   seguir();
 }
@@ -927,7 +975,8 @@ function turnoBot(a){
   const P = paramsDoBot(a);
   if(!T.travada && proxValor(T.valor) && TRUCO.querPedir(T, a, P, Math.random))
     return pedirTruco(a);
-  jogar(a, TRUCO.decideCarta(T, a, P, Math.random));
+  const d = TRUCO.decideCarta(T, a, P, Math.random);
+  jogar(a, d.i, d.virada);
 }
 
 function resolverVaza(){
@@ -938,18 +987,6 @@ function resolverVaza(){
   const r = times.size > 1 ? "t" : timeSigla(T.times[topos[0].i]);
   T.vazas.push(r);
   const nomeTime = s => T.n===4 ? (s==="p"?"Sua dupla":"Os adversários") : (s==="p"?"Você":"A máquina");
-  const botsDo = tm => T.times.map((x,i)=> x===tm && i>0 ? i : -1).filter(i=>i>0);
-  if(r !== "t"){
-    const meuTimeGanhou = r === "p";
-    const falantes = botsDo(meuTimeGanhou ? 0 : 1);
-    if(falantes.length && Math.random() < 0.55)
-      T.balao = { a: falantes[(Math.random()*falantes.length)|0],
-                  txt: fala(meuTimeGanhou ? FALAS.parceiro : FALAS.ganhou) };
-    else if(meuTimeGanhou){
-      const adv = botsDo(1);
-      if(adv.length && Math.random() < 0.5) T.balao = { a: adv[(Math.random()*adv.length)|0], txt: fala(FALAS.perdeu) };
-    }
-  }
   T.msg = r === "t" ? "Rodada empatada." : `${nomeTime(r)} ganhou a rodada!`;
   render();
 
@@ -969,10 +1006,6 @@ const donoDaMao = TRUCO.donoDaMao;
 const FALAS = {
   pede:   { 3:["TRUCO!","Truco, ladrão!","Truco!"], 6:["SEIS!","Seis!"], 9:["NOVE!"], 12:["DOZE!"] },
   aceita: ["Tô dentro!","Manda ver!","Pode vir!","Tô junto!","Vem que tem!","Cara a cara!"],
-  joga:     ["Toma essa!","Vai essa.","Segura essa.","Essa é minha.","Olha aí.","Pode vir."],
-  ganhou:   ["Minha!","É nossa!","Essa foi boa.","Tá comigo."],
-  perdeu:   ["Boa...","Essa foi tua.","Tá bom, tá bom.","Passou essa."],
-  parceiro: ["Boa, parceiro!","É isso aí!","Assim que se faz!"],
   corre:  ["Corro...","Tá teu.","Essa é tua.","Não vou não.","Fica pra próxima."]
 };
 const fala = arr => arr[(Math.random()*arr.length)|0];
@@ -991,7 +1024,7 @@ function pedirTruco(a){
   if(!prox || T.fim || T.travada) return;          // mão de onze: ninguém pede
   const quem = timeSigla(T.times[a]);
   if(T.ultimoPediu === quem) return;
-  T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = true; T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
+  T.pendente = prox; T.ultimoPediu = quem; T.pediuAssento = a; if(T.n === 4) T.parceiroAberto = quem === "p" ? "b" : "p";   // só o time que responde consulta T.balao = { a, txt: fala(FALAS.pede[prox]), grito:true };
   reg("pediu", { quem: a===0 ? "voce" : "bot", assento:a, aposta:prox });
   T.msg = `${NOMES[T.n][a]} pediu ${nomeAposta(prox)}!`;
   render();
@@ -1047,7 +1080,7 @@ function fimDaMao(vencedor, pontos){
       [["Jogar de novo", ()=>setModoTruco(T.n)], ["Sair da mesa", voltar]]), 1200);
     return;
   }
-  T.abreMao = (T.abreMao + 1) % T.n;
+  T.abreMao = ((T.abreMao - 1) % T.n + T.n) % T.n;
   setTimeout(novaMao, 1800);
 }
 

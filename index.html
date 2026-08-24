@@ -450,6 +450,9 @@
   .tt-hand .card:hover .tt-esc-aba,.tt-hand .card:focus-visible .tt-esc-aba{opacity:1;pointer-events:auto}
   @media (hover:none){ .tt-esc-aba{opacity:1;pointer-events:auto} }
   .tt-esc-aba:hover{background:var(--copag-am);color:#2e1a0d;border-color:#fff}
+  .tt-aposta .b-corre{background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 5px 0 #6a1410,0 6px 12px #000a}
+  .tt-aposta .b-aceita{background:linear-gradient(180deg,#5fce72,#2e8b3e);color:#fff;box-shadow:0 5px 0 #1b5622,0 6px 12px #000a}
+  .tt-aposta .b-sobe{background:linear-gradient(180deg,#6aa6ff,#1f4e9c);color:#fff;box-shadow:0 5px 0 #12305f,0 6px 12px #000a}
 </style>
 </head>
 <body>
@@ -471,12 +474,12 @@
   <aside class="tt-lado">
     <button class="voltar" onclick="voltar()">← Sair da mesa</button>
     <div class="modos">
-      <button id="t-m2" onclick="setModoTruco(2)">1 x 1</button>
-      <button id="t-m4" onclick="setModoTruco(4)">Dupla 2 x 2</button>
+      <!-- o modo ja e escolhido ao entrar na mesa; estes ficam so pro codigo nao quebrar -->
+      <button id="t-m2" class="hidden" onclick="setModoTruco(2)">1 x 1</button>
+      <button id="t-m4" class="hidden" onclick="setModoTruco(4)">Dupla 2 x 2</button>
       <button id="t-df" class="on" onclick="ciclaDificuldade()">Difícil</button>
     </div>
-    <div class="tt-msg" id="t-msg"></div>
-    <div class="tt-vazas" id="t-vazas"></div>
+    <div class="tt-msg hidden" id="t-msg"></div>
   </aside>
   <div class="tt-fit" id="t-fit">
   <div class="tt-stage" id="tt-stage">
@@ -499,6 +502,7 @@
   </div>
   </div>
   <aside class="tt-acoes">
+    <div class="tt-vazas" id="t-vazas"></div>
     <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
     <div class="tt-aposta hidden" id="t-aposta"></div>
   </aside>
@@ -1046,10 +1050,12 @@ const fala = arr => arr[(Math.random()*arr.length)|0];
 function barraAposta(txt, botoes){
   const b = $("t-aposta");
   b.innerHTML = `<span class="txt">${txt}</span>`;
-  botoes.forEach(([lbl,fn])=>{ const x = document.createElement("button"); x.textContent = lbl;
+  botoes.forEach(([lbl,fn,cor])=>{ const x = document.createElement("button"); x.textContent = lbl;
+    if(cor) x.className = "b-" + cor;
     x.onclick = ()=>{ b.classList.add("hidden"); fn(); }; b.appendChild(x); });
   b.classList.remove("hidden");
-  b.querySelector("button").focus({preventScroll:true});
+  // foco no Aceitar: com o Correr em primeiro, um Enter distraido entregaria a mao
+  (b.querySelector(".b-aceita") || b.querySelector("button")).focus({preventScroll:true});
 }
 
 function pedirTruco(a){
@@ -1064,9 +1070,9 @@ function pedirTruco(a){
 
   const respondente = quem === "p" ? 1 : 0;              // time que responde
   if(respondente === 0){
-    const opcoes = [["Aceitar", ()=>{ anotaResposta(false); aceitar("p"); }],
-                    ["Correr",  ()=>{ anotaResposta(true);  correr("p"); }]];
-    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0)]);
+    const opcoes = [["Correr",  ()=>{ anotaResposta(true);  correr("p"); }, "corre"],
+                    ["Aceitar", ()=>{ anotaResposta(false); aceitar("p"); }, "aceita"]];
+    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0), "sobe"]);
     barraAposta(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. E aí?`, opcoes);
   } else {
     setTimeout(()=>botResponde(respondente), 900);

@@ -213,7 +213,7 @@
   }
   /* =============== TRUCO: mesa (prefixo tt-) =============== */
   #scr-truco{max-width:none;padding:8px 12px 10px}
-  .tt-table{position:absolute;left:18%;right:18%;top:0;bottom:0;
+  .tt-table{position:absolute;left:6%;right:6%;top:0;bottom:0;
     background:
       radial-gradient(ellipse at 50% 40%,#3c9a5c 0%,#2a7f47 40%,#1f6a3a 75%,#17552e 100%);
     border:14px solid #2b2b2b;border-top-width:12px;border-bottom-width:12px;
@@ -221,12 +221,12 @@
   .tt-table::before{content:"";position:absolute;inset:10px;border:2px solid #ffffff18;border-radius:6px;pointer-events:none}
 
   /* placar a giz no feltro */
-  .tt-placar{position:absolute;left:21%;top:6%;z-index:2;color:#b8f0a8;font-size:22px;letter-spacing:.06em;
+  .tt-placar{position:absolute;left:10%;top:6%;z-index:2;color:#b8f0a8;font-size:22px;letter-spacing:.06em;
     text-shadow:0 1px 2px #0008;display:grid;grid-template-columns:auto auto;gap:2px 26px;align-items:baseline}
   .tt-placar b{font-family:var(--disp);font-size:34px;line-height:1;text-align:right}
   .tt-placar .pal{grid-column:1/-1;height:34px;display:flex;gap:8px}
   .tt-placar .pal svg{height:34px;filter:drop-shadow(0 1px 1px #0008)}
-  .tt-vale{position:absolute;right:21%;top:6%;z-index:2;text-align:center;color:#fffdf3;font-size:18px;letter-spacing:.08em;
+  .tt-vale{position:absolute;right:10%;top:6%;z-index:2;text-align:center;color:#fffdf3;font-size:18px;letter-spacing:.08em;
     text-transform:uppercase;text-shadow:0 2px 3px #000a}
   .tt-vale > b{display:block;font-family:var(--disp);font-size:44px;line-height:1;color:var(--copag-am)}
   .tt-vale.alto > b{color:#ff6b5b;animation:tt-pulse 1s infinite}
@@ -292,7 +292,7 @@
   .tt-btn{width:100%;margin:0;font-size:26px;padding:13px 8px;border-radius:12px;
     background:linear-gradient(180deg,#ff6a5a,#c62828);color:#fff;box-shadow:0 5px 0 #6a1410,0 8px 16px #000a}
   .tt-btn:disabled{opacity:.25}
-  .tt-you{position:absolute;left:2%;bottom:6%;z-index:5;display:flex;align-items:center;gap:12px}
+  .tt-you{position:absolute;left:1%;bottom:6%;z-index:5;display:flex;align-items:center;gap:12px}
   .tt-you .tt-av{margin:0}
   .tt-you .tt-nome{display:inline-block;padding:3px 12px;border-radius:999px;background:#000a;color:#fff;font-size:18px;font-weight:700}
   .tt-you.vez .tt-av{box-shadow:0 0 0 5px var(--copag-am),0 0 26px 8px #f2c400aa;animation:tt-pulse 1.2s infinite}
@@ -440,8 +440,9 @@
     .tt-acoes .tt-aposta{flex:1 1 100%;flex-direction:row;align-items:center;padding:8px}
     .tt-acoes .tt-aposta .txt{flex:1 1 100%;font-size:16px}
   }
-  .tt-esc-aba{position:absolute;left:50%;top:8px;transform:translateX(-50%);
-    padding:5px 14px;border-radius:9px;background:#1b1108ee;border:2px solid #ffffff66;
+  .tt-esc-aba{position:absolute;left:50%;top:-28px;height:30px;box-sizing:border-box;
+    transform:translateX(-50%);display:flex;align-items:center;
+    padding:0 14px;border-radius:9px 9px 4px 4px;background:#1b1108ee;border:2px solid #ffffff66;
     color:#fff;font-family:var(--txt);font-size:15px;font-weight:800;letter-spacing:.05em;
     text-transform:uppercase;white-space:nowrap;cursor:pointer;z-index:6;box-shadow:0 3px 7px #000a;
     opacity:0;pointer-events:none;transition:opacity .12s}
@@ -757,8 +758,8 @@ const avatarHTML = a => a === 0 ? `<img src="${JOGADOR.foto}" alt="" onerror="th
 // posições (% da mesa) por assento: av = avatar, bk = cartas viradas, sl = carta jogada
 const POS = {
   2:{ 1:{av:[50,8], bk:[50,21], sl:[50,36]}, 0:{sl:[50,68]} },
-  4:{ 1:{av:[21,50], bk:[31,50], sl:[39,52]}, 2:{av:[50,8], bk:[50,21], sl:[50,36]},
-      3:{av:[79,50], bk:[69,50], sl:[61,52]}, 0:{sl:[50,68]} }
+  4:{ 1:{av:[10,50], bk:[24,50], sl:[35,52]}, 2:{av:[50,8], bk:[50,21], sl:[50,36]},
+      3:{av:[90,50], bk:[76,50], sl:[65,52]}, 0:{sl:[50,68]} }
 };
 const pct = (el,[x,y]) => { el.style.left = x+"%"; el.style.top = y+"%"; };
 

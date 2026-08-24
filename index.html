@@ -544,12 +544,7 @@
 <div id="modal" class="overlay hidden"><div class="box">
   <div id="modal-vira" class="hidden"></div>
   <p id="modal-txt"></p><div id="modal-btns"></div>
-  </div>
-  <aside class="tt-acoes">
-    <button class="tt-btn" id="t-truco" onclick="pedirTruco(0)">Truco</button>
-    <div class="tt-aposta hidden" id="t-aposta"></div>
-  </aside>
-  </div>
+</div></div>
 
 <script src="truco_core.js?v=1"></script>
 <script src="cacheta_core.js?v=3"></script>
@@ -645,8 +640,9 @@ const timeSigla = t => t === 0 ? "p" : "b";
 const assentosDoTime = t => T.times.map((x,i)=>x===t?i:-1).filter(i=>i>=0);
 
 function abrirTruco(){
-  mostrar("scr-truco");
-  modal("Como quer jogar?", [["Sozinho (1 x 1)", ()=>setModoTruco(2)], ["Em dupla (2 x 2)", ()=>setModoTruco(4)]]);
+  // pergunta ainda no menu: mostrar a mesa antes deixava o fundo montado pela metade
+  const entra = n => { mostrar("scr-truco"); setModoTruco(n); ajustaMesa(); };
+  modal("Como quer jogar?", [["Sozinho (1 x 1)", ()=>entra(2)], ["Em dupla (2 x 2)", ()=>entra(4)]]);
 }
 
 function setModoTruco(n){

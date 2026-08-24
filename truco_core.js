@@ -23,6 +23,9 @@ const PADRAO = {
   margem:     -0.03,   // soma ao preço matemático de aceitar (negativo = aceita mais)
   freqPede:    0.58,   // com mão boa, com que frequência de fato pede
   pagaPraVer:  0.22,   // aceita mesmo sem conta fechar
+  certeza:     0.90,   // ganho certo (ultimo a jogar com a folha): pede SEMPRE, sem sortear
+  leitura:     0.75,   // o quanto acredita que quem pediu truco tem carta (0 = surdo)
+  pesoFalta:   0.60,   // o quanto o placar mexe na conta de aceitar/pedir
 
   // blefe
   blefe:       0.17,   // base
@@ -159,14 +162,43 @@ function desconhecidas(E, a){
   ORDEM.forEach(r => NAIPES.forEach(s => { if(!vistas.has(r+s)) fora.push({r,s}); }));
   return fora;
 }
-function reparte(E, a, fora, rnd){
-  embaralha(fora, rnd);
+/* ---- leitura da mesa ----
+   Sortear as cartas dos outros de forma uniforme e ignorar tudo que eles
+   fizeram. Quem pede truco quase sempre tem carta: as mãos sorteadas que
+   não sustentam a aposta são descartadas e resorteadas. É o que faz o bot
+   desconfiar de blefe e correr de mão de verdade.
+   ponytail: só a aposta é lida. Ler também a carta que o cara escolheu
+   jogar (jogou o 4 de saída = mão fraca) pede um modelo de jogada. */
+const FORCA_APOSTA = { 3:8, 6:11, 9:11, 12:11 };   // 8 = um "1"; 11 = manilha
+function exigencia(E){
+  if(!E.ultimoPediu) return null;
+  return { time: E.ultimoPediu === "p" ? 0 : 1,
+           alvo: FORCA_APOSTA[E.pendente || E.valor] || 8 };
+}
+/* a mão sorteada explica a aposta que aquele time fez? */
+function coerente(E, maos, exig, a, par){
+  let incognita = false;
+  for(let i=0;i<E.n;i++){
+    if(E.times[i] !== exig.time || i === a || i === par || !maos[i].length) continue;
+    incognita = true;
+    if(maos[i].some(c => forca(c, E.manilha) >= exig.alvo)) return true;
+  }
+  return !incognita;                               // nada a inferir: serve
+}
+function reparte(E, a, fora, rnd, P){
   const par = parceiroVisivel(E, a);
-  let p = 0;
-  return E.maos.map((m,i)=>{
-    if(i === a || i === par) return m.slice();     // já sei essas
-    const q = fora.slice(p, p + m.length); p += m.length; return q;
-  });
+  const exig = (P && P.leitura && rnd() < P.leitura) ? exigencia(E) : null;
+  let maos;
+  for(let tent=0; tent<8; tent++){
+    embaralha(fora, rnd);
+    let p = 0;
+    maos = E.maos.map((m,i)=>{
+      if(i === a || i === par) return m.slice();   // já sei essas
+      const q = fora.slice(p, p + m.length); p += m.length; return q;
+    });
+    if(!exig || coerente(E, maos, exig, a, par)) break;
+  }
+  return maos;                                     // desistiu de filtrar: vale o último
 }
 function base(E, maos){
   return { n:E.n, times:E.times, manilha:E.manilha, mesa:E.mesa.slice(),
@@ -175,10 +207,13 @@ function base(E, maos){
 const ponto = (dono, time) => dono === "n" ? 0.5 : (dono === sigla(time) ? 1 : 0);
 
 /* chance de cada carta da mão de `a` ganhar a mão (mesmo sorteio pra todas) */
-function avaliaJogadas(E, a, sims, rnd){
+/* aceita P (objeto) ou só o número de simulações, pra não quebrar chamada antiga */
+const comoP = x => typeof x === "number" ? { sims:x } : x;
+function avaliaJogadas(E, a, P_, rnd){
+  const P = comoP(P_), sims = P.sims;
   const mao = E.maos[a], fora = desconhecidas(E, a), res = mao.map(()=>0);
   for(let s=0;s<sims;s++){
-    const b = reparte(E, a, fora, rnd);
+    const b = reparte(E, a, fora, rnd, P);
     for(let k=0;k<mao.length;k++){
       const maos = b.map(m => m.slice());
       const S = base(E, maos);
@@ -190,10 +225,11 @@ function avaliaJogadas(E, a, sims, rnd){
   return res.map(x => x / sims);
 }
 /* chance do time de `a` ganhar a mão daqui pra frente */
-function probMao(E, a, sims, rnd){
+function probMao(E, a, P_, rnd){
+  const P = comoP(P_), sims = P.sims;
   const fora = desconhecidas(E, a);
   let tot = 0;
-  for(let s=0;s<sims;s++) tot += ponto(simulaMao(base(E, reparte(E, a, fora, rnd))), E.times[a]);
+  for(let s=0;s<sims;s++) tot += ponto(simulaMao(base(E, reparte(E, a, fora, rnd, P))), E.times[a]);
   return tot / sims;
 }
 
@@ -213,6 +249,23 @@ function momento(E, a, P){
   if(semCartas && faltaAdversario) f *= P.mSemCartasExposto;
   else if(semCartas) f *= P.mSemCartas;
   return f;
+}
+/* ---- o placar ----
+   11 x 0 e 11 x 11 nao sao o mesmo jogo. Duas coisas mudam tudo:
+   - se correr ja entrega a partida, correr nao e opcao: aceita e reza.
+   - se eles ganham a partida ganhando esta mao, pedir e de graca:
+     nao ha mais nada a perder alem do que ja esta na mesa. */
+function falta(E, time){
+  const alvo = E.alvo || 12;
+  return E.placar ? Math.max(1, alvo - E.placar[time]) : alvo;
+}
+function ajusteFalta(E, time, P){
+  if(!E.placar) return 0;
+  const w = P.pesoFalta || 0, emJogo = E.pendente || E.valor;
+  let d = 0;
+  if(falta(E, 1-time) > E.valor && falta(E, 1-time) <= emJogo) d += 0.15 * w;  // aceitar arrisca a partida
+  if(falta(E, time) <= emJogo) d -= 0.15 * w;                                   // ganhar esta fecha o jogo
+  return d;
 }
 function escalaBlefe(P, valor){
   return valor === 1 ? 1 : valor === 3 ? P.bl3 : valor === 6 ? P.bl6 : P.bl9;
@@ -235,7 +288,7 @@ function liderDaVaza(E){
 
 /* devolve { i, virada } */
 function decideCarta(E, a, P, rnd){
-  const probs = avaliaJogadas(E, a, P.sims, rnd);
+  const probs = avaliaJogadas(E, a, P, rnd);
   const mao = E.maos[a];
   let melhor = 0;
   for(let i=1;i<probs.length;i++){
@@ -260,7 +313,17 @@ function decideCarta(E, a, P, rnd){
 function querPedir(E, a, P, rnd){
   const prox = proxValor(E.valor);
   if(!prox || E.ultimoPediu === sigla(E.times[a])) return false;
-  const p = probMao(E, a, P.sims, rnd), r = rnd(), m = momento(E, a, P);
+  const p = probMao(E, a, P, rnd), r = rnd(), m = momento(E, a, P);
+  const meu = E.times[a];
+  if(E.placar && P.pesoFalta){
+    // eles fecham a partida ganhando esta mao: subir nao custa mais nada
+    if(falta(E, 1-meu) <= E.valor) return p > P.blefeMin;
+    // esta mao ja fecha a partida pro meu time: subir so aumenta o que eles levam
+    if(falta(E, meu) <= E.valor && p <= (P.certeza || 1.01)) return false;
+  }
+  // ganho praticamente certo: pedir e de graca. Se o outro corre, levo o que
+  // ja era meu; se aceita, levo mais. Aqui nao se sorteia nem se poupa.
+  if(p > (P.certeza || 1.01)) return true;
   const cego = E.n === 4 && parceiroVisivel(E, a) < 0;
   const blefe = P.blefe * escalaBlefe(P, E.valor) * m * (cego ? P.cegoBlefe : 1);
   const forte = p > P.pedir + (cego ? P.cegoPedir : 0);
@@ -271,12 +334,19 @@ function querPedir(E, a, P, rnd){
 /* responder uma aposta -> "subir" | "aceitar" | "correr" */
 function responde(E, time, P, rnd){
   const a = assentoQueDecide(E, time);
-  const p = probMao(E, a, P.sims, rnd), r = rnd();
+  const p = probMao(E, a, P, rnd), r = rnd();
   const prox = proxValor(E.pendente);
   const cego = E.n === 4 && parceiroVisivel(E, a) < 0;
   const blefe = P.blefe * escalaBlefe(P, E.valor) * momento(E, a, P) * (cego ? P.cegoBlefe : 1);
-  const lim = limiteAceite(E.pendente, E.valor) + P.margem;
-  if(prox && (p > P.subir + (cego ? P.cegoPedir : 0) || (p > P.blefeMin && r < blefe))) return "subir";
+  const lim = limiteAceite(E.pendente, E.valor) + P.margem + ajusteFalta(E, time, P);
+  // correr entrega o valor atual; se isso ja fecha a partida deles, correr e
+  // desistir. Aceitar da pelo menos a chance p.
+  const correrPerdeTudo = E.placar && P.pesoFalta && falta(E, 1-time) <= E.valor;
+  if(correrPerdeTudo && !(prox && p > P.subir)) return "aceitar";
+  if(prox && (p > (P.certeza || 1.01) || p > P.subir + (cego ? P.cegoPedir : 0) || (p > P.blefeMin && r < blefe))) return "subir";
+  // espelho da `certeza`: derrota certa nao se paga pra ver. O "pagaPraVer"
+  // e pra mao duvidosa, nao pra folha que ja perdeu na mesa.
+  if(p < 1 - (P.certeza || 1.01)) return "correr";
   if(p > lim || r < P.pagaPraVer) return "aceitar";
   return "correr";
 }
@@ -368,8 +438,9 @@ function jogaMao(E, PS, rnd){
 function partida(P0, P1, opts){
   const o = Object.assign({ n:2, alvo:12, abre:0 }, opts||{});
   const rnd = o.rnd || Math.random;
-  const E = { n:o.n, times: o.n === 2 ? [0,1] : [0,1,0,1], abreMao:o.abre };
   const placar = [0,0];
+  const E = { n:o.n, times: o.n === 2 ? [0,1] : [0,1,0,1], abreMao:o.abre,
+              placar, alvo:o.alvo };   // mesma referência: o placar anda sozinho
   const stats = { maos:0, apostadas:0, ptsApostados:[0,0], ptsSimples:[0,0], correu:[0,0] };
   let guard = 0;
   while(placar[0] < o.alvo && placar[1] < o.alvo && guard++ < 200){
@@ -408,13 +479,13 @@ function duelo(PA, PB, opts){
 /* =========================================================
    Torneio evolutivo: os DNAs vencedores geram filhos mutados.
    ========================================================= */
-const MEXIVEIS = ["pedir","subir","margem","freqPede","pagaPraVer","blefe",
+const MEXIVEIS = ["pedir","subir","margem","freqPede","pagaPraVer","blefe","certeza","leitura","pesoFalta",
                   "bl3","bl6","bl9","blefeMin","blefeMax",
                   "mSaida","mPrimeira","mGanhouPrimeira","mSemCartas","mSemCartasExposto",
                   "cegoPedir","cegoBlefe","cegoFreq"];
 const LIMITES = {
   pedir:[0.35,0.95], subir:[0.40,0.98], margem:[-0.25,0.25], freqPede:[0.1,1],
-  pagaPraVer:[0,0.6], blefe:[0,0.6], bl3:[0,1], bl6:[0,1], bl9:[0,1],
+  pagaPraVer:[0,0.6], blefe:[0,0.6], certeza:[0.75,1], leitura:[0,1], pesoFalta:[0,1.5], bl3:[0,1], bl6:[0,1], bl9:[0,1],
   blefeMin:[0,0.45], blefeMax:[0.2,0.8],
   mSaida:[0,1.5], mPrimeira:[0,1.5], mGanhouPrimeira:[0.3,2.5],
   mSemCartas:[0,1.5], mSemCartasExposto:[0,1.5],
@@ -436,8 +507,8 @@ function muta(P, forca_, rnd){
 return { ORDEM, NAIPES, FORCA_NAIPE, PADRAO, MEXIVEIS, LIMITES,
          chave, forca, manilhaDe, sigla, proxValor, limiteAceite, baralho, embaralha, semente,
          donoDaMao, politica, simulaMao,
-         parceiroDe, parceiroVisivel, desconhecidas, reparte, avaliaJogadas, probMao,
-         momento, escalaBlefe, assentoQueDecide, decideCarta, querPedir, responde,
+         parceiroDe, parceiroVisivel, desconhecidas, reparte, exigencia, coerente, avaliaJogadas, probMao,
+         momento, escalaBlefe, falta, ajusteFalta, assentoQueDecide, decideCarta, querPedir, responde,
          jogaMao, partida, duelo, muta };
 })();
 

@@ -251,7 +251,8 @@ function decideCarta(E, a, P, rnd){
   // esconder so faz sentido quando a carta perde de qualquer jeito (empatar e melhor que perder)
   const lider = liderDaVaza(E);
   const perdeAssim = lider && forca(E.maos[a][melhor], E.manilha) < lider.f;
-  const virada = !!(perdeAssim && E.vazas.length < 2 && rnd() < (P.escondeCarta || 0));
+  // na primeira rodada ninguém esconde (regra da casa)
+  const virada = !!(perdeAssim && E.vazas.length >= 1 && rnd() < (P.escondeCarta || 0));
   return { i: melhor, virada };
 }
 

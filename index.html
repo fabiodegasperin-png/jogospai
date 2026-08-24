@@ -390,12 +390,12 @@
      A mesa tem tamanho fixo (1200x760) e é reduzida por transform:scale
      até caber. Assim todo o desenho interno, que é em px, encolhe junto —
      nada some embaixo da barra de tarefas num monitor pequeno. */
-  .tt-jogo{display:flex;gap:14px;align-items:flex-start}
+  .tt-jogo{display:flex;gap:14px;align-items:flex-start;justify-content:center}
   .tt-lado{width:190px;flex:none;display:flex;flex-direction:column;gap:10px}
   .tt-lado .voltar{width:100%;margin:0}
   .tt-lado .modos{display:flex;flex-wrap:wrap;gap:6px}
   .tt-lado .modos button{flex:1 1 100%;margin:0;font-size:17px;padding:8px 6px;white-space:nowrap}
-  .tt-fit{flex:1;min-width:0;position:relative}
+  .tt-fit{flex:none;position:relative}
   .tt-stage{position:absolute;top:0;left:0;width:1200px;height:760px;transform-origin:top left}
 
   .tt-msg{font-family:var(--disp);font-size:21px;line-height:1.2;color:var(--copag-am);
@@ -440,12 +440,15 @@
     .tt-acoes .tt-aposta{flex:1 1 100%;flex-direction:row;align-items:center;padding:8px}
     .tt-acoes .tt-aposta .txt{flex:1 1 100%;font-size:16px}
   }
-  .tt-esc-aba{position:absolute;left:50%;top:-34px;transform:translateX(-50%);
+  .tt-esc-aba{position:absolute;left:50%;top:8px;transform:translateX(-50%);
     padding:5px 14px;border-radius:9px;background:#1b1108ee;border:2px solid #ffffff66;
     color:#fff;font-family:var(--txt);font-size:15px;font-weight:800;letter-spacing:.05em;
-    text-transform:uppercase;white-space:nowrap;cursor:pointer;z-index:6;box-shadow:0 3px 7px #000a}
+    text-transform:uppercase;white-space:nowrap;cursor:pointer;z-index:6;box-shadow:0 3px 7px #000a;
+    opacity:0;pointer-events:none;transition:opacity .12s}
+  /* só aparece na carta sob o cursor (o hover do pai vale enquanto o mouse está na aba) */
+  .tt-hand .card:hover .tt-esc-aba,.tt-hand .card:focus-visible .tt-esc-aba{opacity:1;pointer-events:auto}
+  @media (hover:none){ .tt-esc-aba{opacity:1;pointer-events:auto} }
   .tt-esc-aba:hover{background:var(--copag-am);color:#2e1a0d;border-color:#fff}
-  .tt-hand .card:hover .tt-esc-aba{top:-38px}
 </style>
 </head>
 <body>
@@ -745,7 +748,7 @@ function seguir(){
   const a = T.ordem[T.pos];
   T.msg = a === 0 ? "Sua vez! Escolha uma carta." : `${NOMES[T.n][a]} pensando...`;
   render();
-  if(a !== 0) setTimeout(()=>turnoBot(a), 800);
+  if(a !== 0) setTimeout(()=>turnoBot(a), 1000);
 }
 
 const AVATAR = { 2:["👴","🤖"], 4:["👴","🧔","👩","👨‍🦰"] };
@@ -765,7 +768,8 @@ const pct = (el,[x,y]) => { el.style.left = x+"%"; el.style.top = y+"%"; };
    normal. Mais claro que um botão de modo separado. */
 function montaCartaDaMao(c, i, minhaVez){
   const el = cardEl(c, "", minhaVez ? ()=>jogar(0, i, false) : null);
-  if(minhaVez){
+  // regra da casa: na primeira rodada ninguém esconde
+  if(minhaVez && T.vazas.length >= 1){
     const aba = document.createElement("span");
     aba.className = "tt-esc-aba";
     aba.textContent = "esconder";
@@ -779,11 +783,16 @@ function montaCartaDaMao(c, i, minhaVez){
 function ajustaMesa(){
   const fit = $("t-fit"), st = $("tt-stage");
   if(!fit || !st || $("scr-truco").classList.contains("hidden")) return;
-  const larg = fit.clientWidth;
+  const jogo = fit.parentElement;
+  // desconta as colunas laterais pra saber quanto sobra pra mesa
+  let usado = 0; jogo.querySelectorAll("aside").forEach(a => usado += a.offsetWidth + 14);
+  let larg = jogo.clientWidth - usado;
+  if(larg < 260) larg = jogo.clientWidth;          // empilhado (celular): usa tudo
   // altura medida a partir do topo do bloco: nao depende do tamanho que acabei de aplicar
-  const alt  = window.innerHeight - (fit.parentElement.offsetTop || 0) - 16;
+  const alt  = window.innerHeight - (jogo.offsetTop || 0) - 16;
   const s = Math.max(0.28, Math.min(larg/1200, alt/760));
   st.style.transform = "scale(" + s + ")";
+  fit.style.width  = (1200*s) + "px";   // fit do tamanho da mesa: as colunas encostam nela
   fit.style.height = (760*s) + "px";
 }
 addEventListener("resize", ajustaMesa);
@@ -1021,7 +1030,8 @@ function resolverVaza(){
     if(dono !== null) return fimDaMao(dono, T.valor);
     T.abreVaza = (r === "t") ? T.abreVaza : topos[0].i;   // empate: reabre quem abriu
     iniciarVaza();
-  }, 1400);
+    // tempo de olhar a mesa antes de recolher as cartas
+  }, T.n === 4 ? 3400 : 2600);
 }
 
 // null = indefinido; "p"/"b" = time vencedor; "n" = mão anulada
@@ -1076,7 +1086,7 @@ function aceitar(quem){
         + ` Vale ${T.valor}` + (suaVez ? " — manda ver!" : ".");
   render();
   const a = T.ordem[T.pos];
-  if(T.pos < T.n && a !== 0) setTimeout(()=>turnoBot(a), 800);
+  if(T.pos < T.n && a !== 0) setTimeout(()=>turnoBot(a), 1000);
 }
 
 function correr(quem){
@@ -1107,7 +1117,7 @@ function fimDaMao(vencedor, pontos){
     return;
   }
   T.abreMao = ((T.abreMao - 1) % T.n + T.n) % T.n;
-  setTimeout(novaMao, 1800);
+  setTimeout(novaMao, 3000);
 }
 
 /* =========================================================

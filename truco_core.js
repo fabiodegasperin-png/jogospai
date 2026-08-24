@@ -26,6 +26,7 @@ const PADRAO = {
   certeza:     0.90,   // ganho certo (ultimo a jogar com a folha): pede SEMPRE, sem sortear
   leitura:     0.75,   // o quanto acredita que quem pediu truco tem carta (0 = surdo)
   pesoFalta:   0.60,   // o quanto o placar mexe na conta de aceitar/pedir
+  memoria:     0.60,   // o quanto o historico DESTA partida corrige a leitura
 
   // blefe
   blefe:       0.17,   // base
@@ -185,9 +186,20 @@ function coerente(E, maos, exig, a, par){
   }
   return !incognita;                               // nada a inferir: serve
 }
+/* ---- memoria desta partida ----
+   O perfil no localStorage leva partidas pra se formar. Dentro de UMA
+   partida ele tambem tem que aprender: quem pediu e perdeu a mao na cara
+   dele ja entregou alguma coisa. So conta mao que foi ate as cartas —
+   quando o outro corre, ninguem viu nada e nao ha o que aprender. */
+function forcaLeitura(E, P, time){
+  const m = E.memoria && E.memoria[time];
+  if(!m || m.pediu < 3) return P.leitura;
+  return P.leitura * (1 - (P.memoria || 0) * (m.perdeu / m.pediu));
+}
 function reparte(E, a, fora, rnd, P){
   const par = parceiroVisivel(E, a);
-  const exig = (P && P.leitura && rnd() < P.leitura) ? exigencia(E) : null;
+  const exig0 = P && P.leitura ? exigencia(E) : null;
+  const exig = (exig0 && rnd() < forcaLeitura(E, P, exig0.time)) ? exig0 : null;
   let maos;
   for(let tent=0; tent<8; tent++){
     embaralha(fora, rnd);
@@ -361,6 +373,7 @@ function novaMao(E, rnd){
   E.manilha = manilhaDe(E.vira);
   E.vazas = []; E.jogadas = []; E.viradas = []; for(let i=0;i<E.n;i++) E.viradas.push([]);
   E.valor = 1; E.pendente = null; E.ultimoPediu = null; E.parceiroAberto = false;
+  E.pediuNaMao = { p:false, b:false };
   E.abreVaza = E.abreMao;
   iniciaVaza(E);
 }
@@ -387,6 +400,7 @@ function negocia(E, pedinte, PS, rnd){
   let quem = sigla(E.times[pedinte]);
   E.pendente = proxValor(E.valor);
   E.ultimoPediu = quem;
+  if(E.pediuNaMao) E.pediuNaMao[quem] = true;
   if(E.n === 4) E.parceiroAberto = quem === "p" ? "b" : "p";   // quem responde é que consulta
   let guard = 0;
   while(guard++ < 6){
@@ -395,7 +409,7 @@ function negocia(E, pedinte, PS, rnd){
     if(acao === "correr"){
       const venc = quem;                      // quem pediu leva o valor anterior
       E.parceiroAberto = false;
-      return { vencedor: venc, pontos: E.valor };
+      return { vencedor: venc, pontos: E.valor, correu: true };
     }
     if(acao === "aceitar"){
       E.valor = E.pendente; E.pendente = null; E.parceiroAberto = false;
@@ -411,6 +425,15 @@ function negocia(E, pedinte, PS, rnd){
   return null;
 }
 
+/* quem pediu nesta mao, e o que deu */
+function anotaMemoria(E, vencedor, correu){
+  if(!E.memoria || correu) return;                  // correu: ninguem mostrou carta
+  ["p","b"].forEach((sg, t)=>{
+    if(!E.pediuNaMao || !E.pediuNaMao[sg]) return;
+    E.memoria[t].pediu++;
+    if(vencedor !== sg && vencedor !== "n") E.memoria[t].perdeu++;
+  });
+}
 function jogaMao(E, PS, rnd){
   novaMao(E, rnd);
   let guard = 0;
@@ -440,11 +463,13 @@ function partida(P0, P1, opts){
   const rnd = o.rnd || Math.random;
   const placar = [0,0];
   const E = { n:o.n, times: o.n === 2 ? [0,1] : [0,1,0,1], abreMao:o.abre,
-              placar, alvo:o.alvo };   // mesma referência: o placar anda sozinho
+              placar, alvo:o.alvo,
+              memoria: [ {pediu:0, perdeu:0}, {pediu:0, perdeu:0} ] };   // mesma referência: o placar anda sozinho
   const stats = { maos:0, apostadas:0, ptsApostados:[0,0], ptsSimples:[0,0], correu:[0,0] };
   let guard = 0;
   while(placar[0] < o.alvo && placar[1] < o.alvo && guard++ < 200){
     const r = jogaMao(E, [P0,P1], rnd);
+    anotaMemoria(E, r.vencedor, r.correu);
     stats.maos++;
     if(r.vencedor !== "n"){
       const t = r.vencedor === "p" ? 0 : 1;
@@ -479,13 +504,13 @@ function duelo(PA, PB, opts){
 /* =========================================================
    Torneio evolutivo: os DNAs vencedores geram filhos mutados.
    ========================================================= */
-const MEXIVEIS = ["pedir","subir","margem","freqPede","pagaPraVer","blefe","certeza","leitura","pesoFalta",
+const MEXIVEIS = ["pedir","subir","margem","freqPede","pagaPraVer","blefe","certeza","leitura","pesoFalta","memoria",
                   "bl3","bl6","bl9","blefeMin","blefeMax",
                   "mSaida","mPrimeira","mGanhouPrimeira","mSemCartas","mSemCartasExposto",
                   "cegoPedir","cegoBlefe","cegoFreq"];
 const LIMITES = {
   pedir:[0.35,0.95], subir:[0.40,0.98], margem:[-0.25,0.25], freqPede:[0.1,1],
-  pagaPraVer:[0,0.6], blefe:[0,0.6], certeza:[0.75,1], leitura:[0,1], pesoFalta:[0,1.5], bl3:[0,1], bl6:[0,1], bl9:[0,1],
+  pagaPraVer:[0,0.6], blefe:[0,0.6], certeza:[0.75,1], leitura:[0,1], pesoFalta:[0,1.5], memoria:[0,1], bl3:[0,1], bl6:[0,1], bl9:[0,1],
   blefeMin:[0,0.45], blefeMax:[0.2,0.8],
   mSaida:[0,1.5], mPrimeira:[0,1.5], mGanhouPrimeira:[0.3,2.5],
   mSemCartas:[0,1.5], mSemCartasExposto:[0,1.5],
@@ -508,7 +533,7 @@ return { ORDEM, NAIPES, FORCA_NAIPE, PADRAO, MEXIVEIS, LIMITES,
          chave, forca, manilhaDe, sigla, proxValor, limiteAceite, baralho, embaralha, semente,
          donoDaMao, politica, simulaMao,
          parceiroDe, parceiroVisivel, desconhecidas, reparte, exigencia, coerente, avaliaJogadas, probMao,
-         momento, escalaBlefe, falta, ajusteFalta, assentoQueDecide, decideCarta, querPedir, responde,
+         momento, escalaBlefe, falta, ajusteFalta, forcaLeitura, anotaMemoria, assentoQueDecide, decideCarta, querPedir, responde,
          jogaMao, partida, duelo, muta };
 })();
 

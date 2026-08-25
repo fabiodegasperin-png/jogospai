@@ -111,45 +111,101 @@ if(EM_USO){
    Grava assim que o campeao valida, e de novo no fim com o algoz. A etapa 4
    e longa: se ela cair, os 10 minutos de evolucao nao podem ir junto. */
 const limpa = o => { const c = Object.assign({}, o); delete c.nome; delete c.sims; return c; };
-function salva(algozDna){
+function salva(algozes){
+  const A = algozes || {};
+  const nomes = Object.keys(A);
   fs.writeFileSync("truco_dna.json", JSON.stringify({
     campeao: limpa(campeao),
-    algoz: algozDna ? limpa(algozDna) : null,
+    // um algoz por jeito de jogar medido no log; `algoz` (singular) e o do
+    // jogador com mais maos, pra quem so quer um DNA e pronto
+    algozes: nomes.reduce((m,n)=> (m[n] = { dna: limpa(A[n].dna), persona: A[n].persona,
+                                            medido: A[n].medido, vence: A[n].vence }, m), {}),
+    algoz: nomes.length ? limpa(A[nomes[0]].dna) : null,
     personas: PERSONAS.reduce((m,p)=> (m[p.nome] = limpa(p), m), {}),
-    ranking, trilha, completo: !!algozDna,
+    ranking, trilha, completo: !!nomes.length,
     geradoEm: new Date().toISOString()
   }, null, 2));
-  console.log("  [salvo em truco_dna.json" + (algozDna ? "" : " - campeao; falta o algoz") + "]");
+  console.log("  [salvo em truco_dna.json" + (nomes.length ? "" : " - campeao; falta o algoz") + "]");
 }
 salva(null);
 
-/* ---- 4. e contra gente? o modelo do jogador real ---- */
-console.log("\n=== 4. CONTRA O JEITO DO ROGÉRIO (corre de 68% dos trucos) ===\n");
-const medroso = dna("medroso", { margem:0.38, pagaPraVer:0.02, pedir:0.76, blefe:0.03, freqPede:0.45 });
-const base = T.duelo(atual,   medroso, { partidas:500, n:2, semente:31 });
-const camp = T.duelo(campeao, medroso, { partidas:500, n:2, semente:31 });
-console.log(`  bot atual  vence ${(base.taxaA*100).toFixed(1)}%`);
-console.log(`  campeão    vence ${(camp.taxaA*100).toFixed(1)}%`);
+/* ---- 4. contra gente de verdade: a persona sai do log, nao do chute ----
+   Antes aqui morava um "medroso" escrito a mao, com o comentario
+   "corre de 68% dos trucos". A persona corre 66% mesmo — o furo era o
+   rotulo: medido em 25/08/2026 nos 4.873 eventos gravados, o Rogerio
+   corre de 23% (e nas sessoes grandes, 0%) e o Fabio de 58%. O algoz
+   estava sendo treinado pra explorar uma fuga que nao existe. */
+console.log("");
+console.log("=== 4. CONTRA GENTE DE VERDADE (persona calibrada no log) ===");
+console.log("");
 
-// agora um DNA evoluído DE PROPÓSITO contra quem corre muito
-let algoz = Object.assign({}, campeao); let sm = 7000;
-for(let g=0; g<8; g++){
-  let melhor = null;
-  for(let f=0; f<6; f++){
-    const filho = T.muta(algoz, 0.22, T.semente(sm++));
-    const r = T.duelo(filho, medroso, { partidas:260, n:2, semente: sm++ });
-    if(!melhor || r.taxaA > melhor.taxa) melhor = { dna: filho, taxa: r.taxaA };
+const sparring = dna("sparring", {});
+const MED = 200, SEM_MED = 555;
+const mediu = d => T.duelo(sparring, d, { partidas:MED, n:2, semente:SEM_MED });
+
+/* busca binaria: mexe num parametro so ate a persona simulada correr (ou
+   pedir) o mesmo tanto que a pessoa faz na mesa. `inverte` e pra quem anda
+   pro outro lado (certeza alta = corre menos e pede menos). */
+function calibra(base, chave, lo, hi, alvo, leitura, inverte){
+  let dna = Object.assign({}, base);
+  for(let i=0; i<7; i++){
+    const meio = (lo + hi) / 2;
+    dna = Object.assign({}, base, { [chave]: meio });
+    const acima = leitura(mediu(dna)) > alvo;
+    if(inverte ? !acima : acima) hi = meio; else lo = meio;
   }
-  const atualTaxa = T.duelo(algoz, medroso, { partidas:260, n:2, semente: sm++ }).taxaA;
-  if(melhor.taxa > atualTaxa) algoz = melhor.dna;
+  return dna;
 }
-const alg = T.duelo(algoz, medroso, { partidas:500, n:2, semente:31 });
-console.log(`  algoz (treinado contra ele) vence ${(alg.taxaA*100).toFixed(1)}%`);
-console.log(`\n  o que o algoz mudou pra explorar quem corre:`);
-["pedir","freqPede","blefe","bl3","mSaida","mPrimeira","mGanhouPrimeira","subir"].forEach(k=>{
-  const de = campeao[k], pra = algoz[k];
-  if(Math.abs(pra-de) > 0.02) console.log(`    ${k.padEnd(16)} ${de.toFixed(2)} -> ${pra.toFixed(2)}`);
-});
 
-salva(algoz);
+let perfis = {};
+try{ perfis = require("./perfil_real.js")().jogadores; }
+catch(e){ console.log("  (sem _eventos.json: rode node baixar_eventos.js)  " + e.message); }
+
+const REAIS = Object.entries(perfis)
+  .filter(([,o]) => o.maos >= 50 && o.respostas >= 6 && o.fuga !== null)
+  .sort((a,b) => b[1].maos - a[1].maos);
+
+const algozes = {};
+for(const [nome, real] of REAIS){
+  /* `certeza` primeiro: ela e o piso dos dois numeros — com p>certeza o bot
+     pede sozinho e com p<1-certeza ele corre sozinho, entao enquanto ela
+     estiver em 0.90 nenhuma persona consegue "nunca correr". Foi o que
+     travava o Rogeriao em 22% de fuga simulada contra 0% de fuga real. */
+  let p = dna("real:" + nome, {});
+  p = calibra(p, "certeza",   0.75, 1.01, real.fuga,       r => r.fugaB, true);
+  p = calibra(p, "margem",   -0.60, 0.80, real.fuga,       r => r.fugaB);
+  p = calibra(p, "freqPede",  0.00, 1.00, real.pedePorMao, r => r.pedePorMaoB);
+  const conf = mediu(p);
+  console.log(`  ${nome}  (${real.maos} maos no log)`);
+  console.log(`    corre de   ${(real.fuga*100).toFixed(0)}% dos trucos  -> persona: ${(conf.fugaB*100).toFixed(0)}%   [margem ${p.margem.toFixed(2)}]`);
+  console.log(`    pede       ${real.pedePorMao.toFixed(2)}/mao          -> persona: ${conf.pedePorMaoB.toFixed(2)}/mao  [freqPede ${p.freqPede.toFixed(2)}]`);
+
+  const base = T.duelo(atual,   p, { partidas:400, n:2, semente:31 }).taxaA;
+  const camp = T.duelo(campeao, p, { partidas:400, n:2, semente:31 }).taxaA;
+
+  // um algoz por jeito de jogar: quem paga tudo e quem corre de tudo
+  // precisam de DNAs opostos, nao da pra servir os dois com um so
+  let algoz = Object.assign({}, campeao); let sm = 7000;
+  for(let g=0; g<6; g++){
+    let melhor = null;
+    for(let f=0; f<5; f++){
+      const filho = T.muta(algoz, 0.22, T.semente(sm++));
+      const r = T.duelo(filho, p, { partidas:200, n:2, semente: sm++ });
+      if(!melhor || r.taxaA > melhor.taxa) melhor = { dna: filho, taxa: r.taxaA };
+    }
+    if(melhor.taxa > T.duelo(algoz, p, { partidas:200, n:2, semente: sm++ }).taxaA) algoz = melhor.dna;
+  }
+  const alg = T.duelo(algoz, p, { partidas:400, n:2, semente:31 }).taxaA;
+  console.log(`    bot atual ${(base*100).toFixed(1)}%  |  campeao ${(camp*100).toFixed(1)}%  |  algoz ${(alg*100).toFixed(1)}%`);
+  const ganho = ["pedir","freqPede","blefe","margem","mSaida","mGanhouPrimeira","subir","pagaPraVer"]
+    .filter(k => Math.abs(algoz[k] - campeao[k]) > 0.02)
+    .map(k => `${k} ${campeao[k].toFixed(2)}->${algoz[k].toFixed(2)}`);
+  if(ganho.length) console.log(`    o algoz mudou: ${ganho.join(", ")}`);
+  algozes[nome] = { dna: algoz, persona: limpa(p), medido: real, vence: alg };
+  console.log("");
+}
+if(!REAIS.length) console.log("  nenhum jogador com amostra suficiente no log ainda.");
+
+salva(algozes);
+
 console.log(`\nSalvo em truco_dna.json — ${((Date.now()-t0)/1000).toFixed(1)}s`);

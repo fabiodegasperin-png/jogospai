@@ -1,46 +1,334 @@
 {
   "campeao": {
     "pedir": 0.88,
-    "subir": 0.963473980187128,
-    "margem": 0.25,
-    "freqPede": 0.29592159168142823,
-    "pagaPraVer": 0.02,
-    "blefe": 0,
-    "bl3": 0.32513281819928025,
-    "bl6": 0.19733828203235232,
+    "subir": 0.92,
+    "margem": 0.1912543225867881,
+    "freqPede": 0.23414102174341675,
+    "pagaPraVer": 0,
+    "certeza": 0.9,
+    "leitura": 0.75,
+    "pesoFalta": 0.6,
+    "memoria": 0.49475245158912406,
+    "blefe": 0.01,
+    "bl3": 0.5111072398722172,
+    "bl6": 0.24964566670772104,
     "bl9": 0.08,
     "blefeMin": 0.22,
-    "blefeMax": 0.3488836346405248,
-    "mSaida": 0.2365252416223908,
-    "mPrimeira": 0.55,
-    "mGanhouPrimeira": 1.0921008277063569,
-    "mSemCartas": 0.7441113833384588,
-    "mSemCartasExposto": 0.32842263972386715,
-    "cegoPedir": 0.03661148669943212,
-    "cegoBlefe": 0.30076186645362113,
-    "cegoFreq": 0.6381577965824141,
+    "blefeMax": 0.5077426683132847,
+    "mSaida": 0.25,
+    "mPrimeira": 0.3564465911251804,
+    "mGanhouPrimeira": 1.5496651347875596,
+    "mSemCartas": 0.6306121543996657,
+    "mSemCartasExposto": 0.0830574334971606,
+    "cegoPedir": 0.09,
+    "cegoBlefe": 0.3,
+    "cegoFreq": 0.55,
+    "escondeCarta": 0.65,
     "erro": 0
   },
+  "algozes": {
+    "rogerio": {
+      "dna": {
+        "pedir": 0.88,
+        "subir": 0.9086122751452029,
+        "margem": 0.1912543225867881,
+        "freqPede": 0.23414102174341675,
+        "pagaPraVer": 0,
+        "certeza": 0.9,
+        "leitura": 0.75,
+        "pesoFalta": 0.6,
+        "memoria": 0.6343976915607021,
+        "blefe": 0.01,
+        "bl3": 0.5111072398722172,
+        "bl6": 0.24964566670772104,
+        "bl9": 0.08,
+        "blefeMin": 0.22,
+        "blefeMax": 0.4397153237921496,
+        "mSaida": 0.25,
+        "mPrimeira": 0.3564465911251804,
+        "mGanhouPrimeira": 1.5496651347875596,
+        "mSemCartas": 0.5027903141702215,
+        "mSemCartasExposto": 0.0830574334971606,
+        "cegoPedir": 0.09,
+        "cegoBlefe": 0.22163692707195876,
+        "cegoFreq": 0.5072720451373607,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "persona": {
+        "pedir": 0.64,
+        "subir": 0.7,
+        "margem": -0.1953125,
+        "freqPede": 0.0234375,
+        "pagaPraVer": 0.22,
+        "certeza": 1.0079687499999999,
+        "leitura": 0.75,
+        "pesoFalta": 0.6,
+        "memoria": 0.6,
+        "blefe": 0.17,
+        "bl3": 0.4,
+        "bl6": 0.18,
+        "bl9": 0.08,
+        "blefeMin": 0.22,
+        "blefeMax": 0.4,
+        "mSaida": 0.25,
+        "mPrimeira": 0.55,
+        "mGanhouPrimeira": 1.35,
+        "mSemCartas": 0.6,
+        "mSemCartasExposto": 0.35,
+        "cegoPedir": 0.09,
+        "cegoBlefe": 0.3,
+        "cegoFreq": 0.55,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "medido": {
+        "maos": 609,
+        "pontosPro": 336,
+        "pontosContra": 673,
+        "respostas": 78,
+        "correu": 18,
+        "aceitou": 59,
+        "subiu": 1,
+        "pedidos": 75,
+        "pedidosFracos": 28,
+        "botCorreu": 49,
+        "botAceitou": 30,
+        "semAposta": {
+          "maos": 384,
+          "pro": 173,
+          "contra": 339,
+          "saldo": -166
+        },
+        "apostadaPaga": {
+          "maos": 156,
+          "pro": 110,
+          "contra": 277,
+          "saldo": -167
+        },
+        "alguemCorreu": {
+          "maos": 69,
+          "pro": 53,
+          "contra": 57,
+          "saldo": -4
+        },
+        "fuga": 0.23076923076923078,
+        "blefe": 0.37333333333333335,
+        "fugaDoBot": 0.620253164556962,
+        "pedePorMao": 0.12315270935960591
+      },
+      "vence": 0.835
+    },
+    "(sem login)": {
+      "dna": {
+        "pedir": 0.88,
+        "subir": 0.92,
+        "margem": 0.1912543225867881,
+        "freqPede": 0.23414102174341675,
+        "pagaPraVer": 0,
+        "certeza": 0.9,
+        "leitura": 0.75,
+        "pesoFalta": 0.6405058112181723,
+        "memoria": 0.49475245158912406,
+        "blefe": 0.01,
+        "bl3": 0.5111072398722172,
+        "bl6": 0.24964566670772104,
+        "bl9": 0.08,
+        "blefeMin": 0.22,
+        "blefeMax": 0.5003545706433554,
+        "mSaida": 0.33651671098545194,
+        "mPrimeira": 0.3564465911251804,
+        "mGanhouPrimeira": 1.6278188677672298,
+        "mSemCartas": 0.5027903141702215,
+        "mSemCartasExposto": 0.0830574334971606,
+        "cegoPedir": 0.09,
+        "cegoBlefe": 0.22163692707195876,
+        "cegoFreq": 0.38205992168746894,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "persona": {
+        "pedir": 0.64,
+        "subir": 0.7,
+        "margem": -0.4140625,
+        "freqPede": 0.0078125,
+        "pagaPraVer": 0.22,
+        "certeza": 1.0079687499999999,
+        "leitura": 0.75,
+        "pesoFalta": 0.6,
+        "memoria": 0.6,
+        "blefe": 0.17,
+        "bl3": 0.4,
+        "bl6": 0.18,
+        "bl9": 0.08,
+        "blefeMin": 0.22,
+        "blefeMax": 0.4,
+        "mSaida": 0.25,
+        "mPrimeira": 0.55,
+        "mGanhouPrimeira": 1.35,
+        "mSemCartas": 0.6,
+        "mSemCartasExposto": 0.35,
+        "cegoPedir": 0.09,
+        "cegoBlefe": 0.3,
+        "cegoFreq": 0.55,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "medido": {
+        "maos": 416,
+        "pontosPro": 251,
+        "pontosContra": 503,
+        "respostas": 126,
+        "correu": 0,
+        "aceitou": 126,
+        "subiu": 0,
+        "pedidos": 6,
+        "pedidosFracos": 0,
+        "botCorreu": 2,
+        "botAceitou": 4,
+        "semAposta": {
+          "maos": 255,
+          "pro": 170,
+          "contra": 133,
+          "saldo": 37
+        },
+        "apostadaPaga": {
+          "maos": 159,
+          "pro": 80,
+          "contra": 367,
+          "saldo": -287
+        },
+        "alguemCorreu": {
+          "maos": 2,
+          "pro": 1,
+          "contra": 3,
+          "saldo": -2
+        },
+        "fuga": 0,
+        "blefe": 0,
+        "fugaDoBot": 0.3333333333333333,
+        "pedePorMao": 0.014423076923076924
+      },
+      "vence": 0.915
+    },
+    "fabio": {
+      "dna": {
+        "pedir": 0.9230687764789909,
+        "subir": 0.9756625707071275,
+        "margem": 0.1912543225867881,
+        "freqPede": 0.23414102174341675,
+        "pagaPraVer": 0,
+        "certeza": 0.9,
+        "leitura": 0.75,
+        "pesoFalta": 0.6,
+        "memoria": 0.4896587455810772,
+        "blefe": 0.01,
+        "bl3": 0.5111072398722172,
+        "bl6": 0.24964566670772104,
+        "bl9": 0.08421144458465278,
+        "blefeMin": 0.154787662552204,
+        "blefeMax": 0.5865485631128152,
+        "mSaida": 0.25,
+        "mPrimeira": 0.3564465911251804,
+        "mGanhouPrimeira": 1.5496651347875596,
+        "mSemCartas": 0.40850494295979534,
+        "mSemCartasExposto": 0.14765409245621408,
+        "cegoPedir": 0.14382643961906433,
+        "cegoBlefe": 0.22163692707195876,
+        "cegoFreq": 0.5448055096622557,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "persona": {
+        "pedir": 0.64,
+        "subir": 0.7,
+        "margem": 0.22031250000000002,
+        "freqPede": 0.0078125,
+        "pagaPraVer": 0.22,
+        "certeza": 0.7520312499999999,
+        "leitura": 0.75,
+        "pesoFalta": 0.6,
+        "memoria": 0.6,
+        "blefe": 0.17,
+        "bl3": 0.4,
+        "bl6": 0.18,
+        "bl9": 0.08,
+        "blefeMin": 0.22,
+        "blefeMax": 0.4,
+        "mSaida": 0.25,
+        "mPrimeira": 0.55,
+        "mGanhouPrimeira": 1.35,
+        "mSemCartas": 0.6,
+        "mSemCartasExposto": 0.35,
+        "cegoPedir": 0.09,
+        "cegoBlefe": 0.3,
+        "cegoFreq": 0.55,
+        "escondeCarta": 0.65,
+        "erro": 0
+      },
+      "medido": {
+        "maos": 109,
+        "pontosPro": 96,
+        "pontosContra": 90,
+        "respostas": 26,
+        "correu": 15,
+        "aceitou": 8,
+        "subiu": 3,
+        "pedidos": 42,
+        "pedidosFracos": 12,
+        "botCorreu": 25,
+        "botAceitou": 16,
+        "semAposta": {
+          "maos": 25,
+          "pro": 20,
+          "contra": 11,
+          "saldo": 9
+        },
+        "apostadaPaga": {
+          "maos": 35,
+          "pro": 42,
+          "contra": 43,
+          "saldo": -1
+        },
+        "alguemCorreu": {
+          "maos": 49,
+          "pro": 34,
+          "contra": 36,
+          "saldo": -2
+        },
+        "fuga": 0.5769230769230769,
+        "blefe": 0.2857142857142857,
+        "fugaDoBot": 0.6097560975609756,
+        "pedePorMao": 0.3853211009174312
+      },
+      "vence": 0.6175
+    }
+  },
   "algoz": {
-    "pedir": 0.9230687764789909,
-    "subir": 0.98,
-    "margem": 0.25,
-    "freqPede": 0.29592159168142823,
-    "pagaPraVer": 0.02,
-    "blefe": 0,
-    "bl3": 0.32513281819928025,
-    "bl6": 0.19733828203235232,
+    "pedir": 0.88,
+    "subir": 0.9086122751452029,
+    "margem": 0.1912543225867881,
+    "freqPede": 0.23414102174341675,
+    "pagaPraVer": 0,
+    "certeza": 0.9,
+    "leitura": 0.75,
+    "pesoFalta": 0.6,
+    "memoria": 0.6343976915607021,
+    "blefe": 0.01,
+    "bl3": 0.5111072398722172,
+    "bl6": 0.24964566670772104,
     "bl9": 0.08,
-    "blefeMin": 0.22189515006309377,
-    "blefeMax": 0.3488836346405248,
-    "mSaida": 0.11872907119958345,
-    "mPrimeira": 0.55,
-    "mGanhouPrimeira": 1.0921008277063569,
-    "mSemCartas": 0.7441113833384588,
-    "mSemCartasExposto": 0.10631542828399684,
-    "cegoPedir": 0.03661148669943212,
-    "cegoBlefe": 0.4801833318505022,
-    "cegoFreq": 0.7522208192778959,
+    "blefeMin": 0.22,
+    "blefeMax": 0.4397153237921496,
+    "mSaida": 0.25,
+    "mPrimeira": 0.3564465911251804,
+    "mGanhouPrimeira": 1.5496651347875596,
+    "mSemCartas": 0.5027903141702215,
+    "mSemCartasExposto": 0.0830574334971606,
+    "cegoPedir": 0.09,
+    "cegoBlefe": 0.22163692707195876,
+    "cegoFreq": 0.5072720451373607,
+    "escondeCarta": 0.65,
     "erro": 0
   },
   "personas": {
@@ -50,6 +338,10 @@
       "margem": -0.03,
       "freqPede": 0.58,
       "pagaPraVer": 0.22,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0.17,
       "bl3": 0.4,
       "bl6": 0.18,
@@ -64,6 +356,7 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     },
     "agressivo": {
@@ -72,6 +365,10 @@
       "margem": -0.12,
       "freqPede": 0.8,
       "pagaPraVer": 0.22,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0.34,
       "bl3": 0.4,
       "bl6": 0.18,
@@ -86,6 +383,7 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     },
     "seguro": {
@@ -94,6 +392,10 @@
       "margem": 0.1,
       "freqPede": 0.4,
       "pagaPraVer": 0.08,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0.04,
       "bl3": 0.4,
       "bl6": 0.18,
@@ -108,6 +410,7 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     },
     "estatistico": {
@@ -116,6 +419,10 @@
       "margem": 0,
       "freqPede": 1,
       "pagaPraVer": 0,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0,
       "bl3": 0.4,
       "bl6": 0.18,
@@ -130,6 +437,7 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     },
     "blefeiro": {
@@ -138,6 +446,10 @@
       "margem": -0.03,
       "freqPede": 0.58,
       "pagaPraVer": 0.22,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0.5,
       "bl3": 0.7,
       "bl6": 0.4,
@@ -152,6 +464,7 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     },
     "pao-duro": {
@@ -160,6 +473,10 @@
       "margem": 0.2,
       "freqPede": 0.3,
       "pagaPraVer": 0.02,
+      "certeza": 0.9,
+      "leitura": 0.75,
+      "pesoFalta": 0.6,
+      "memoria": 0.6,
       "blefe": 0.01,
       "bl3": 0.4,
       "bl6": 0.18,
@@ -174,95 +491,96 @@
       "cegoPedir": 0.09,
       "cegoBlefe": 0.3,
       "cegoFreq": 0.55,
+      "escondeCarta": 0.65,
       "erro": 0
     }
   },
   "ranking": [
     {
       "n": "pao-duro",
-      "taxa": 0.6833333333333333
+      "taxa": 0.7016666666666667
     },
     {
       "n": "seguro",
-      "taxa": 0.5958333333333333
+      "taxa": 0.6058333333333333
     },
     {
       "n": "estatistico",
-      "taxa": 0.5116666666666667
+      "taxa": 0.5175
     },
     {
       "n": "atual",
-      "taxa": 0.46416666666666667
-    },
-    {
-      "n": "blefeiro",
-      "taxa": 0.3883333333333333
+      "taxa": 0.4716666666666667
     },
     {
       "n": "agressivo",
-      "taxa": 0.3566666666666667
+      "taxa": 0.36583333333333334
+    },
+    {
+      "n": "blefeiro",
+      "taxa": 0.3375
     }
   ],
   "trilha": [
     {
       "g": 1,
-      "taxa": 0.5266666666666666,
+      "taxa": 0.53,
       "trocou": false
     },
     {
       "g": 2,
-      "taxa": 0.5266666666666666,
-      "trocou": false
-    },
-    {
-      "g": 3,
-      "taxa": 0.5133333333333333,
-      "trocou": false
-    },
-    {
-      "g": 4,
       "taxa": 0.5533333333333333,
       "trocou": true
     },
     {
-      "g": 5,
+      "g": 3,
       "taxa": 0.5366666666666666,
       "trocou": false
     },
     {
+      "g": 4,
+      "taxa": 0.54,
+      "trocou": true
+    },
+    {
+      "g": 5,
+      "taxa": 0.54,
+      "trocou": true
+    },
+    {
       "g": 6,
-      "taxa": 0.56,
+      "taxa": 0.5566666666666666,
       "trocou": true
     },
     {
       "g": 7,
-      "taxa": 0.5733333333333334,
+      "taxa": 0.5433333333333333,
       "trocou": true
     },
     {
       "g": 8,
-      "taxa": 0.56,
-      "trocou": true
-    },
-    {
-      "g": 9,
-      "taxa": 0.5533333333333333,
-      "trocou": true
-    },
-    {
-      "g": 10,
       "taxa": 0.5633333333333334,
       "trocou": true
     },
     {
-      "g": 11,
-      "taxa": 0.5933333333333334,
+      "g": 9,
+      "taxa": 0.5433333333333333,
       "trocou": true
     },
     {
+      "g": 10,
+      "taxa": 0.5133333333333333,
+      "trocou": false
+    },
+    {
+      "g": 11,
+      "taxa": 0.5266666666666666,
+      "trocou": false
+    },
+    {
       "g": 12,
-      "taxa": 0.5433333333333333,
-      "trocou": true
+      "taxa": 0.5333333333333333,
+      "trocou": false
     },
     {
       "g": 13,
@@ -271,9 +589,10 @@
     },
     {
       "g": 14,
-      "taxa": 0.5566666666666666,
-      "trocou": true
+      "taxa": 0.52,
+      "trocou": false
     }
   ],
-  "geradoEm": "2026-08-23T12:51:19.701Z"
+  "completo": true,
+  "geradoEm": "2026-08-25T13:10:13.313Z"
 }

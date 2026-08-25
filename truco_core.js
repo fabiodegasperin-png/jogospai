@@ -398,6 +398,7 @@ function resolveVaza(E){
    devolve null (segue o jogo) ou {vencedor, pontos} se alguém correu. */
 function negocia(E, pedinte, PS, rnd){
   let quem = sigla(E.times[pedinte]);
+  if(E.conta) E.conta.pediu[E.times[pedinte]]++;
   E.pendente = proxValor(E.valor);
   E.ultimoPediu = quem;
   if(E.pediuNaMao) E.pediuNaMao[quem] = true;
@@ -406,6 +407,9 @@ function negocia(E, pedinte, PS, rnd){
   while(guard++ < 6){
     const timeResp = quem === "p" ? 1 : 0;
     const acao = responde(E, timeResp, PS[timeResp], rnd);
+    // quanto esse DNA corre, medido: e o numero que deixa comparar a persona
+    // simulada com o jogador de verdade (ver perfil_real.js)
+    if(E.conta){ E.conta.respostas[timeResp]++; if(acao === "correr") E.conta.correu[timeResp]++; }
     if(acao === "correr"){
       const venc = quem;                      // quem pediu leva o valor anterior
       E.parceiroAberto = false;
@@ -464,8 +468,10 @@ function partida(P0, P1, opts){
   const placar = [0,0];
   const E = { n:o.n, times: o.n === 2 ? [0,1] : [0,1,0,1], abreMao:o.abre,
               placar, alvo:o.alvo,
-              memoria: [ {pediu:0, perdeu:0}, {pediu:0, perdeu:0} ] };   // mesma referência: o placar anda sozinho
-  const stats = { maos:0, apostadas:0, ptsApostados:[0,0], ptsSimples:[0,0], correu:[0,0] };
+              memoria: [ {pediu:0, perdeu:0}, {pediu:0, perdeu:0} ],   // mesma referência: o placar anda sozinho
+              conta: { respostas:[0,0], correu:[0,0], pediu:[0,0] } };
+  const stats = { maos:0, apostadas:0, ptsApostados:[0,0], ptsSimples:[0,0],
+                  respostas:E.conta.respostas, correu:E.conta.correu, pediu:E.conta.pediu };
   let guard = 0;
   while(placar[0] < o.alvo && placar[1] < o.alvo && guard++ < 200){
     const r = jogaMao(E, [P0,P1], rnd);
@@ -486,7 +492,8 @@ function partida(P0, P1, opts){
 function duelo(PA, PB, opts){
   const o = Object.assign({ partidas:200, n:2, semente:1 }, opts||{});
   const rnd = semente(o.semente);
-  let vitA = 0; const agg = { ptsApostados:[0,0], ptsSimples:[0,0], maos:0 };
+  let vitA = 0; const agg = { ptsApostados:[0,0], ptsSimples:[0,0], maos:0,
+                              respostas:[0,0], correu:[0,0], pediu:[0,0] };
   for(let i=0;i<o.partidas;i++){
     // metade das partidas com os papéis trocados: tira a vantagem de abrir
     const troca = i % 2 === 1;
@@ -497,8 +504,15 @@ function duelo(PA, PB, opts){
     agg.ptsApostados[0] += r.stats.ptsApostados[iA]; agg.ptsApostados[1] += r.stats.ptsApostados[iB];
     agg.ptsSimples[0]   += r.stats.ptsSimples[iA];   agg.ptsSimples[1]   += r.stats.ptsSimples[iB];
     agg.maos += r.stats.maos;
+    agg.respostas[0] += r.stats.respostas[iA]; agg.respostas[1] += r.stats.respostas[iB];
+    agg.correu[0]    += r.stats.correu[iA];    agg.correu[1]    += r.stats.correu[iB];
+    agg.pediu[0]     += r.stats.pediu[iA];     agg.pediu[1]     += r.stats.pediu[iB];
   }
-  return { taxaA: vitA / o.partidas, partidas:o.partidas, agg };
+  // fugaA/fugaB: de quanto do truco do outro cada lado correu
+  const fuga = i => agg.respostas[i] ? agg.correu[i] / agg.respostas[i] : null;
+  return { taxaA: vitA / o.partidas, partidas:o.partidas, agg,
+           fugaA: fuga(0), fugaB: fuga(1),
+           pedePorMaoA: agg.pediu[0]/agg.maos, pedePorMaoB: agg.pediu[1]/agg.maos };
 }
 
 /* =========================================================

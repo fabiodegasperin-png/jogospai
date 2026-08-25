@@ -567,6 +567,7 @@
 
 <script src="truco_core.js?v=1"></script>
 <script src="cacheta_core.js?v=3"></script>
+<script src="perfil_real.js?v=1"></script>
 <script>
 "use strict";
 const $ = s => document.getElementById(s);
@@ -1004,8 +1005,11 @@ const anotaResposta = correu => anota(L => { L.trucosRecebidos++; if(correu) L.c
 /* você pediu: com que mão? (leitura:0 aqui — a medida tem que ser crua) */
 function anotaPedido(){
   T.humanoPediu = true;
+  // mesma regra do perfil_real.js (sem manilha e sem A/2/3). Antes era
+  // probMao<0.45, que o servidor nao consegue recalcular do log — dois
+  // jeitos de medir "pediu sem nada" somados no mesmo contador.
   let fraco = false;
-  try{ fraco = TRUCO.probMao(T, 0, { sims:60, leitura:0 }, Math.random) < 0.45; }catch(e){}
+  try{ fraco = PERFIL.pediuFraco({ vira:T.vira, mao:T.maos[0] }); }catch(e){}
   anota(L => { L.pediu++; if(fraco) L.pediuFraco++; });
 }
 const anotaFimMao = () => anota(L => { L.maos++; });
@@ -1019,6 +1023,43 @@ function perfilDoAdversario(){
       blefe: (L.pediu || 0)           >= 6  ? (L.pediuFraco || 0) / L.pediu : null
     };
   }catch(e){ return null; }
+}
+
+/* O perfil morava so no localStorage: trocou de aparelho (ou limpou o
+   navegador) e o bot esquecia com quem estava jogando — 12 mil eventos no
+   servidor e ele recomecava do zero. Agora ele parte do historico inteiro
+   e vai somando por cima durante a partida.
+   ponytail: puxa uma vez por carregamento; nao precisa ser ao vivo, o
+   contador local ja acompanha a mesa. */
+/* consulta os eventos de um jogador, do mais novo pro mais velho, e devolve
+   na ordem em que aconteceram (o PERFIL le sequencia, entao a ordem importa).
+   ponytail: 1000 e o teto do Supabase por requisicao; pedir mais so mente. */
+function eventosDe(id, tipos, limite){
+  const q = SB_URL + "/rest/v1/eventos?select=id,sessao,jogo,tipo,dados"
+          + "&jogo=eq.truco&tipo=in.(" + tipos + ")"
+          + "&dados->>jogador=eq." + encodeURIComponent(id)
+          + "&order=id.desc&limit=" + Math.min(limite || 1000, 1000);
+  return fetch(q, { headers:{ apikey:SB_KEY, Authorization:"Bearer "+SB_KEY } })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(linhas => linhas.reverse());
+}
+
+function puxaPerfil(id){
+  return eventosDe(id, "pediu,correu,aceitou", 500)
+    .then(linhas => {
+      if(!linhas.length) return;
+      const p = PERFIL(linhas).jogadores[id];             // mesma conta do treinador
+      if(!p) return;
+      const k = "leitura_" + id;
+      const local = JSON.parse(localStorage.getItem(k) || "null");
+      // jogou offline? o aparelho sabe mais que o servidor: nao apaga
+      if(local && (local.trucosRecebidos || 0) > p.respostas) return;
+      localStorage.setItem(k, JSON.stringify({
+        trucosRecebidos: p.respostas, correu: p.correu,
+        pediu: p.pedidos, pediuFraco: p.pedidosFracos,
+        maos: (local && local.maos) || 0
+      }));
+    }).catch(()=>{});     // sem rede: fica o que o aparelho ja sabia
 }
 
 function paramsDoBot(a){
@@ -1132,7 +1173,10 @@ function pedirTruco(a){
   if(respondente === 0){
     const opcoes = [["Correr",  ()=>{ anotaResposta(true);  correr("p"); }, "corre"],
                     ["Aceitar", ()=>{ anotaResposta(false); aceitar("p"); }, "aceita"]];
-    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)), ()=>pedirTruco(0), "sobe"]);
+    // subir e resposta que NAO e fuga; sem esta linha o bot achava que voce
+    // corria mais do que corre (a resposta simplesmente sumia da conta)
+    if(proxValor(prox)) opcoes.push([nomeAposta(proxValor(prox)),
+                                     ()=>{ anotaResposta(false); pedirTruco(0); }, "sobe"]);
     barraAposta(`${NOMES[T.n][a]} pediu ${nomeAposta(prox)}. E aí?`, opcoes);
   } else {
     setTimeout(()=>botResponde(respondente), 900);
@@ -1255,6 +1299,7 @@ function analisaHistorico(){
   }
   return r;
 }
+const NL = String.fromCharCode(10);
 function abrirHistorico(){
   const r = analisaHistorico(), perf = perfilDoAdversario();
   const pct = (x,n) => n ? (100*x/n).toFixed(0) + "%" : "—";
@@ -1284,8 +1329,42 @@ function abrirHistorico(){
     perf && perf.blefe !== null ? `  e ${(perf.blefe*100).toFixed(0)}% dos seus pedidos são blefe` :
                                   `  ainda não sabe se você blefa (precisa de 6 pedidos)`
   ];
-  $("hist-txt").textContent = linhas.join(String.fromCharCode(10));
+  const base = linhas.join(NL);
+  const pinta = extra => { $("hist-txt").textContent = base + NL + NL + extra; };
+  pinta("ONDE OS SEUS PONTOS VÃO" + NL + "  buscando o histórico inteiro...");
   mostrar("scr-hist");
+  ondeVaoOsPontos(JOGADOR.id).then(pinta);
+}
+
+/* A pergunta que o placar não responde: perdeu jogando carta, ou pagando
+   truco? Medido em 25/08/2026 no log, o buraco inteiro de um dos jogadores
+   estava em mão apostada e paga — 156 mãos, 110 x 277, enquanto o resto do
+   jogo era parelho. Sem esta tela isso fica invisível: o jogo só mostra o
+   placar, e placar não diz onde o ponto foi embora. */
+function ondeVaoOsPontos(id){
+  const titulo = "ONDE OS SEUS PONTOS VÃO";
+  return eventosDe(id, "pediu,correu,aceitou,fim_mao", 1000)
+    .then(linhas => {
+      const p = PERFIL(linhas).jogadores[id];             // mesma conta do treinador
+      if(!p || !p.maos) return titulo + NL + "  ainda não há mãos suficientes.";
+      const L = [titulo + " (últimas " + p.maos + " mãos)"];
+      const baldes = [["mão simples","semAposta"], ["truco que você pagou","apostadaPaga"],
+                      ["alguém correu","alguemCorreu"], ["mão de onze","maoDeOnze"]];
+      baldes.forEach(([rot,c]) => { const b = p[c]; if(!b.maos) return;
+        L.push("  " + rot.padEnd(22) + String(b.maos).padStart(4) + " mãos   " +
+               b.pro + " x " + b.contra + "   saldo " + (b.saldo > 0 ? "+" : "") + b.saldo); });
+      const pior = baldes.map(x => x[1]).filter(c => p[c].maos)
+                         .sort((a,b) => p[a].saldo - p[b].saldo)[0];
+      L.push("");
+      // saldo pequeno e sorte, nao padrao: nao acusa ninguem de nada por 2 pontos
+      if(p[pior].saldo > -10) return L.join(NL) + NL + "  Está parelho — nenhum buraco claro.";
+      L.push(pior === "apostadaPaga" ? "  O buraco é o truco que você paga: o bot só pede com mão boa." :
+             pior === "maoDeOnze"    ? "  O buraco é a mão de onze: ela já vale 3 e você joga quase toda." :
+             pior === "semAposta"    ? "  Você perde na carta, não na aposta — o truco não é o problema." :
+                                       "  Você corre demais: está pagando o truco dos outros de graça.");
+      return L.join(NL);
+    })
+    .catch(()=> titulo + NL + "  (sem conexão pra buscar o histórico)");
 }
 function baixarHistorico(){
   const b = new Blob([JSON.stringify(leLog(), null, 1)], { type:"application/json" });
@@ -1307,6 +1386,7 @@ function escolherJogador(){
   modal("Quem vai jogar?", JOGADORES.map(j => [j.nome, ()=>{
     JOGADOR = j;
     try{ localStorage.setItem("jogador", j.id); }catch(e){}
+    puxaPerfil(j.id);
     pintaJogador();
   }]));
 }
@@ -1319,7 +1399,10 @@ function pintaJogador(){
   try{ id = localStorage.getItem("jogador"); }catch(e){}
   const achou = JOGADORES.find(j => j.id === id);
   if(achou) JOGADOR = achou;
-  addEventListener("DOMContentLoaded", ()=>{ pintaJogador(); if(!achou) escolherJogador(); });
+  addEventListener("DOMContentLoaded", ()=>{
+    pintaJogador();
+    if(achou) puxaPerfil(JOGADOR.id); else escolherJogador();
+  });
 })();
 /* ---- registro de jogadas: Supabase + cópia local ---- */
 const SB_URL = "https://yvwfyhjhxbvxpcqejdsa.supabase.co";

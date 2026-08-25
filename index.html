@@ -1220,7 +1220,7 @@ const melhorDescarte = mao => CAC.escolherDescarte(mao, POL(), G && G.perigo);
 
 /* =========================================================
    O LOG QUE NINGUÉM NUNCA ABRIU
-   reg() grava desde sempre os últimos 500 eventos COM o estado inteiro:
+   reg() grava TUDO, sem teto, COM o estado inteiro:
    sua mão, a mesa, a vira, o placar. Isso não é log, é um registro de
    como você joga — e estava fechado. Aqui ele vira número.
 
@@ -1235,7 +1235,8 @@ function leLog(){
 function analisaHistorico(){
   const L = leLog().filter(e => e.jogador === JOGADOR.id && e.jogo === "truco");
   const conta = t => L.filter(e => e.tipo === t).length;
-  const r = { eventos:L.length, maos:conta("fim_mao"), cartas:conta("jogou"),
+  const r = { eventos:L.length, fila:leLog().filter(e => e.ok === 0).length,
+              maos:conta("fim_mao"), cartas:conta("jogou"),
               pediu:0, correu:0, aceitou:0, podia:0, matou:0,
               // só as jogadas importam aqui: é nelas que a mesa faz falta
               semEstado: L.filter(e => e.tipo === "jogou" && !e.estado).length };
@@ -1260,7 +1261,7 @@ function abrirHistorico(){
   const linhas = [
     `Jogador: ${JOGADOR.nome}`,
     ``,
-    `Guardado: ${r.eventos} eventos (o log fica com os últimos 500)`,
+    `Guardado: ${r.eventos} eventos` + (r.fila ? ` (${r.fila} ainda na fila pra subir)` : ` (todos no servidor)`),
     r.semEstado ? `  ${r.semEstado} jogadas são antigas, sem a mesa gravada` : ``,
     `  mãos terminadas ....... ${r.maos}`,
     `  cartas que você jogou . ${r.cartas}`,
@@ -1324,6 +1325,43 @@ function pintaJogador(){
 const SB_URL = "https://yvwfyhjhxbvxpcqejdsa.supabase.co";
 const SB_KEY = "sb_publishable_Xv7FzSBFEFozSc9EoEdGcg_WTtOltFp";
 const SESSAO = Date.now().toString(36);
+let SEQ = 0;
+
+/* NADA É APAGADO ANTES DE O SERVIDOR CONFIRMAR.
+   Cada evento nasce com ok:0 (só existe aqui) e vira ok:1 quando o Supabase
+   aceita. Internet caiu? Ele fica na fila e sobe na próxima chance — no
+   recarregar da página, quando a rede volta, ou no minuto seguinte.
+   Evento sem campo `ok` é dos antigos, de quando não havia fila: não reenvia. */
+function gravaLog(L){
+  for(;;){
+    try{ localStorage.setItem("jogos_log", JSON.stringify(L)); return; }
+    catch(e){
+      // localStorage cheio: descarta o mais velho QUE JÁ ESTÁ NO SERVIDOR.
+      const i = L.findIndex(ev => ev.ok !== 0);
+      if(i < 0) throw e;          // fila inteira pendente: estourar é melhor que perder
+      L.splice(i, 1);
+    }
+  }
+}
+function enviar(){
+  const fila = leLog().filter(ev => ev.ok === 0);
+  if(!fila.length) return;
+  fetch(SB_URL + "/rest/v1/eventos", { method:"POST",
+    headers:{ "Content-Type":"application/json", apikey:SB_KEY, Authorization:"Bearer "+SB_KEY },
+    body: JSON.stringify(fila.map(ev => ({
+      sessao: ev.sessao || SESSAO, jogo: ev.jogo, tipo: ev.tipo,
+      // `t` vai junto: evento atrasado tem que guardar a hora em que aconteceu,
+      // não a hora em que a fila conseguiu subir.
+      dados: Object.assign({}, ev, { ok:undefined })
+    })))
+  }).then(r=>{
+    if(!r.ok) return;                      // servidor recusou: fica na fila, tenta depois
+    const subiu = new Set(fila.map(ev => ev.id));
+    const L = leLog();                     // relê: pode ter entrado evento novo no meio
+    L.forEach(ev => { if(subiu.has(ev.id)) ev.ok = 1; });
+    gravaLog(L);
+  }).catch(()=>{});                        // sem rede: fica na fila
+}
 function reg(tipo, dados){
   const jogo = $("scr-truco").classList.contains("hidden") ? "cacheta" : "truco";
   let estado = null;
@@ -1334,20 +1372,15 @@ function reg(tipo, dados){
       : (G && { pts:G.jog.map(j=>j.pts), dif:G.dif, mao:G.jog[0].mao,
                 lixo_topo:G.lixo[G.lixo.length-1] || null });
   }catch(e){}
-  // o `estado` ia só pro Supabase: a cópia local ficava sem mesa e sem mão, e
-  // era justamente isso que fazia dela um log em vez de um registro de jogo.
-  const evento = Object.assign({ t:Date.now(), jogador:JOGADOR.id, jogo, tipo, estado }, dados||{});
-  try{   // ponytail: guarda só os últimos 500; sem isso o localStorage cresce sem fim
-    const L = JSON.parse(localStorage.getItem("jogos_log") || "[]");
-    L.push(evento);
-    localStorage.setItem("jogos_log", JSON.stringify(L.slice(-500)));
-  }catch(e){}
-  fetch(SB_URL + "/rest/v1/eventos", { method:"POST",
-    headers:{ "Content-Type":"application/json", apikey:SB_KEY, Authorization:"Bearer "+SB_KEY },
-    body: JSON.stringify({ sessao:SESSAO, jogo, tipo,
-                           dados: Object.assign({}, dados||{}, { jogador:JOGADOR.id, estado }) })
-  }).catch(()=>{});   // ponytail: sem fila offline; perde evento se cair a internet
+  const evento = Object.assign({ id:SESSAO + "-" + (++SEQ), t:Date.now(),
+                                 jogador:JOGADOR.id, jogo, tipo, estado }, dados||{});
+  evento.ok = 0;                           // por último: dados|| não sobrescreve a fila
+  try{ const L = leLog(); L.push(evento); gravaLog(L); }catch(e){}
+  enviar();
 }
+addEventListener("online", enviar);
+addEventListener("DOMContentLoaded", enviar);
+setInterval(enviar, 60000);   // fila vazia sai na primeira linha: custa nada
 const maoStr = m => m.map(c=>c.r+(c.s||"")).join(" ");
 
 /* ---- configuração ---- */

@@ -8,6 +8,16 @@ const T = require("./truco_core.js");
 const fs = require("fs");
 const t0 = Date.now();
 
+/* O DNA que esta valendo hoje — lido antes de qualquer coisa, porque o
+   arquivo vai ser sobrescrito no fim. Sem isso a validacao comparava o
+   campeao novo com o DNA PADRAO em vez do titular, e toda rodada de
+   evolucao parecia um triunfo: medido em 25/08/2026, um campeao que
+   ganhava "68.5% do atual" empatou 49.9% contra o que estava no jogo. */
+const EM_USO = (()=>{
+  try{ return JSON.parse(fs.readFileSync("truco_dna.json","utf8")).campeao || null; }
+  catch(e){ return null; }
+})();
+
 const RAPIDO = 60;           // simulações por decisão durante o treino
 const dna = (nome, mods) => Object.assign({ nome }, T.PADRAO, { sims: RAPIDO }, mods || {});
 
@@ -74,15 +84,44 @@ for(let g=1; g<=GERACOES; g++){
 /* ---- 3. validação séria do campeão ---- */
 console.log("\n=== 3. VALIDAÇÃO (amostra grande, sementes novas) ===\n");
 const atual = dna("atual", {});
+const titular = EM_USO ? dna("em uso", EM_USO) : atual;
+console.log(EM_USO ? "  (comparando com o DNA que esta no jogo hoje)"
+                   : "  (sem truco_dna.json: comparando com o DNA padrao)");
 for(const n of [2,4]){
   const partidas = n === 2 ? 800 : 300;
-  const r = T.duelo(campeao, atual, { partidas, n, semente: 999 + n });
+  const r = T.duelo(campeao, titular, { partidas, n, semente: 999 + n });
   const erro = Math.sqrt(0.25/partidas) * 1.96 * 100;
   console.log(`  ${n===2?"1x1  ":"dupla"}: campeão vence ${(r.taxaA*100).toFixed(1)}% ` +
               `(±${erro.toFixed(1)} com 95% de confiança, ${partidas} partidas)`);
-  console.log(`         pontos em mãos apostadas — campeão ${r.agg.ptsApostados[0]} x ${r.agg.ptsApostados[1]} atual`);
-  console.log(`         pontos em mãos de 1     — campeão ${r.agg.ptsSimples[0]} x ${r.agg.ptsSimples[1]} atual`);
+  console.log(`         pontos em mãos apostadas — campeão ${r.agg.ptsApostados[0]} x ${r.agg.ptsApostados[1]} titular`);
+  console.log(`         pontos em mãos de 1     — campeão ${r.agg.ptsSimples[0]} x ${r.agg.ptsSimples[1]} titular`);
 }
+
+/* O veredito que faltava: o campeao so vale a troca se ganhar do titular. */
+if(EM_USO){
+  const r = T.duelo(campeao, titular, { partidas:800, n:2, semente:4242 });
+  console.log(r.taxaA >= 0.53
+    ? `
+  >>> TROCAR: campeao vence o titular em ${(r.taxaA*100).toFixed(1)}% (800 partidas)`
+    : `
+  >>> NAO TROCAR: ${(r.taxaA*100).toFixed(1)}% contra o titular — dentro do ruido`);
+}
+
+/* ---- salva ----
+   Grava assim que o campeao valida, e de novo no fim com o algoz. A etapa 4
+   e longa: se ela cair, os 10 minutos de evolucao nao podem ir junto. */
+const limpa = o => { const c = Object.assign({}, o); delete c.nome; delete c.sims; return c; };
+function salva(algozDna){
+  fs.writeFileSync("truco_dna.json", JSON.stringify({
+    campeao: limpa(campeao),
+    algoz: algozDna ? limpa(algozDna) : null,
+    personas: PERSONAS.reduce((m,p)=> (m[p.nome] = limpa(p), m), {}),
+    ranking, trilha, completo: !!algozDna,
+    geradoEm: new Date().toISOString()
+  }, null, 2));
+  console.log("  [salvo em truco_dna.json" + (algozDna ? "" : " - campeao; falta o algoz") + "]");
+}
+salva(null);
 
 /* ---- 4. e contra gente? o modelo do jogador real ---- */
 console.log("\n=== 4. CONTRA O JEITO DO ROGÉRIO (corre de 68% dos trucos) ===\n");
@@ -112,13 +151,5 @@ console.log(`\n  o que o algoz mudou pra explorar quem corre:`);
   if(Math.abs(pra-de) > 0.02) console.log(`    ${k.padEnd(16)} ${de.toFixed(2)} -> ${pra.toFixed(2)}`);
 });
 
-/* ---- salva ---- */
-const limpa = o => { const c = Object.assign({}, o); delete c.nome; delete c.sims; return c; };
-fs.writeFileSync("truco_dna.json", JSON.stringify({
-  campeao: limpa(campeao),
-  algoz: limpa(algoz),
-  personas: PERSONAS.reduce((m,p)=> (m[p.nome] = limpa(p), m), {}),
-  ranking, trilha,
-  geradoEm: new Date().toISOString()
-}, null, 2));
+salva(algoz);
 console.log(`\nSalvo em truco_dna.json — ${((Date.now()-t0)/1000).toFixed(1)}s`);

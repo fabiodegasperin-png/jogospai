@@ -964,10 +964,19 @@ const PERSONAS = [
 ];
 
 /* ---- leitura do adversário ----
-   Medido no simulador: contra quem corre muito, subir freqPede de 0.30
-   para 0.90 vale +14 pontos percentuais. Blefar não vale nada (quem
-   corre te entrega só 1 ponto). Então o bot não blefa mais contra o
-   medroso — ele pede mais vezes, com mão de verdade.
+   Blefar não vale nada contra quem corre (ele te entrega só 1 ponto), e
+   isso segue valendo — por isso o bot não blefa contra o medroso.
+
+   Já o "+14 pontos percentuais por subir o freqPede" que estava escrito
+   aqui NÃO se reproduz mais. Medido de novo em 25/08/2026, 3200 partidas
+   por ponto (±1,7%), contra quem corre de 68% dos trucos:
+     freqPede  0.23 -> 54.5%   0.50 -> 54.6%   0.81 -> 53.1%
+               0.30 -> 54.9%   0.70 -> 55.0%   0.95 -> 55.3%
+   Reta. O ganho sumiu quando entrou o `certeza`: o bot já pede sozinho
+   toda vez que a mão está ganha, que era de onde vinha a maior parte
+   daqueles pedidos a mais. Fica no código porque não custa nada e o
+   modelo do "medroso" é grosseiro perto de gente de verdade — mas não
+   conte com ele até alguém medir contra jogador real.
 
    O perfil também alimenta P.leitura (o quanto o bot acredita em quem
    pede truco). Contra quem pede com qualquer carta, acreditar na aposta

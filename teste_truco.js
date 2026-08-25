@@ -27,9 +27,55 @@ let pediu = 0;
 for(let i=0;i<20;i++) if(T.querPedir(mesaGanhaCerta(), 0, P, Math.random)) pediu++;
 ok(pediu === 20, `pede truco com ganho certo (pediu ${pediu}/20)`);
 
+/* A ARAPUCA: mesma mao ganha, mas na SAIDA. Com arapuca=1 ele fica quieto
+   pra voce pedir; com arapuca=0 ele pede, como sempre pediu. */
+function mesaSaidaMonstro(){
+  const vira = { r:"4", s:"O" };                 // manilha = 5
+  return {
+    n:2, times:[0,1], manilha:T.manilhaDe(vira), vira,
+    maos: [ [{r:"5",s:"P"},{r:"5",s:"C"},{r:"5",s:"E"}],   // tres manilhas
+            [{r:"7",s:"E"},{r:"6",s:"O"},{r:"4",s:"C"}] ],
+    mesa: [ null, null ], vazas: [], jogadas: [], viradas: [[],[]],
+    abreVaza: 0, ordem:[0,1], pos:0,
+    valor: 1, pendente: null, ultimoPediu: null, parceiroAberto: false
+  };
+}
+ok(T.probMao(mesaSaidaMonstro(), 0, P.sims, Math.random) > 0.99, "tres manilhas na saida e mao ganha");
+const conta = arapuca => { let c = 0;
+  const Pa = Object.assign({}, P, { arapuca });
+  for(let i=0;i<20;i++) if(T.querPedir(mesaSaidaMonstro(), 0, Pa, Math.random)) c++;
+  return c; };
+ok(conta(1) === 0,  `arapuca=1: cala a boca com mao ganha na saida (pediu ${conta(1)}/20)`);
+ok(conta(0) === 20, `arapuca=0: pede, como antes (pediu ${conta(0)}/20)`);
+
 // e se veio truco em cima da mão ganha, sobe — nunca só aceita
 const E2 = mesaGanhaCerta(); E2.valor = 1; E2.pendente = 3; E2.ultimoPediu = "b";
 ok(T.responde(E2, 0, P, Math.random) === "subir", "sobe a aposta com ganho certo");
+
+/* BLEFE COM CONTA: mao fraca (26%), segunda rodada. Contra quem corre a
+   conta fecha e ele blefa; contra quem paga pra ver, nao blefa nunca —
+   e sem perfil volta pro sorteio de antes. blefe:1 tira o sorteio do meio. */
+function mesaBlefavel(){
+  const vira = { r:"4", s:"O" };                 // manilha = 5
+  return {
+    n:2, times:[0,1], manilha:T.manilhaDe(vira), vira,
+    maos: [ [{r:"2",s:"O"},{r:"7",s:"E"}], [{r:"6",s:"O"},{r:"7",s:"C"}] ],
+    mesa: [ null, null ], vazas: ["b"],          // perdeu a primeira
+    jogadas: [], viradas: [[],[]],
+    abreVaza: 1, ordem:[1,0], pos:0,
+    valor: 1, pendente: null, ultimoPediu: null, parceiroAberto: false
+  };
+}
+const pB = T.probMao(mesaBlefavel(), 0, 400, Math.random);
+ok(pB > 0.22 && pB < 0.40, `mao de blefe cai na faixa (deu ${pB.toFixed(2)})`);
+const blefou = fuga => { let c = 0;
+  // blefe:1 e faixa aberta: o que esta em teste e a conta, nao o sorteio
+  const Pb = Object.assign({}, P, { sims:200, blefe:1, bl3:1, blefeMin:0, blefeMax:1, fuga });
+  for(let i=0;i<20;i++) if(T.querPedir(mesaBlefavel(), 0, Pb, Math.random)) c++;
+  return c; };
+ok(blefou(0.70) === 20, `contra quem corre de 70%, blefa (blefou ${blefou(0.70)}/20)`);
+ok(blefou(0.10) === 0,  `contra quem paga pra ver, nao blefa (blefou ${blefou(0.10)}/20)`);
+ok(blefou(null) === 20, `sem perfil, sorteio de antes (blefou ${blefou(null)}/20)`);
 
 // e o contrário segue valendo: mão perdida não vira pedido automático
 const E3 = mesaGanhaCerta();

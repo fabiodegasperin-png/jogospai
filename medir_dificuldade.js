@@ -33,7 +33,10 @@ console.log("  " + "jogador".padEnd(13) + "maos   " +
 for(const [nome, a] of alvos){
   const p = Object.assign({ nome:"real" }, a.persona, { sims:60 });
   const linha = DIF_ORDEM.map(niv => {
-    const r = TRUCO.duelo(Object.assign({ nome:niv }, DIF[niv]), p,
+    // a mesa de verdade entrega a fuga medida pro bot (paramsDoBot faz isso);
+    // sem ela aqui, o blefe viraria moeda e o numero medido nao seria o do jogo
+    const r = TRUCO.duelo(Object.assign({ nome:niv }, DIF[niv],
+                            niv === "facil" ? {} : { fuga: a.medido.fuga }), p,
                           { partidas:PARTIDAS, n:2, semente:31 });
     return (r.taxaA*100).toFixed(1).padStart(7) + "%";
   });

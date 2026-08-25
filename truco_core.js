@@ -49,6 +49,8 @@ const PADRAO = {
   cegoFreq:   0.55,   // quanto encolhe a vontade de pedir
 
   escondeCarta: 0.65,  // com que frequencia esconde quando a carta perde de qualquer jeito
+  arapuca:      0.35,  // com mao ganha na saida: cala a boca e espera VOCE pedir
+  fuga:         null,  // quanto o adversario corre do truco (vem do perfil; null = ainda nao sei)
 
   // motor
   sims: 260,          // simulações por decisão
@@ -333,14 +335,45 @@ function querPedir(E, a, P, rnd){
     // esta mao ja fecha a partida pro meu time: subir so aumenta o que eles levam
     if(falta(E, meu) <= E.valor && p <= (P.certeza || 1.01)) return false;
   }
+  /* A ARAPUCA. Mao ganha na primeira rodada: pedir agora avisa o adversario
+     e ele corre por 1. Ficando quieto, quem pede e ele — e `responde` sobe
+     em cima (p > subir ja cobre). Custa o caso em que ninguem pede e a mao
+     valiosa vale 1: e o preco da malicia, por isso e sorteio e nao regra.
+     Fora da primeira rodada nao vale: com uma vaza no placar o silencio ja
+     nao engana ninguem. */
+  if(E.vazas.length === 0 && p > (P.certeza || 1.01) && rnd() < (P.arapuca || 0)) return false;
   // ganho praticamente certo: pedir e de graca. Se o outro corre, levo o que
   // ja era meu; se aceita, levo mais. Aqui nao se sorteia nem se poupa.
   if(p > (P.certeza || 1.01)) return true;
   const cego = E.n === 4 && parceiroVisivel(E, a) < 0;
   const blefe = P.blefe * escalaBlefe(P, E.valor) * m * (cego ? P.cegoBlefe : 1);
   const forte = p > P.pedir + (cego ? P.cegoPedir : 0);
-  return forte ? r < P.freqPede * m * (cego ? P.cegoFreq : 1)
-               : (p > P.blefeMin && p < P.blefeMax && r < blefe);
+  if(forte) return r < P.freqPede * m * (cego ? P.cegoFreq : 1);
+  /* BLEFE COM CONTA, NAO COM MOEDA.
+     `P.fuga` e quanto ESTE jogador corre do truco do bot — medido no log
+     dele (perfilDoAdversario), nao chutado. Com esse numero da pra saber se
+     o blefe paga, em vez de sortear:
+        ele corre (f) ......... levo `valor` na hora
+        ele aceita (1-f) ...... a mao passa a valer `prox` e eu ganho `p` dela
+        calado ................ a mesma mao vale `valor`
+     Blefar so quando  f*valor + (1-f)*prox*(2p-1) > valor*(2p-1).
+     Contra quem paga tudo a conta nunca fecha, e e isso mesmo: medido em
+     300 partidas, blefe as cegas custava 5 pontos de vitoria contra o
+     Rogerio (fuga 23%) — o blefe do jeito antigo era doacao.
+     Sem perfil (menos de 6 trucos) segue o sorteio de antes: nao da pra
+     calcular com um numero que ainda nao existe.
+
+     A conta e um FILTRO em cima da faixa de blefe, nao no lugar dela: o `f`
+     medido e a media de todos os trucos, mas quem aceita aceita porque TEM
+     carta. Solto, sem a faixa, o teste passava com mao de 50% e virava
+     pedido de rotina — medido, piorava tudo (77% contra o Rogerio, 1930
+     trucos numa mesa que pedia 1696). Dentro da faixa ele so faz o que
+     deve: corta o blefe contra quem paga pra ver. */
+  if(!(p > P.blefeMin && p < P.blefeMax) || r >= blefe) return false;
+  const f = P.fuga;
+  if(f === null || f === undefined) return true;         // sem perfil: sorteio de antes
+  const ganho = 2*p - 1;                                 // saldo esperado por ponto em jogo
+  return f*E.valor + (1-f)*prox*ganho > E.valor*ganho;
 }
 
 /* responder uma aposta -> "subir" | "aceitar" | "correr" */

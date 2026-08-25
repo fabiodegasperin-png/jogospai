@@ -967,7 +967,11 @@ const DIF = {
   normal:  Object.assign({}, CAMPEAO, { sims:90,  erro:0.10, blefe:0.14,
              pedir:0.70, subir:0.80, margem:0.05, freqPede:0.50, pagaPraVer:0.15,
              leitura:0.45, pesoFalta:0.3, memoria:0.3 }),
-  dificil: Object.assign({}, CAMPEAO, { sims:260, erro:0 })
+  /* Blefe voltou ao Dificil — mas so vale contra quem corre: o `P.fuga`
+     abaixo faz o core cortar o blefe contra quem paga pra ver. Medido em
+     400 partidas por jogador: as cegas custava 3 pontos de vitoria (82.5 ->
+     79.5 contra o Rogeriao); com a conta, 82.3 — de graca. */
+  dificil: Object.assign({}, CAMPEAO, { sims:260, erro:0, blefe:0.20 })
 };
 const DIF_ORDEM = ["facil","meio","normal","dificil"];
 // as chaves continuam as mesmas (o log de 4.873 eventos grava `dif`, e
@@ -1113,6 +1117,7 @@ function paramsDoBot(a){
   if(perf && T.dif !== "facil"){
     // corre muito? pede mais. paga tudo? aperta a mão e cobra caro.
     if(perf.fuga !== null){
+      P.fuga = perf.fuga;                  // e com isso o blefe deixa de ser moeda
       P.freqPede = Math.max(P.freqPede, Math.min(0.95, 0.30 + perf.fuga * 0.75));
       if(perf.fuga < 0.25) P.margem = Math.max(P.margem, 0.30);
     }

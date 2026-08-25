@@ -1058,6 +1058,7 @@ function perfilDoAdversario(){
     if(!L) return null;
     return {   // null = amostra pequena demais, não inventa
       fuga:  (L.trucosRecebidos || 0) >= 6  ? L.correu / L.trucosRecebidos : null,
+      respostas: L.trucosRecebidos || 0,   // o tamanho da amostra vale tanto quanto a taxa
       blefe: (L.pediu || 0)           >= 6  ? (L.pediuFraco || 0) / L.pediu : null
     };
   }catch(e){ return null; }
@@ -1118,6 +1119,7 @@ function paramsDoBot(a){
     // corre muito? pede mais. paga tudo? aperta a mão e cobra caro.
     if(perf.fuga !== null){
       P.fuga = perf.fuga;                  // e com isso o blefe deixa de ser moeda
+      P.fugaN = perf.respostas;            // e o tanto de amostra decide o quanto ele ainda testa
       P.freqPede = Math.max(P.freqPede, Math.min(0.95, 0.30 + perf.fuga * 0.75));
       if(perf.fuga < 0.25) P.margem = Math.max(P.margem, 0.30);
     }

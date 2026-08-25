@@ -51,6 +51,8 @@ const PADRAO = {
   escondeCarta: 0.65,  // com que frequencia esconde quando a carta perde de qualquer jeito
   arapuca:      0.35,  // com mao ganha na saida: cala a boca e espera VOCE pedir
   fuga:         null,  // quanto o adversario corre do truco (vem do perfil; null = ainda nao sei)
+  fugaN:        0,     // em quantas respostas essa fuga foi medida
+  curiosidade:  40,    // teto do `n` no bonus de exploracao: com ele o bot nunca para de testar
 
   // motor
   sims: 260,          // simulações por decisão
@@ -323,6 +325,20 @@ function decideCarta(E, a, P, rnd){
   return { i: melhor, virada };
 }
 
+/* O `f` que a conta usa nao e o medido, e o OTIMISTA: f + 1/raiz(n).
+   Motivo: o f so existe pros trucos que o bot JA pediu. Se a conta fechar
+   contra ele hoje, ele para de pedir, para de medir, e nunca descobre que o
+   jogador mudou de jeito — a conta se tranca sozinha. O bonus de raiz e o
+   jeito classico de sair disso: com 6 respostas ele arrisca (+0.41), com 100
+   quase nao (+0.10).
+   `curiosidade` capa o n: sem esse teto o bonus zera e o bot para de testar
+   pra sempre. Jogador muda; bot que parou de testar nao percebe. */
+function fugaOtimista(P){
+  if(P.fuga === null || P.fuga === undefined) return null;
+  const n = Math.min(P.fugaN || 0, P.curiosidade || 40);
+  return Math.min(1, P.fuga + 1 / Math.sqrt(Math.max(1, n)));
+}
+
 /* vai pedir truco agora? */
 function querPedir(E, a, P, rnd){
   const prox = proxValor(E.valor);
@@ -370,8 +386,8 @@ function querPedir(E, a, P, rnd){
      trucos numa mesa que pedia 1696). Dentro da faixa ele so faz o que
      deve: corta o blefe contra quem paga pra ver. */
   if(!(p > P.blefeMin && p < P.blefeMax) || r >= blefe) return false;
-  const f = P.fuga;
-  if(f === null || f === undefined) return true;         // sem perfil: sorteio de antes
+  const f = fugaOtimista(P);
+  if(f === null) return true;                            // sem perfil: sorteio de antes
   const ganho = 2*p - 1;                                 // saldo esperado por ponto em jogo
   return f*E.valor + (1-f)*prox*ganho > E.valor*ganho;
 }
@@ -576,7 +592,7 @@ function muta(P, forca_, rnd){
   return f;
 }
 
-return { ORDEM, NAIPES, FORCA_NAIPE, PADRAO, MEXIVEIS, LIMITES,
+return { ORDEM, NAIPES, FORCA_NAIPE, PADRAO, MEXIVEIS, LIMITES, fugaOtimista,
          chave, forca, manilhaDe, sigla, proxValor, limiteAceite, baralho, embaralha, semente,
          donoDaMao, politica, simulaMao,
          parceiroDe, parceiroVisivel, desconhecidas, reparte, exigencia, coerente, avaliaJogadas, probMao,

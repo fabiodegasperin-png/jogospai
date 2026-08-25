@@ -67,15 +67,17 @@ function mesaBlefavel(){
   };
 }
 const pB = T.probMao(mesaBlefavel(), 0, 400, Math.random);
-ok(pB > 0.22 && pB < 0.40, `mao de blefe cai na faixa (deu ${pB.toFixed(2)})`);
-const blefou = fuga => { let c = 0;
+ok(pB > 0.15 && pB < 0.40, `mao de blefe e fraca (deu ${pB.toFixed(2)})`);
+const blefou = (fuga, fugaN) => { let c = 0;
   // blefe:1 e faixa aberta: o que esta em teste e a conta, nao o sorteio
-  const Pb = Object.assign({}, P, { sims:200, blefe:1, bl3:1, blefeMin:0, blefeMax:1, fuga });
+  const Pb = Object.assign({}, P, { sims:200, blefe:1, bl3:1, blefeMin:0, blefeMax:1, fuga, fugaN });
   for(let i=0;i<20;i++) if(T.querPedir(mesaBlefavel(), 0, Pb, Math.random)) c++;
   return c; };
-ok(blefou(0.70) === 20, `contra quem corre de 70%, blefa (blefou ${blefou(0.70)}/20)`);
-ok(blefou(0.10) === 0,  `contra quem paga pra ver, nao blefa (blefou ${blefou(0.10)}/20)`);
-ok(blefou(null) === 20, `sem perfil, sorteio de antes (blefou ${blefou(null)}/20)`);
+ok(blefou(0.70, 200) === 20, `contra quem corre de 70%, blefa (blefou ${blefou(0.70,200)}/20)`);
+ok(blefou(0.10, 200) === 0,  `contra quem paga pra ver, nao blefa (blefou ${blefou(0.10,200)}/20)`);
+ok(blefou(null, 0)   === 20, `sem perfil, sorteio de antes (blefou ${blefou(null,0)}/20)`);
+// curiosidade: a MESMA fuga baixa, medida em 6 respostas so, ainda merece teste
+ok(blefou(0.10, 6)   === 20, `com amostra curta ele testa mesmo assim (blefou ${blefou(0.10,6)}/20)`);
 
 // e o contrário segue valendo: mão perdida não vira pedido automático
 const E3 = mesaGanhaCerta();

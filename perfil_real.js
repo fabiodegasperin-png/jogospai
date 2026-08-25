@@ -52,7 +52,16 @@ const zero = () => ({ maos:0, pontosPro:0, pontosContra:0,
                       respostas:0, correu:0, aceitou:0, subiu:0,
                       pedidos:0, pedidosFracos:0, botCorreu:0, botAceitou:0,
                       semAposta:balde(), apostadaPaga:balde(), alguemCorreu:balde(),
-                      maoDeOnze:balde() });
+                      maoDeOnze:balde(),
+                      /* fuga fatiada pela situacao: [correu, total] por valor em
+                         jogo e por vaza. E o que responde "qual a melhor hora de
+                         pedir seis" — quando tiver amostra. Medido em 25/08/2026
+                         nao tinha: dos 226 trucos respondidos no log, 8 estavam
+                         valendo 3 e nenhum valendo 6, porque o bot quase nunca
+                         subia. Por isso a tabela existe zerada em vez de virar
+                         um numero inventado. */
+                      porValor:{}, porVaza:{} });
+const conta2 = (m, k, correu) => { const c = m[k] = m[k] || [0,0]; c[correu ? 0 : 1]++; };
 
 function perfilar(eventos){
   const E = (eventos || le()).filter(e => e.jogo === "truco")
@@ -92,7 +101,11 @@ function perfilar(eventos){
     naMao[s] = naMao[s] || {};
     if(e.tipo === "pediu") naMao[s].apostou = true;
     if(e.tipo === "correu") naMao[s].correu = true;
-    if(e.tipo === "pediu" && quem === "bot"){ esperandoResposta[s] = true; continue; }
+    if(e.tipo === "pediu" && quem === "bot"){
+      const st = dados.estado || {};
+      esperandoResposta[s] = { valor: st.valor || 1, vazas: (st.vazas || []).length };
+      continue;
+    }
 
     if(e.tipo === "pediu" && quem === "voce"){
       soma("pedidos");
@@ -105,7 +118,12 @@ function perfilar(eventos){
     if(e.tipo === "correu" || e.tipo === "aceitou"){
       const fugiu = e.tipo === "correu";
       if(quem === "voce"){
-        if(esperandoResposta[s]){ soma("respostas"); soma(fugiu ? "correu" : "aceitou"); }
+        const sit = esperandoResposta[s];
+        if(sit){
+          soma("respostas"); soma(fugiu ? "correu" : "aceitou");
+          alvos.forEach(o => { conta2(o.porValor, sit.valor, fugiu);
+                               conta2(o.porVaza,  sit.vazas, fugiu); });
+        }
       }else{
         soma(fugiu ? "botCorreu" : "botAceitou");
       }
@@ -140,6 +158,24 @@ function tabela(m, titulo){
       "  " + pct(o.blefe) + "   " + `${o.pontosPro} x ${o.pontosContra}`));
 }
 
+/* quando ele corre: a fuga fatiada. E daqui que sai a resposta pra "quando
+   vale pedir seis" — o bot ja sabe a forca da mao dele sozinho (simula), o
+   que ele NAO sabe e como voce responde em cada situacao. So imprime o que
+   tem amostra: abaixo de 6 respostas e ruido, e ruido vira decisao errada. */
+function quandoCorre(m){
+  Object.entries(m).filter(([,o]) => o.respostas >= 6)
+    .sort((a,b) => b[1].respostas - a[1].respostas)
+    .forEach(([k,o]) => {
+      console.log("");
+      console.log("  " + k + " — de que truco ele corre (fuga geral " + pct(o.fuga) + "):");
+      const linha = (rot, c) => console.log("    " + rot.padEnd(18) +
+        String(c[0]+c[1]).padStart(4) + " trucos   corre " +
+        (c[0]+c[1] >= 6 ? pct(c[0]/(c[0]+c[1])) : "  — (amostra curta)"));
+      Object.keys(o.porValor).sort((a,b)=>a-b).forEach(v => linha("valendo " + v, o.porValor[v]));
+      Object.keys(o.porVaza).sort((a,b)=>a-b).forEach(v => linha("apos " + v + " vaza(s)", o.porVaza[v]));
+    });
+}
+
 /* onde o ponto cai: e a tabela que explica placar sem falar de sorte */
 function onde(m){
   Object.entries(m).filter(([,o]) => o.maos >= 50)
@@ -167,6 +203,7 @@ if(emNode){
     console.log("");
     console.log("  fuga = corre de quanto dos trucos do bot | blefe = pediu sem manilha nem A/2/3");
     onde(r.jogadores);
+    quandoCorre(r.jogadores);
   }
 }else{
   globalThis.PERFIL = perfilar;   // a pagina usa a mesma conta do treinador

@@ -470,7 +470,17 @@
   <p style="text-align:center;margin:0"><button class="voltar" onclick="escolherJogador()">Trocar jogador</button></p>
   <button class="menu-btn" onclick="abrirTruco()">Truco</button>
   <button class="menu-btn" onclick="abrirCacheta()">Cacheta</button>
+  <p style="text-align:center;margin:10px 0 0"><button class="voltar" onclick="abrirHistorico()">Meu histórico</button></p>
   <div class="versao" id="versao"></div>
+</div>
+
+<div id="scr-hist" class="screen hidden">
+  <h1 style="font-size:1.8em">Meu histórico</h1>
+  <p style="text-align:center;margin:0 0 8px"><button class="voltar" onclick="voltar()">← Voltar</button></p>
+  <pre id="hist-txt" style="white-space:pre-wrap;font-size:17px;line-height:1.5;max-width:640px;
+       margin:0 auto;padding:14px 18px;background:#0003;border-radius:8px;color:var(--giz)"></pre>
+  <p style="text-align:center;margin-top:12px">
+    <button class="voltar" onclick="baixarHistorico()">Baixar o JSON cru</button></p>
 </div>
 
 <!-- ================= TRUCO ================= -->
@@ -605,9 +615,9 @@ function coluna(rotulo, node, destaque){
   l.textContent = rotulo; d.appendChild(l); d.appendChild(node); return d;
 }
 
-function voltar(){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+function voltar(){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta","scr-hist"].forEach(i=>$(i).classList.add("hidden"));
                    $("scr-menu").classList.remove("hidden"); fecharModal(); }
-function mostrar(id){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta"].forEach(i=>$(i).classList.add("hidden"));
+function mostrar(id){ ["scr-menu","scr-truco","scr-cacheta-cfg","scr-cacheta","scr-hist"].forEach(i=>$(i).classList.add("hidden"));
                       $(id).classList.remove("hidden"); }
 function modal(txt, botoes, vira){
   // a caixa fica no meio da mesa e tapa o vira; quando a decisão depende dele, mostra aqui
@@ -1208,6 +1218,83 @@ const POL = () => NIVEL_POL[(G && G.dif) || CFG.dif] || CAC.POL_PADRAO;
 const pontuar = cs => CAC.pontuar(cs, POL());
 const melhorDescarte = mao => CAC.escolherDescarte(mao, POL(), G && G.perigo);
 
+/* =========================================================
+   O LOG QUE NINGUÉM NUNCA ABRIU
+   reg() grava desde sempre os últimos 500 eventos COM o estado inteiro:
+   sua mão, a mesa, a vira, o placar. Isso não é log, é um registro de
+   como você joga — e estava fechado. Aqui ele vira número.
+
+   O mais importante da lista é "quando podia matar, matou": foi
+   exatamente o número que faltou pra leitura de carta funcionar. Ela
+   falhou porque o bot ASSUMIU que quem podia matar mata. Aqui a gente
+   mede, em vez de assumir.
+   ========================================================= */
+function leLog(){
+  try{ return JSON.parse(localStorage.getItem("jogos_log") || "[]"); }catch(e){ return []; }
+}
+function analisaHistorico(){
+  const L = leLog().filter(e => e.jogador === JOGADOR.id && e.jogo === "truco");
+  const conta = t => L.filter(e => e.tipo === t).length;
+  const r = { eventos:L.length, maos:conta("fim_mao"), cartas:conta("jogou"),
+              pediu:0, correu:0, aceitou:0, podia:0, matou:0,
+              // só as jogadas importam aqui: é nelas que a mesa faz falta
+              semEstado: L.filter(e => e.tipo === "jogou" && !e.estado).length };
+  for(const e of L){
+    if(e.tipo === "pediu"   && e.quem === "voce") r.pediu++;
+    if(e.tipo === "correu"  && e.quem === "voce") r.correu++;
+    if(e.tipo === "aceitou" && e.quem === "voce") r.aceitou++;
+    if(e.tipo !== "jogou" || !e.estado || !e.estado.mesa) continue;
+    const f = c => c ? TRUCO.forca(c, e.manilha) : -1;
+    let lider = -1;
+    e.estado.mesa.forEach((c,i)=>{ if(i !== 0 && c) lider = Math.max(lider, f(c)); });
+    if(lider < 0) continue;                       // você abriu a rodada: nada a julgar
+    const minha = f(e.estado.mesa[0]), mao = e.estado.mao || [];
+    if(minha > lider){ r.podia++; r.matou++; }
+    else if(mao.some(c => f(c) > lider)) r.podia++;   // podia e não quis
+  }
+  return r;
+}
+function abrirHistorico(){
+  const r = analisaHistorico(), perf = perfilDoAdversario();
+  const pct = (x,n) => n ? (100*x/n).toFixed(0) + "%" : "—";
+  const linhas = [
+    `Jogador: ${JOGADOR.nome}`,
+    ``,
+    `Guardado: ${r.eventos} eventos (o log fica com os últimos 500)`,
+    r.semEstado ? `  ${r.semEstado} jogadas são antigas, sem a mesa gravada` : ``,
+    `  mãos terminadas ....... ${r.maos}`,
+    `  cartas que você jogou . ${r.cartas}`,
+    ``,
+    `COMO VOCÊ JOGA A CARTA`,
+    `  podia matar a rodada .. ${r.podia} vezes`,
+    `  e matou ............... ${pct(r.matou, r.podia)}`,
+    r.podia < 10 ? `  (amostra pequena — jogue mais que isso fica confiável)` :
+    r.matou/r.podia > 0.85 ? `  você quase sempre cobre: seu descarte entrega mão fraca` :
+                             `  você segura carta boa: não dá pra ler seu descarte`,
+    ``,
+    `COMO VOCÊ APOSTA`,
+    `  pediu truco ........... ${r.pediu} vezes`,
+    `  correu ................ ${r.correu} vezes`,
+    `  aceitou ............... ${r.aceitou} vezes`,
+    ``,
+    `O QUE O BOT ACHA DE VOCÊ (é isso que ele usa na mesa)`,
+    perf && perf.fuga  !== null ? `  você corre de ${(perf.fuga*100).toFixed(0)}% dos trucos dele` :
+                                  `  ainda não sabe se você corre (precisa de 6 trucos)`,
+    perf && perf.blefe !== null ? `  e ${(perf.blefe*100).toFixed(0)}% dos seus pedidos são blefe` :
+                                  `  ainda não sabe se você blefa (precisa de 6 pedidos)`
+  ];
+  $("hist-txt").textContent = linhas.join(String.fromCharCode(10));
+  mostrar("scr-hist");
+}
+function baixarHistorico(){
+  const b = new Blob([JSON.stringify(leLog(), null, 1)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "truco_historico_" + JOGADOR.id + ".json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
 /* ---- quem está na mesa (separa o histórico de cada um) ---- */
 const JOGADORES = [
   { id:"rogerio", nome:"Rogério", foto:"perfil/pai.jpg",   emoji:"👴" },
@@ -1247,7 +1334,9 @@ function reg(tipo, dados){
       : (G && { pts:G.jog.map(j=>j.pts), dif:G.dif, mao:G.jog[0].mao,
                 lixo_topo:G.lixo[G.lixo.length-1] || null });
   }catch(e){}
-  const evento = Object.assign({ t:Date.now(), jogador:JOGADOR.id, jogo, tipo }, dados||{});
+  // o `estado` ia só pro Supabase: a cópia local ficava sem mesa e sem mão, e
+  // era justamente isso que fazia dela um log em vez de um registro de jogo.
+  const evento = Object.assign({ t:Date.now(), jogador:JOGADOR.id, jogo, tipo, estado }, dados||{});
   try{   // ponytail: guarda só os últimos 500; sem isso o localStorage cresce sem fim
     const L = JSON.parse(localStorage.getItem("jogos_log") || "[]");
     L.push(evento);

@@ -35,6 +35,8 @@ guardado.jogos_log = JSON.stringify([
   ev("jogou", { manilha:"5" }),
   ev("pediu",  { quem:"voce" }), ev("pediu", { quem:"bot" }),
   ev("correu", { quem:"voce" }), ev("fim_mao", { vencedor:"p" }),
+  ev("fim_partida", { vencedor:"p" }), ev("fim_partida", { vencedor:"b" }),
+  ev("fim_partida", { vencedor:"p" }),
   // de outro jogador e de outro jogo: nao entram
   Object.assign(ev("jogou", { manilha:"5" }), { jogador:"fabio" }),
   Object.assign(ev("jogou", { manilha:"5" }), { jogo:"cacheta" })
@@ -48,7 +50,9 @@ ok(r.correu === 1,    `correu = 1 (deu ${r.correu})`);
 ok(r.maos === 1,      `maos = 1 (deu ${r.maos})`);
 ok(r.cartas === 5,    `cartas suas no truco = 5 (deu ${r.cartas})`);
 ok(r.semEstado === 1, `1 evento antigo sem estado (deu ${r.semEstado})`);
-ok(leLog().length === 11, "leLog devolve o log inteiro, sem filtrar");
+ok(r.venceu === 2,    `partidas vencidas = 2 (deu ${r.venceu})`);
+ok(r.perdeu === 1,    `partidas perdidas = 1 (deu ${r.perdeu})`);
+ok(leLog().length === 14, "leLog devolve o log inteiro, sem filtrar");
 
 console.log(`\n${n - mal}/${n} ok`);
 process.exit(mal ? 1 : 0);

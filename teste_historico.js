@@ -16,8 +16,9 @@ const guardado = { jogos_log: "[]" };
 const localStorage = { getItem: k => guardado[k] || null,
                        setItem: (k,v) => { guardado[k] = v; } };
 const JOGADOR = { id: "rogerio" };
-const { leLog, analisaHistorico } = (new Function("TRUCO","localStorage","JOGADOR",
-  fonte + "; return { leLog, analisaHistorico };"))(TRUCO, localStorage, JOGADOR);
+const { leLog, analisaHistorico, contaVitorias, marcaVitoria } =
+  (new Function("TRUCO","localStorage","JOGADOR",
+   fonte + "; return { leLog, analisaHistorico, contaVitorias, marcaVitoria };"))(TRUCO, localStorage, JOGADOR);
 
 const c = (r,s) => ({ r, s });
 const ev = (tipo, extra) => Object.assign({ jogador:"rogerio", jogo:"truco", tipo }, extra);
@@ -53,6 +54,24 @@ ok(r.semEstado === 1, `1 evento antigo sem estado (deu ${r.semEstado})`);
 ok(r.venceu === 2,    `partidas vencidas = 2 (deu ${r.venceu})`);
 ok(r.perdeu === 1,    `partidas perdidas = 1 (deu ${r.perdeu})`);
 ok(leLog().length === 14, "leLog devolve o log inteiro, sem filtrar");
+
+/* ---- o contador de vitorias nao pode andar pra tras ----
+   `gravaLog` descarta o evento mais velho quando o localStorage enche. Se o
+   placar viesse de contar `fim_partida` no log, ele encolheria junto. */
+const antes = contaVitorias("rogerio");
+ok(antes.v === 2 && antes.d === 1, `semeou do log: 2V 1D (deu ${antes.v}V ${antes.d}D)`);
+
+guardado.jogos_log = "[]";                       // localStorage encheu e podou tudo
+const depois = contaVitorias("rogerio");
+ok(depois.v === 2 && depois.d === 1, `log podado nao mexe no placar (deu ${depois.v}V ${depois.d}D)`);
+ok(analisaHistorico().venceu === 2, "a tela de historico le o mesmo contador");
+
+marcaVitoria(true); marcaVitoria(false);
+const somou = contaVitorias("rogerio");
+ok(somou.v === 3 && somou.d === 2, `marcaVitoria soma uma so vez (deu ${somou.v}V ${somou.d}D)`);
+
+// jogador novo comeca zerado, sem herdar o do outro
+ok(contaVitorias("ninguem").v === 0, "jogador sem partida comeca zerado");
 
 console.log(`\n${n - mal}/${n} ok`);
 process.exit(mal ? 1 : 0);

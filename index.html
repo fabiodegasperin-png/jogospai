@@ -1294,6 +1294,7 @@ function fimDaMao(vencedor, pontos){
   if(T.placar[0] >= 12 || T.placar[1] >= 12){
     T.fim = true;
     const ganhou = T.placar[0] >= 12;
+    marcaVitoria(ganhou);
     reg("fim_partida", { vencedor: ganhou ? "p" : "b", placar: T.placar.slice() });
     pintaVida();
     setTimeout(()=>modal(ganhou ? "Vocês venceram o jogo!" : "Os adversários venceram. Revanche?",
@@ -1351,8 +1352,39 @@ const melhorDescarte = mao => CAC.escolherDescarte(mao, POL(), G && G.perigo);
 function leLog(){
   try{ return JSON.parse(localStorage.getItem("jogos_log") || "[]"); }catch(e){ return []; }
 }
+/* O CONTADOR NAO PODE ANDAR PRA TRAS.
+   `venceu/perdeu` saia de contar `fim_partida` dentro do `jogos_log` — e o
+   `gravaLog` descarta o evento mais velho quando o localStorage enche. Log
+   grande (o do rogerio ja passa de 13 mil eventos, perto do teto de 5 MB)
+   significa contador ENCOLHENDO sozinho, e um contador que diminui nao e
+   contador. Agora a conta mora numa chave de duas linhas, que nunca e podada;
+   o log continua sendo o registro bruto, mas nao e mais a fonte do placar. */
+const CHAVE_VIT = "placar_vitorias";
+function placarVitorias(){
+  try{ const cru = localStorage.getItem(CHAVE_VIT); if(cru) return JSON.parse(cru); }catch(e){}
+  // primeira vez: semeia com os `fim_partida` que ainda restarem no log
+  const p = {};
+  for(const e of leLog()){
+    if(e.jogo !== "truco" || e.tipo !== "fim_partida") continue;
+    const q = p[e.jogador] = p[e.jogador] || { v:0, d:0 };
+    if(e.vencedor === "p") q.v++; else q.d++;
+  }
+  guardaVitorias(p);
+  return p;
+}
+function guardaVitorias(p){ try{ localStorage.setItem(CHAVE_VIT, JSON.stringify(p)); }catch(e){} }
+function contaVitorias(id){ return placarVitorias()[id || JOGADOR.id] || { v:0, d:0 }; }
+/* chamado ANTES do reg("fim_partida"): se fosse depois, a semeadura da
+   primeira vez ja veria o evento novo no log e contaria a partida duas vezes */
+function marcaVitoria(ganhou){
+  const p = placarVitorias(), q = p[JOGADOR.id] = p[JOGADOR.id] || { v:0, d:0 };
+  if(ganhou) q.v++; else q.d++;
+  guardaVitorias(p);
+}
+
 function analisaHistorico(){
   const L = leLog().filter(e => e.jogador === JOGADOR.id && e.jogo === "truco");
+  const vit = contaVitorias();
   const conta = t => L.filter(e => e.tipo === t).length;
   const r = { eventos:L.length, fila:leLog().filter(e => e.ok === 0).length,
               maos:conta("fim_mao"), cartas:conta("jogou"),
@@ -1360,9 +1392,9 @@ function analisaHistorico(){
               /* partidas so contam do evento `fim_partida` pra frente: o
                  `estado.placar` do log velho esta furado (467 maos gravadas
                  com placar acima de 12 num jogo que vai ate 12), entao
-                 reconstruir partida antiga dali daria numero inventado. */
-              venceu: L.filter(e => e.tipo === "fim_partida" && e.vencedor === "p").length,
-              perdeu: L.filter(e => e.tipo === "fim_partida" && e.vencedor === "b").length,
+                 reconstruir partida antiga dali daria numero inventado.
+                 A tela e a mesa leem o MESMO contador: nao ha como divergirem. */
+              venceu: vit.v, perdeu: vit.d,
               // só as jogadas importam aqui: é nelas que a mesa faz falta
               semEstado: L.filter(e => e.tipo === "jogou" && !e.estado).length };
   for(const e of L){

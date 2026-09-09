@@ -16,9 +16,9 @@ const guardado = { jogos_log: "[]" };
 const localStorage = { getItem: k => guardado[k] || null,
                        setItem: (k,v) => { guardado[k] = v; } };
 const JOGADOR = { id: "rogerio" };
-const { leLog, analisaHistorico, contaVitorias, marcaVitoria } =
+const { leLog, analisaHistorico, contaVitorias, marcaVitoria, mesclaVitorias } =
   (new Function("TRUCO","localStorage","JOGADOR",
-   fonte + "; return { leLog, analisaHistorico, contaVitorias, marcaVitoria };"))(TRUCO, localStorage, JOGADOR);
+   fonte + "; return { leLog, analisaHistorico, contaVitorias, marcaVitoria, mesclaVitorias };"))(TRUCO, localStorage, JOGADOR);
 
 const c = (r,s) => ({ r, s });
 const ev = (tipo, extra) => Object.assign({ jogador:"rogerio", jogo:"truco", tipo }, extra);
@@ -72,6 +72,15 @@ ok(somou.v === 3 && somou.d === 2, `marcaVitoria soma uma so vez (deu ${somou.v}
 
 // jogador novo comeca zerado, sem herdar o do outro
 ok(contaVitorias("ninguem").v === 0, "jogador sem partida comeca zerado");
+
+/* ---- semear do servidor sem atropelar quem jogou offline ---- */
+ok(mesclaVitorias({v:0,d:0}, {v:5,d:4}).v === 5,
+   "aparelho zerado adota o placar do servidor");
+ok(mesclaVitorias({v:5,d:4}, {v:5,d:4}).v === 5,
+   "empatado, nao mexe");
+const off = mesclaVitorias({v:6,d:4}, {v:5,d:4});
+ok(off.v === 6 && off.d === 4,
+   `partida jogada offline nao e apagada pelo servidor (deu ${off.v}V ${off.d}D)`);
 
 console.log(`\n${n - mal}/${n} ok`);
 process.exit(mal ? 1 : 0);

@@ -1381,6 +1381,29 @@ function marcaVitoria(ganhou){
   if(ganhou) q.v++; else q.d++;
   guardaVitorias(p);
 }
+/* O contador nasce no aparelho, mas quem guarda de verdade e o servidor.
+   Sem isto o mesmo jogador tem um numero no PC e outro no celular, e um
+   localStorage limpo apaga o que ele levou meses fazendo — foi o que
+   aconteceu em 09/09: o painel marcava 0 enquanto o Supabase tinha 9
+   partidas fechadas do rogerio.
+   Quem tem MAIS partidas manda: se o aparelho jogou offline e a fila ainda
+   nao subiu, ele sabe mais que o servidor. Mesma regra do `puxaPerfil`. */
+function mesclaVitorias(local, servidor){
+  const tot = x => x.v + x.d;
+  return tot(servidor) > tot(local) ? servidor : local;
+}
+function puxaVitorias(id){
+  // ponytail: o `eventosDe` para em 1000 linhas. Se um dia alguem passar de
+  // mil partidas fechadas, paginar aqui — ate la o teto nao encosta.
+  return eventosDe(id, "fim_partida", 1000).then(linhas => {
+    const srv = { v:0, d:0 };
+    for(const l of linhas){ if(l.dados && l.dados.vencedor === "p") srv.v++; else srv.d++; }
+    const p = placarVitorias();
+    p[id] = mesclaVitorias(p[id] || { v:0, d:0 }, srv);
+    guardaVitorias(p);
+    pintaVida();
+  }).catch(()=>{});          // sem rede: fica o que o aparelho ja sabia
+}
 
 function analisaHistorico(){
   const L = leLog().filter(e => e.jogador === JOGADOR.id && e.jogo === "truco");
@@ -1517,7 +1540,7 @@ function escolherJogador(){
   modal("Quem vai jogar?", JOGADORES.map(j => [j.nome, ()=>{
     JOGADOR = j;
     try{ localStorage.setItem("jogador", j.id); }catch(e){}
-    puxaPerfil(j.id);
+    puxaPerfil(j.id); puxaVitorias(j.id);
     pintaJogador();
   }]));
 }
@@ -1532,7 +1555,7 @@ function pintaJogador(){
   if(achou) JOGADOR = achou;
   addEventListener("DOMContentLoaded", ()=>{
     pintaJogador();
-    if(achou) puxaPerfil(JOGADOR.id); else escolherJogador();
+    if(achou){ puxaPerfil(JOGADOR.id); puxaVitorias(JOGADOR.id); } else escolherJogador();
   });
 })();
 /* ---- registro de jogadas: Supabase + cópia local ---- */

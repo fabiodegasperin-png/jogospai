@@ -406,6 +406,26 @@
   .tt-msg{font-family:var(--disp);font-size:21px;line-height:1.2;color:var(--copag-am);
     background:#00000055;border-radius:10px;padding:10px 12px;min-height:52px;text-align:center}
 
+  /* mesmo vocabulario do painel de RODADAS do outro lado da mesa:
+     azul = voce, vermelho = maquina, borda grossa a esquerda */
+  .tt-vida{background:#00000055;border-radius:10px;padding:8px 10px 9px;cursor:pointer;
+    border:2px solid #ffffff1a;transition:background .15s,border-color .15s}
+  .tt-vida:hover{background:#00000080;border-color:#ffffff44}
+  .tt-vida .cab{font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;
+    text-align:center;margin-bottom:6px}
+  .tt-vida .pares{display:flex;gap:6px}
+  .tt-vida .par{flex:1;border-radius:8px;padding:4px 0 5px;text-align:center;
+    border-left:6px solid #ffffff33;background:#3d3d3dcc}
+  .tt-vida .par b{display:block;font-family:var(--disp);font-size:26px;line-height:1.05}
+  .tt-vida .par span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+  .tt-vida .par.v{background:#1d3f77cc;border-left-color:#5b9bff}
+  .tt-vida .par.d{background:#6b1616cc;border-left-color:#ff6b5b}
+  .tt-vida .par.zero{opacity:.4}
+  .tt-vida .barra{margin-top:8px;height:7px;border-radius:99px;background:#00000066;overflow:hidden}
+  .tt-vida .barra i{display:block;height:100%;border-radius:99px;
+    background:linear-gradient(90deg,#3f7fe0,#7fb5ff);transition:width .4s}
+  .tt-vida .pct{margin-top:5px;font-size:12px;opacity:.7;text-align:center}
+
   .tt-vazas{display:flex;flex-direction:column;gap:5px}
   .tt-vazas .cab{font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;text-align:center}
   .tt-vazas .lin{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:8px;
@@ -428,6 +448,10 @@
     .tt-lado{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center}
     .tt-lado .voltar{width:auto}
     .tt-lado .modos{flex:1 1 auto}
+    .tt-vida{flex:1 1 100%;padding:6px 10px 7px}
+    .tt-vida .cab{margin-bottom:4px}
+    .tt-vida .par b{font-size:21px}
+    .tt-vida .barra{margin-top:6px;height:6px}
     .tt-msg{flex:1 1 100%;min-height:0;font-size:18px;padding:6px 10px}
     .tt-vazas{flex-direction:row;flex:1 1 100%}
     .tt-vazas .cab{display:none}
@@ -494,6 +518,9 @@
       <button id="t-m4" class="hidden" onclick="setModoTruco(4)">Dupla 2 x 2</button>
       <button id="t-df" class="on" onclick="ciclaDificuldade()">Difícil</button>
     </div>
+    <!-- o retrospecto ficava escondido atras do menu: aqui ele fica na mesa,
+         e clicar abre a tela inteira -->
+    <div class="tt-vida" id="t-vida" onclick="abrirHistorico()" title="ver o histórico completo"></div>
     <div class="tt-msg hidden" id="t-msg"></div>
   </aside>
   <div class="tt-fit" id="t-fit">
@@ -565,7 +592,7 @@
   <p id="modal-txt"></p><div id="modal-btns"></div>
 </div></div>
 
-<script src="truco_core.js?v=1"></script>
+<script src="truco_core.js?v=2"></script>
 <script src="cacheta_core.js?v=3"></script>
 <script src="perfil_real.js?v=1"></script>
 <script>
@@ -661,7 +688,7 @@ const assentosDoTime = t => T.times.map((x,i)=>x===t?i:-1).filter(i=>i>=0);
 
 function abrirTruco(){
   // pergunta ainda no menu: mostrar a mesa antes deixava o fundo montado pela metade
-  const entra = n => { mostrar("scr-truco"); setModoTruco(n); ajustaMesa(); };
+  const entra = n => { mostrar("scr-truco"); setModoTruco(n); ajustaMesa(); pintaVida(); };
   modal("Como quer jogar?", [["Sozinho (1 x 1)", ()=>entra(2)], ["Em dupla (2 x 2)", ()=>entra(4)]]);
 }
 
@@ -1268,6 +1295,7 @@ function fimDaMao(vencedor, pontos){
     T.fim = true;
     const ganhou = T.placar[0] >= 12;
     reg("fim_partida", { vencedor: ganhou ? "p" : "b", placar: T.placar.slice() });
+    pintaVida();
     setTimeout(()=>modal(ganhou ? "Vocês venceram o jogo!" : "Os adversários venceram. Revanche?",
       [["Jogar de novo", ()=>setModoTruco(T.n)], ["Sair da mesa", voltar]]), 1200);
     return;
@@ -1352,6 +1380,19 @@ function analisaHistorico(){
   }
   return r;
 }
+/* o mesmo retrospecto da tela de historico, na lateral da mesa */
+function pintaVida(){
+  const el = $("t-vida"); if(!el) return;
+  const r = analisaHistorico(), t = r.venceu + r.perdeu;
+  const pct = t ? Math.round(100 * r.venceu / t) : 0;
+  const par = (n, cls, rot) => '<div class="par ' + (n ? cls : "zero") + '">' +
+                               '<b>' + n + '</b><span>' + rot + '</span></div>';
+  el.innerHTML = '<div class="cab">Partidas</div>' +
+    '<div class="pares">' + par(r.venceu, "v", "venceu") + par(r.perdeu, "d", "perdeu") + '</div>' +
+    '<div class="barra"><i style="width:' + (t ? pct : 0) + '%"></i></div>' +
+    '<div class="pct">' + (t ? pct + "% de aproveitamento" : "nenhuma partida fechada") + '</div>';
+}
+
 const NL = String.fromCharCode(10);
 function abrirHistorico(){
   const r = analisaHistorico(), perf = perfilDoAdversario();

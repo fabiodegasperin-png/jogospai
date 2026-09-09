@@ -95,6 +95,20 @@ for(let k=0;k<40;k++){
 }
 ok(pagou === 0, "corre de truco com derrota certa (pagou pra ver " + pagou + "/40)");
 
+/* ---- EXPOSTO: ele ja jogou tudo e eu jogo por ultimo ----
+   Vi a carta dele na mesa antes de decidir: subir so pode custar. Mesmo com
+   o zap deitado, a resposta ao meu truco e aceitar ou correr, nunca seis. */
+function mesaExposta(){
+  const E = mesaGanhaCerta();
+  E.mesa[1] = { r:"5", s:"P" };                  // ele deitou o zap: mao ganha certa
+  E.maos[0] = [{ r:"7", s:"E" }];                // eu, por jogar, perco de qualquer jeito
+  E.valor = 1; E.pendente = 3; E.ultimoPediu = "p";
+  return E;
+}
+let subiu = 0;
+for(let k=0;k<30;k++) if(T.responde(mesaExposta(), 1, P, Math.random) === "subir") subiu++;
+ok(subiu === 0, "exposto na ultima vaza nao sobe a aposta (subiu " + subiu + "/30)");
+
 /* ---- leitura: quem pediu truco tem carta ---- */
 function maoDeSaida(){
   const vira = { r:"4", s:"O" };

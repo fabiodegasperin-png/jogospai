@@ -261,10 +261,15 @@ function momento(E, a, P){
   else if(primeira)         f = P.mPrimeira;
   else if(E.vazas[0] === sigla(E.times[a])) f = P.mGanhouPrimeira;
 
-  const faltaAdversario = E.mesa.some((c,i)=> !c && E.times[i] !== E.times[a] && E.maos[i].length);
-  if(semCartas && faltaAdversario) f *= P.mSemCartasExposto;
+  if(exposto(E, a)) f *= P.mSemCartasExposto;
   else if(semCartas) f *= P.mSemCartas;
   return f;
+}
+/* ja joguei tudo e quem falta jogar e adversario: a minha carta esta na mesa
+   e ele decide DEPOIS de ver o resultado. */
+function exposto(E, a){
+  return !E.maos[a].length &&
+         E.mesa.some((c,i)=> !c && E.times[i] !== E.times[a] && E.maos[i].length);
 }
 /* ---- o placar ----
    11 x 0 e 11 x 11 nao sao o mesmo jogo. Duas coisas mudam tudo:
@@ -396,7 +401,10 @@ function querPedir(E, a, P, rnd){
 function responde(E, time, P, rnd){
   const a = assentoQueDecide(E, time);
   const p = probMao(E, a, P, rnd), r = rnd();
-  const prox = proxValor(E.pendente);
+  /* EXPOSTO: subir aqui nunca paga, por melhor que seja a carta. Quem falta
+     jogar ja sabe se ganha: se perde corre e me da o mesmo que eu levaria
+     aceitando; se ganha aceita e leva o dobro. So sobra aceitar ou correr. */
+  const prox = exposto(E, a) ? null : proxValor(E.pendente);
   const cego = E.n === 4 && parceiroVisivel(E, a) < 0;
   const blefe = P.blefe * escalaBlefe(P, E.valor) * momento(E, a, P) * (cego ? P.cegoBlefe : 1);
   const lim = limiteAceite(E.pendente, E.valor) + P.margem + ajusteFalta(E, time, P);

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apuração Presidente</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --ink:#14181f; --mute:#6b7280; --line:#e3e6eb;
+    --bar:#2563eb; --lead:#16a34a; --warn:#d97706; --err:#dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e1116; --card:#171b22; --ink:#e8ebf0; --mute:#8b94a3; --line:#2a303a; --bar:#5b8def; --lead:#34d399; }
+  }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui,sans-serif }
+  main { max-width:820px; margin:0 auto; padding:20px 16px 48px }
+  h1 { font-size:1.4rem; margin:0 0 4px }
+  .sub { color:var(--mute); font-size:.9rem; display:flex; gap:12px; flex-wrap:wrap; align-items:center }
+  .pill { padding:2px 10px; border-radius:99px; border:1px solid var(--line); font-size:.8rem }
+  .pill.demo { color:var(--warn); border-color:var(--warn) }
+  .pill.live { color:var(--lead); border-color:var(--lead) }
+  .pill.err { color:var(--err); border-color:var(--err) }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px }
+  .prog { height:10px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:8px }
+  .prog > i { display:block; height:100%; background:var(--bar); transition:width .6s }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-top:14px }
+  .stats b { display:block; font-size:1.15rem }
+  .stats span { color:var(--mute); font-size:.8rem }
+  .cand { padding:12px 0; border-top:1px solid var(--line) }
+  .cand:first-of-type { border-top:0 }
+  .row { display:flex; justify-content:space-between; gap:8px; align-items:baseline }
+  .nome { font-weight:600 } .num { color:var(--mute); font-size:.85rem; margin-left:6px }
+  .pct { font-variant-numeric:tabular-nums; font-weight:700; font-size:1.1rem }
+  .votos { color:var(--mute); font-size:.85rem; font-variant-numeric:tabular-nums }
+  .track { position:relative; height:14px; background:var(--line); border-radius:6px; margin-top:6px }
+  .track i { display:block; height:100%; border-radius:6px; background:var(--bar); transition:width .6s }
+  .track.first i { background:var(--lead) }
+  .track::after { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; border-left:2px dashed var(--mute) }
+  .legend { color:var(--mute); font-size:.8rem; margin-top:10px }
+  .cfg { display:grid; gap:8px; margin-top:8px }
+  input { width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font:inherit }
+  button { padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit; cursor:pointer }
+  details summary { cursor:pointer; color:var(--mute) }
+  .msg { color:var(--err); font-size:.85rem; margin-top:6px }
+</style>
+</head>
+<body>
+<main>
+  <h1>Apuração — Presidente da República</h1>
+  <div class="sub">
+    <span id="modo" class="pill demo">demonstração</span>
+    <span id="atualizado">—</span>
+  </div>
+
+  <section class="card">
+    <div class="row"><strong>Seções totalizadas</strong><span class="pct" id="pst">0%</span></div>
+    <div class="prog"><i id="pbar" style="width:0%"></i></div>
+    <div class="stats">
+      <div><b id="vv">—</b><span>votos válidos</span></div>
+      <div><b id="vb">—</b><span>brancos</span></div>
+      <div><b id="vn">—</b><span>nulos</span></div>
+      <div><b id="sec">—</b><span>seções apuradas</span></div>
+    </div>
+  </section>
+
+  <section class="card" id="lista" aria-live="polite"></section>
+  <p class="legend">Linha tracejada = 50% dos votos válidos (vitória no 1º turno exige mais de 50%).</p>
+
+  <details class="card">
+    <summary>Fonte dos dados</summary>
+    <div class="cfg">
+      <label for="url">URL do JSON de resultados do TSE (deixe vazio para o modo demonstração)</label>
+      <input id="url" placeholder="https://resultados.tse.jus.br/oficial/ele2026/.../br-c0001-e000..-r.json">
+      <div><button id="salvar">Usar esta fonte</button> <button id="demo">Voltar à demonstração</button></div>
+      <div class="msg" id="erro"></div>
+    </div>
+  </details>
+</main>
+
+<script>
+const INTERVALO_MS = 30000;
+const $ = id => document.getElementById(id);
+const fmt = n => n == null ? "—" : Number(n).toLocaleString("pt-BR");
+const num = v => typeof v === "number" ? v : parseFloat(String(v ?? "0").replace(/\./g, "").replace(",", ".")) || 0;
+const store = { get(k){ try { return localStorage.getItem(k) } catch { return null } },
+                set(k,v){ try { localStorage.setItem(k,v) } catch {} } };
+
+let url = new URLSearchParams(location.search).get("fonte") || store.get("fonte") || "";
+
+// ---- Normaliza o JSON do TSE (formato "dados-simplificados") ----
+// Campos usados: cand[] {n, nm, vap, pvap, e}, pst, vv, vb, vn, s, st, ds
+// Os valores numéricos vêm como texto em pt-BR (ex.: "48,43").
+function normalizarTSE(j) {
+  const cand = (j.cand || []).map(c => ({
+    nome: c.nm || c.nmu || "?", numero: c.n, votos: num(c.vap), pct: num(c.pvap), eleito: c.e === "s"
+  }));
+  return {
+    cand,
+    pst: num(j.pst), vv: num(j.vv), vb: num(j.vb), vn: num(j.vn),
+    secoes: num(j.st), totalSecoes: num(j.s),
+    atualizado: [j.dg, j.hg].filter(Boolean).join(" ")
+  };
+}
+
+// ---- Modo demonstração: simula uma apuração evoluindo ----
+const demo = (() => {
+  const base = [["Candidato A",13,.47],["Candidato B",22,.41],["Candidato C",12,.07],["Candidato D",15,.03],["Candidato E",30,.02]];
+  const total = 470000, t0 = Date.now();
+  return () => {
+    const p = Math.min(1, (Date.now() - t0) / 240000);
+    const vv = Math.round(118e6 * p * 0.97);
+    const cand = base.map(([nome, numero, s], i) => {
+      const drift = 1 + Math.sin(p * 6 + i) * (1 - p) * 0.12;
+      return { nome, numero, votos: Math.round(vv * s * drift), pct: 0, eleito: false };
+    });
+    const soma = cand.reduce((a, c) => a + c.votos, 0) || 1;
+    cand.forEach(c => c.pct = c.votos / soma * 100);
+    return { cand, pst: p * 100, vv: soma, vb: Math.round(soma * .018), vn: Math.round(soma * .03),
+             secoes: Math.round(total * p), totalSecoes: total, atualizado: "simulado" };
+  };
+})();
+
+function render(d, modo) {
+  const el = $("modo");
+  el.textContent = modo === "live" ? "ao vivo (TSE)" : modo === "erro" ? "erro na fonte" : "demonstração";
+  el.className = "pill " + (modo === "live" ? "live" : modo === "erro" ? "err" : "demo");
+  $("atualizado").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR") + (d.atualizado ? " · " + d.atualizado : "");
+  $("pst").textContent = d.pst.toFixed(2).replace(".", ",") + "%";
+  $("pbar").style.width = Math.min(100, d.pst) + "%";
+  $("vv").textContent = fmt(d.vv); $("vb").textContent = fmt(d.vb); $("vn").textContent = fmt(d.vn);
+  $("sec").textContent = d.totalSecoes ? fmt(d.secoes) + " / " + fmt(d.totalSecoes) : fmt(d.secoes);
+  const ordenados = [...d.cand].sort((a, b) => b.votos - a.votos);
+  $("lista").innerHTML = ordenados.map((c, i) => `
+    <div class="cand">
+      <div class="row">
+        <span><span class="nome">${esc(c.nome)}</span><span class="num">${esc(c.numero)}${c.eleito ? " · ELEITO" : ""}</span></span>
+        <span class="pct">${c.pct.toFixed(2).replace(".", ",")}%</span>
+      </div>
+      <div class="track ${i === 0 ? "first" : ""}"><i style="width:${Math.min(100, c.pct)}%"></i></div>
+      <div class="votos">${fmt(c.votos)} votos</div>
+    </div>`).join("");
+}
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
+
+async function atualizar() {
+  $("erro").textContent = "";
+  if (!url) return render(demo(), "demo");
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = normalizarTSE(await r.json());
+    if (!d.cand.length) throw new Error("JSON sem lista de candidatos (formato diferente do esperado)");
+    render(d, "live");
+  } catch (e) {
+    $("erro").textContent = "Falha ao buscar a fonte: " + e.message;
+    $("modo").textContent = "erro na fonte"; $("modo").className = "pill err";
+  }
+}
+
+$("url").value = url;
+$("salvar").onclick = () => { url = $("url").value.trim(); store.set("fonte", url); atualizar(); };
+$("demo").onclick = () => { url = ""; $("url").value = ""; store.set("fonte", ""); atualizar(); };
+(async function ciclo() { await atualizar(); setTimeout(ciclo, url ? INTERVALO_MS : 3000); })();
+</script>
+</body>
+</html>

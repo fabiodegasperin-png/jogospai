@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projeção da Apuração</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#14181f; --mute:#6b7280; --line:#e3e6eb; --a:#2563eb; --b:#dc2626; --ok:#16a34a }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e1116; --card:#171b22; --ink:#e8ebf0; --mute:#8b94a3; --line:#2a303a; --a:#5b8def; --b:#f26b6b; --ok:#34d399 } }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui,sans-serif }
+  main { max-width:900px; margin:0 auto; padding:20px 16px 48px }
+  h1 { font-size:1.4rem; margin:0 0 4px } h2 { font-size:1rem; margin:0 0 10px }
+  .mute { color:var(--mute); font-size:.85rem }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px }
+  .nomes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px }
+  label { font-size:.8rem; color:var(--mute); display:block }
+  input { width:100%; padding:7px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font:inherit }
+  .big { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap }
+  .big b { font-size:1.8rem; font-variant-numeric:tabular-nums }
+  .duo { height:22px; display:flex; border-radius:8px; overflow:hidden; margin:10px 0; position:relative }
+  .duo i { display:block; height:100%; transition:width .4s }
+  .duo::after { content:""; position:absolute; left:50%; top:0; bottom:0; border-left:2px dashed var(--ink) }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums }
+  th, td { padding:6px 4px; text-align:right; border-top:1px solid var(--line); font-size:.9rem }
+  th:first-child, td:first-child { text-align:left } th { color:var(--mute); font-weight:600; border-top:0; font-size:.75rem }
+  td input { width:74px; padding:4px; text-align:right }
+  tr.reg td { font-weight:700; background:var(--bg) }
+  .scroll { overflow-x:auto }
+  .sobe { color:var(--ok) } .desce { color:var(--b) }
+  button { padding:7px 12px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit; cursor:pointer }
+</style>
+</head>
+<body>
+<main>
+  <h1>Projeção da apuração com base na última eleição</h1>
+  <p class="mute">Parte do 1º turno anterior em cada estado e aplica o balanço (diferença entre o que está saindo agora e o que saiu antes) nos estados ainda não apurados. É uma estimativa, não um resultado.</p>
+
+  <section class="card">
+    <h2>Candidatos e participação</h2>
+    <div class="nomes">
+      <div><label for="nA">Candidato 1</label><input id="nA" value="Bolsonaro"></div>
+      <div><label for="nB">Candidato 2</label><input id="nB" value="Lula"></div>
+      <div><label for="part">Votos vs. eleição base (%)</label><input id="part" type="number" value="100" min="50" max="150"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Projeção nacional</h2>
+    <div class="big"><span><b id="pA">—</b> <span id="lA" class="mute"></span></span><span><span id="lB" class="mute"></span> <b id="pB">—</b></span></div>
+    <div class="duo"><i id="bA" style="background:var(--a)"></i><i id="bB" style="background:var(--b)"></i></div>
+    <div class="mute" id="resumo"></div>
+  </section>
+
+  <section class="card">
+    <h2>Por estado — informe o que já foi apurado</h2>
+    <p class="mute">Preencha só os estados que já têm urnas apuradas: % de urnas apuradas e % do candidato 1 entre os dois candidatos. O restante é projetado.</p>
+    <div class="scroll"><table id="tab"></table></div>
+    <p><button id="limpar">Limpar entradas</button></p>
+  </section>
+  <p class="mute">Cuidado: a ordem de apuração distorce parciais (urnas urbanas costumam chegar antes das rurais). Por isso a confiança no balanço do estado só cresce conforme ele é apurado. Base: 1º turno da eleição anterior, da planilha fornecida.</p>
+</main>
+<script src="projecao_base.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const pct = x => (x * 100).toFixed(2).replace(".", ",") + "%";
+const fmt = n => Math.round(n).toLocaleString("pt-BR");
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
+let entrada = {};
+try { entrada = JSON.parse(localStorage.getItem("proj_entrada") || "{}"); } catch {}
+const salvar = () => { try { localStorage.setItem("proj_entrada", JSON.stringify(entrada)); } catch {} };
+
+function montarTabela() {
+  const linhas = BASE_UFS.map(u => {
+    const e = entrada[u.uf] || {};
+    const val = (v, mult) => v == null ? "" : +(v * mult).toFixed(2);
+    return `<tr data-uf="${esc(u.uf)}"><td>${esc(u.uf)}</td>
+      <td class="base"></td>
+      <td><input data-k="apurado" type="number" min="0" max="100" step="0.1" placeholder="0" value="${val(e.apurado, 100)}"></td>
+      <td><input data-k="pctA" type="number" min="0" max="100" step="0.01" placeholder="—" value="${val(e.pctA, 100)}"></td>
+      <td class="proj"></td><td class="vot"></td></tr>`;
+  }).join("");
+  $("tab").innerHTML = `<thead><tr><th>Estado</th><th>Base cand.1</th><th>% apurado</th><th>% cand.1 parcial</th><th>Projeção cand.1</th><th>Votos (1 / 2)</th></tr></thead><tbody>${linhas}</tbody><tbody id="regs"></tbody>`;
+  $("tab").querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => {
+    const uf = inp.closest("tr").dataset.uf, k = inp.dataset.k;
+    const e = entrada[uf] = entrada[uf] || {};
+    if (inp.value === "") delete e[k]; else e[k] = Math.min(100, Math.max(0, parseFloat(inp.value))) / 100;
+    if (e.pctA == null && e.apurado == null) delete entrada[uf];
+    salvar(); atualizar();
+  }));
+}
+
+function atualizar() {
+  const validas = {};
+  for (const [uf, e] of Object.entries(entrada)) if (e.pctA != null) validas[uf] = { apurado: e.apurado ?? 0, pctA: e.pctA };
+  const r = projetar(validas, (parseFloat($("part").value) || 100) / 100);
+  const nA = $("nA").value || "Cand. 1", nB = $("nB").value || "Cand. 2";
+  $("lA").textContent = nA; $("lB").textContent = nB;
+  $("pA").textContent = pct(r.nacional.share); $("pB").textContent = pct(1 - r.nacional.share);
+  $("bA").style.width = r.nacional.share * 100 + "%"; $("bB").style.width = (1 - r.nacional.share) * 100 + "%";
+  const lider = r.nacional.share >= .5 ? nA : nB;
+  const bal = r.balancoNac * 100;
+  $("resumo").textContent = `${fmt(r.nacional.votosA)} × ${fmt(r.nacional.votosB)} votos · projeção favorece ${lider} · balanço médio informado: ${bal >= 0 ? "+" : ""}${bal.toFixed(2).replace(".", ",")} p.p. para ${nA}`;
+  $("tab").querySelectorAll("tbody:first-of-type tr").forEach(tr => {
+    const s = r.ufs.find(x => x.uf === tr.dataset.uf);
+    tr.querySelector(".base").textContent = pct(s.shareBase);
+    const d = s.share - s.shareBase;
+    tr.querySelector(".proj").innerHTML = `${pct(s.share)} <span class="${d >= 0 ? "sobe" : "desce"}">${d >= 0 ? "▲" : "▼"}</span>`;
+    tr.querySelector(".vot").textContent = `${fmt(s.votosA)} / ${fmt(s.votosB)}`;
+  });
+  $("regs").innerHTML = r.regioes.map(g => `<tr class="reg"><td>${esc(g.regiao)}</td><td></td><td></td><td></td><td>${pct(g.share)}</td><td>${fmt(g.votosA)} / ${fmt(g.votosB)}</td></tr>`).join("");
+}
+
+["nA", "nB", "part"].forEach(id => $(id).addEventListener("input", atualizar));
+$("limpar").onclick = () => { entrada = {}; salvar(); montarTabela(); atualizar(); };
+montarTabela(); atualizar();
+</script>
+</body>
+</html>
